@@ -1,13 +1,13 @@
-# Имя нашего рабочего процесса, будет отображаться в разделе "Actions" на GitHub
+# Имя нашего рабочего процесса
 name: Deploy React App to GitHub Pages
 
-# Условие для запуска: запускать при каждом пуше в ветку main
+# Условие для запуска
 on:
   push:
-    branches: [ "main" ] # Или master, в зависимости от твоей основной ветки
+    branches: [ "main" ] # Убедись, что твоя основная ветка называется 'main'
   workflow_dispatch:
 
-# Разрешения для токена, чтобы ворфклоу мог развернуть сайт
+# Разрешения для токена
 permissions:
   contents: read
   pages: write
@@ -15,14 +15,13 @@ permissions:
 
 # Задачи, которые будут выполняться
 jobs:
-  # Одна задача под названием "deploy"
   deploy:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest # Запускать на виртуальной машине с Ubuntu
+    runs-on: ubuntu-latest
     steps:
-      # Шаг 1: Клонируем репозиторий в виртуальную машину
+      # Шаг 1: Клонируем репозиторий
       - name: Checkout
         uses: actions/checkout@v4
 
@@ -30,25 +29,28 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20 # Можно указать твою версию Node.js
+          node-version: 20
 
-      # Шаг 3: Устанавливаем все зависимости проекта
+      # Шаг 3: Устанавливаем зависимости, указав рабочую папку
       - name: Install dependencies
         run: npm install
+        working-directory: ./my-react-app # <-- Указываем, что работать нужно в этой папке
 
-      # Шаг 4: Собираем проект (Vite создаст папку 'dist')
+      # Шаг 4: Собираем проект, также указав рабочую папку
       - name: Build
         run: npm run build
+        working-directory: ./my-react-app # <-- И здесь тоже
 
-      # Шаг 5: Готовим артефакт для загрузки на GitHub Pages
+      # Шаг 5: Готовим артефакт для загрузки
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
-      # Шаг 6: Загружаем собранную папку 'dist' как артефакт
+      # Шаг 6: Загружаем собранную папку 'dist'
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: './dist' # Указываем путь к нашей собранной папке
+          # Указываем правильный путь к папке 'dist'
+          path: './my-react-app/dist'
 
       # Шаг 7: Разворачиваем (деплоим) сайт
       - name: Deploy to GitHub Pages
