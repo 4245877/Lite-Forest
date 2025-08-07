@@ -22,3 +22,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Игнорировать lock-файл, чтобы избежать конфликтов между ОС
+package-lock.json
