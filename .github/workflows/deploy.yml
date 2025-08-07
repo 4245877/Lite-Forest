@@ -4,7 +4,7 @@ name: Deploy React App to GitHub Pages
 # Условие для запуска
 on:
   push:
-    branches: [ "main" ] # Убедись, что твоя основная ветка называется 'main'
+    branches: [ "main" ]
   workflow_dispatch:
 
 # Разрешения для токена
@@ -31,15 +31,15 @@ jobs:
         with:
           node-version: 20
 
-      # Шаг 3: Устанавливаем зависимости, указав рабочую папку
+      # Шаг 3: Устанавливаем зависимости с помощью 'npm ci'
       - name: Install dependencies
-        run: npm install
-        working-directory: ./my-react-app # <-- Указываем, что работать нужно в этой папке
+        run: npm ci # <-- ВОТ ОНО, ГЛАВНОЕ ИЗМЕНЕНИЕ!
+        working-directory: ./my-react-app
 
-      # Шаг 4: Собираем проект, также указав рабочую папку
+      # Шаг 4: Собираем проект
       - name: Build
         run: npm run build
-        working-directory: ./my-react-app # <-- И здесь тоже
+        working-directory: ./my-react-app
 
       # Шаг 5: Готовим артефакт для загрузки
       - name: Setup Pages
@@ -49,7 +49,6 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          # Указываем правильный путь к папке 'dist'
           path: './my-react-app/dist'
 
       # Шаг 7: Разворачиваем (деплоим) сайт
