@@ -12,10 +12,10 @@ export const getProductsHandler = async (request: FastifyRequest, reply: Fastify
 // ✅ НОВЫЙ КОНТРОЛЛЕР: Обработчик создания товара
 export const createProductHandler = async (request: FastifyRequest, reply: FastifyReply) => {
   try {
-    // request.body содержит данные, отправленные в теле POST-запроса
+    // `request.body` теперь будет содержать большой JSON-объект,
+    // соответствующий интерфейсу ComplexProductInput
     const product = await ProductService.createProduct(request.body as any); 
     
-    // Отправляем ответ с кодом 201 Created — это стандарт для успешного создания
     return reply.status(201).send(product);
   } catch (error) {
     console.error(error);
