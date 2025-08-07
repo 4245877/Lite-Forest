@@ -1,0 +1,368 @@
+/* src/components/layout/Header.css */
+
+/* Подключение шрифтов */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+/* CSS переменные для цветовой палитры */
+:root {
+  --eco-primary: #2d5a27;
+  --eco-secondary: #4a7c59;
+  --eco-accent: #52b788;
+  --eco-light: #95d5b2;
+  --eco-sand: #f1faee;
+  --eco-beige: #e9c46a;
+  --eco-dark: #1b4332;
+  --text-dark: #2d3436;
+  --text-light: #636e72;
+  --white: #ffffff;
+  --shadow-light: 0 2px 10px rgba(45, 90, 39, 0.1);
+  --shadow-medium: 0 4px 20px rgba(45, 90, 39, 0.15);
+  --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Основной хедер */
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: linear-gradient(135deg, var(--eco-sand) 0%, rgba(241, 250, 238, 0.95) 100%);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(82, 183, 136, 0.2);
+  box-shadow: var(--shadow-light);
+  
+  /* Добавляем subtle паттерн листьев */
+  background-image: 
+    radial-gradient(circle at 20% 80%, rgba(149, 213, 178, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(233, 196, 106, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 40% 40%, rgba(82, 183, 136, 0.05) 0%, transparent 50%);
+}
+
+.header-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 70px;
+}
+
+/* Логотип */
+.logo {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  transition: var(--transition-smooth);
+}
+
+.logo:hover {
+  transform: translateY(-1px);
+}
+
+.logo-icon {
+  font-size: 1.8rem;
+  margin-right: 8px;
+  animation: gentle-sway 3s ease-in-out infinite;
+}
+
+.logo-text {
+  font-family: 'Inter', sans-serif;
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--eco-primary);
+  letter-spacing: -0.02em;
+}
+
+.logo-accent {
+  color: var(--eco-accent);
+  position: relative;
+}
+
+.logo-accent::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, var(--eco-accent), var(--eco-light));
+  border-radius: 1px;
+  opacity: 0;
+  transition: var(--transition-smooth);
+}
+
+.logo:hover .logo-accent::after {
+  opacity: 1;
+}
+
+/* Основная навигация */
+.main-nav {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+
+.nav-link {
+  position: relative;
+  text-decoration: none;
+  color: var(--text-dark);
+  font-family: 'Inter', sans-serif;
+  font-size: 1rem;
+  font-weight: 500;
+  padding: 8px 16px;
+  border-radius: 8px;
+  transition: var(--transition-smooth);
+  overflow: hidden;
+}
+
+.nav-link::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(82, 183, 136, 0.1), transparent);
+  transition: var(--transition-smooth);
+}
+
+.nav-link:hover::before {
+  left: 100%;
+}
+
+.nav-link:hover {
+  color: var(--eco-primary);
+  background-color: rgba(82, 183, 136, 0.1);
+  box-shadow: 0 0 20px rgba(82, 183, 136, 0.3);
+  transform: translateY(-1px);
+}
+
+.nav-link span {
+  position: relative;
+  z-index: 1;
+}
+
+/* Действия в хедере */
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.action-btn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  background: var(--white);
+  border: 1px solid rgba(82, 183, 136, 0.2);
+  border-radius: 12px;
+  color: var(--text-dark);
+  cursor: pointer;
+  text-decoration: none;
+  transition: var(--transition-smooth);
+  box-shadow: var(--shadow-light);
+}
+
+.action-btn:hover {
+  background: var(--eco-accent);
+  color: var(--white);
+  border-color: var(--eco-accent);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-medium);
+}
+
+.action-btn svg {
+  transition: var(--transition-smooth);
+}
+
+.action-btn:hover svg {
+  transform: scale(1.1);
+}
+
+/* Счетчик корзины */
+.cart-btn {
+  position: relative;
+}
+
+.cart-count {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: var(--eco-beige);
+  color: var(--eco-dark);
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 10px;
+  min-width: 18px;
+  text-align: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Мобильное меню кнопка */
+.mobile-menu-btn {
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  background: var(--white);
+  border: 1px solid rgba(82, 183, 136, 0.2);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: var(--transition-smooth);
+  box-shadow: var(--shadow-light);
+}
+
+.mobile-menu-btn span {
+  display: block;
+  height: 2px;
+  width: 20px;
+  background: var(--text-dark);
+  margin: 2px auto;
+  transition: var(--transition-smooth);
+  border-radius: 1px;
+}
+
+.mobile-menu-btn:hover {
+  background: var(--eco-accent);
+  border-color: var(--eco-accent);
+}
+
+.mobile-menu-btn:hover span {
+  background: var(--white);
+}
+
+.mobile-menu-btn.active span:nth-child(1) {
+  transform: rotate(45deg) translate(5px, 5px); 
+}
+
+.mobile-menu-btn.active span:nth-child(2) {
+  opacity: 0;
+}
+
+.mobile-menu-btn.active span:nth-child(3) {
+  transform: rotate(-45deg) translate(5px, -5px);
+}
+
+/* Мобильное меню overlay */
+.mobile-menu-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(45, 90, 39, 0.5);
+  backdrop-filter: blur(5px);
+  z-index: 999;
+  animation: fadeIn 0.3s ease;
+}
+
+.mobile-menu-overlay.visible {
+  opacity: 1;
+  visibility: visible;
+}
+
+body.no-scroll {
+  overflow: hidden;
+}
+
+/* Анимации */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes gentle-sway {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(2deg); }
+  75% { transform: rotate(-2deg); }
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+  .header-container {
+    padding: 0 15px;
+    min-height: 60px;
+  }
+
+  .logo-text {
+    font-size: 1.4rem;
+  }
+
+  .logo-icon {
+    font-size: 1.5rem;
+  }
+
+  .main-nav {
+    position: fixed;
+    top: 0;
+    right: -100%;
+    width: 280px;
+    height: 100vh;
+    background: var(--white);
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 2rem;
+    padding-top: 80px;
+    gap: 1rem;
+    transition: var(--transition-smooth);
+    box-shadow: var(--shadow-medium);
+    border-left: 1px solid rgba(82, 183, 136, 0.2);
+    z-index: 1000;
+    overflow-y: auto;
+  }
+
+  .main-nav.mobile-open {
+    right: 0;
+  }
+
+  .nav-link {
+    width: 100%;
+    padding: 12px 16px;
+    border-radius: 8px;
+    background: rgba(82, 183, 136, 0.05);
+  }
+
+  .mobile-menu-btn {
+    display: flex;
+    z-index: 1001; 
+  }
+
+  .header-actions {
+    gap: 0.5rem;
+  }
+
+  .action-btn {
+    width: 40px;
+    height: 40px;
+  }
+}
+
+@media (max-width: 480px) {
+  .header-container {
+    padding: 0 10px;
+  }
+
+  .logo-text {
+    font-size: 1.2rem;
+  }
+
+  .header-actions {
+    gap: 0.25rem;
+  }
+
+  .action-btn {
+    width: 36px;
+    height: 36px;
+  }
+
+  .main-nav {
+    width: 100vw;
+    right: -100vw;
+    padding: 1.5rem;
+  }
+}

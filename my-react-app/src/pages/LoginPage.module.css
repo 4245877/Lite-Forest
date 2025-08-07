@@ -1,0 +1,210 @@
+/* src/pages/LoginPage.module.css */
+
+/* --- Базовая структура страницы --- */
+.loginPage {
+  display: flex;
+  min-height: 100vh;
+  font-family: 'Inter', sans-serif;
+  background: var(--gradient-hero);
+  color: var(--text-primary);
+}
+
+/* --- Левая панель (с иллюстрацией) --- */
+.leftPanel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+  background: var(--gradient-primary);
+  color: var(--white);
+  text-align: center;
+}
+
+.brandLogo {
+  font-size: 5rem;
+  margin-bottom: 1.5rem;
+  filter: drop-shadow(0 4px 15px rgba(0, 0, 0, 0.2));
+  animation: float 4s ease-in-out infinite; /* Анимация из вашего CSS */
+}
+
+.brandTitle {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+}
+
+.brandSlogan {
+  font-size: 1.1rem;
+  max-width: 400px;
+  opacity: 0.9;
+  line-height: 1.6;
+}
+
+/* --- Правая панель (с формой) --- */
+.formPanel {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 3rem 2rem;
+}
+
+.formContainer {
+  width: 100%;
+  max-width: 420px;
+  background: var(--white);
+  padding: 2.5rem;
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-lg);
+  transition: var(--transition);
+}
+
+.formTitle {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--eco-dark);
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+/* --- Элементы формы --- */
+.inputGroup {
+  margin-bottom: 1.5rem;
+  position: relative;
+}
+
+.inputLabel {
+  display: block;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+  color: var(--text-secondary);
+}
+
+.input {
+  width: 100%;
+  height: 50px;
+  padding: 0 16px;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  font-size: 1rem;
+  color: var(--text-primary);
+  transition: var(--transition);
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--eco-accent);
+  box-shadow: 0 0 0 3px rgba(82, 183, 136, 0.2);
+}
+
+/* --- Стили для иконки "показать/скрыть пароль" --- */
+.passwordToggle {
+  position: absolute;
+  top: 50%;
+  right: 16px;
+  transform: translateY(25%);
+  cursor: pointer;
+  color: var(--text-light);
+  font-size: 1.2rem;
+}
+
+/* --- Кнопки и ссылки --- */
+.submitButton {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  background: var(--gradient-primary);
+  color: white;
+  padding: 14px;
+  border-radius: 12px;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 1.1rem;
+  transition: var(--transition);
+  box-shadow: var(--shadow-md);
+  border: none;
+  cursor: pointer;
+}
+
+.submitButton:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.submitButton:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.formLink {
+  color: var(--eco-primary);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.formLink:hover {
+  text-decoration: underline;
+}
+
+.linkGroup {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 1rem;
+  font-size: 0.9rem;
+}
+
+.toggleForm {
+  text-align: center;
+  margin-top: 2rem;
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+}
+
+/* --- Сообщения об ошибках --- */
+.errorText {
+  color: #d32f2f;
+  font-size: 0.85rem;
+  margin-top: 0.5rem;
+}
+
+.serverError {
+  color: #d32f2f;
+  background-color: rgba(211, 47, 47, 0.1);
+  padding: 1rem;
+  border-radius: 8px;
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+
+/* --- Адаптивность --- */
+@media (max-width: 768px) {
+  .loginPage {
+    flex-direction: column;
+  }
+
+  .leftPanel {
+    display: none; /* Скрываем левую панель на мобильных */
+  }
+
+  .formPanel {
+    padding: 2rem 1rem;
+  }
+
+  .formContainer {
+    padding: 2rem;
+  }
+}
+
+/* --- Анимации (скопированы из вашего CSS для согласованности) --- */
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-15px); }
+  100% { transform: translateY(0px); }
+}

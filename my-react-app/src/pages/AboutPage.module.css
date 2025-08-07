@@ -1,0 +1,393 @@
+/* Подключение шрифтов и CSS-переменных, аналогично HomePage */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+/* Используем те же переменные, что и на главной странице */
+:root {
+  --eco-primary: #2d5a27;
+  --eco-secondary: #4a7c59;
+  --eco-accent: #52b788;
+  --eco-light: #95d5b2;
+  --eco-sand: #f1faee;
+  --eco-cream: #fefcf3;
+  --text-primary: #2d3436;
+  --text-secondary: #636e72;
+  --gradient-primary: linear-gradient(135deg, var(--eco-accent) 0%, var(--eco-secondary) 100%);
+  --shadow-sm: 0 2px 8px rgba(45, 90, 39, 0.1);
+  --shadow-md: 0 4px 20px rgba(45, 90, 39, 0.15);
+  --border-radius: 16px;
+  --section-gap: 6rem;
+  --container-padding: 0 20px;
+}
+
+/* Общие стили страницы */
+.aboutPage {
+  font-family: 'Inter', sans-serif;
+  color: var(--text-primary);
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+.container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: var(--container-padding);
+}
+
+/* Стили для общих элементов */
+.sectionTitle {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--eco-dark, #1b4332);
+  margin-bottom: 1rem;
+}
+
+.sectionHeader {
+  text-align: center;
+  margin-bottom: 3rem;
+  max-width: 700px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.sectionSubtitle {
+  font-size: 1.1rem;
+  color: var(--text-secondary);
+}
+
+/* Hero-блок */
+.hero {
+  padding: 6rem 0;
+  background: var(--eco-sand);
+  text-align: center;
+}
+
+.heroContent h1 {
+  font-size: 3rem;
+  font-weight: 800;
+  line-height: 1.2;
+  margin-bottom: 1.5rem;
+  letter-spacing: -0.02em;
+}
+
+.titleAccent {
+  background: var(--gradient-primary);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.heroSubtitle {
+  font-size: 1.25rem;
+  color: var(--text-secondary);
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+/* Секция "Миссия" */
+.mission {
+  padding: var(--section-gap) 0;
+  background: white;
+}
+
+.missionContent {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 3rem;
+}
+
+.missionIcon {
+  font-size: 5rem;
+  filter: drop-shadow(0 4px 15px rgba(82, 183, 136, 0.3));
+}
+
+/* Секция "Ценности" */
+.values {
+  padding: var(--section-gap) 0;
+  background: var(--eco-sand);
+}
+
+.valuesGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 2rem;
+}
+
+.valueCard {
+  background: white;
+  padding: 2.5rem 2rem;
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-sm);
+  text-align: center;
+  border: 1px solid rgba(82, 183, 136, 0.1);
+  transition: all 0.3s ease;
+}
+
+.valueCard:hover {
+  transform: translateY(-8px);
+  box-shadow: var(--shadow-md);
+}
+
+.valueIcon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.valueCard h3 {
+  font-size: 1.4rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+/* Секция "Команда" */
+.team {
+  padding: var(--section-gap) 0;
+  background: white;
+}
+
+.teamGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 2rem;
+}
+
+.teamMemberCard {
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.teamMemberCard:hover {
+  transform: scale(1.05);
+}
+
+.teamAvatar {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--eco-light), var(--eco-sand));
+  margin: 0 auto 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 3rem; /* Для эмодзи */
+  box-shadow: var(--shadow-sm);
+}
+
+.teamName {
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.teamRole {
+  color: var(--text-secondary);
+}
+
+/* Секция "История компании" (Timeline) */
+.history {
+    padding: var(--section-gap) 0;
+    background: var(--eco-sand);
+}
+
+.timeline {
+    position: relative;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem 0;
+}
+
+.timeline::after {
+    content: '';
+    position: absolute;
+    width: 3px;
+    background-color: var(--eco-light);
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    margin-left: -1.5px;
+}
+
+.timelineItem {
+    padding: 10px 40px;
+    position: relative;
+    width: 50%;
+}
+
+/* Размещаем контейнеры по сторонам */
+.timelineItem:nth-child(odd) {
+    left: 0;
+    text-align: right;
+}
+
+.timelineItem:nth-child(even) {
+    left: 50%;
+}
+
+.timelineDot {
+    content: '';
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    background-color: white;
+    border: 4px solid var(--eco-accent);
+    top: 24px;
+    border-radius: 50%;
+    z-index: 1;
+}
+
+.timelineItem:nth-child(odd) .timelineDot {
+    right: -8px;
+}
+
+.timelineItem:nth-child(even) .timelineDot {
+    left: -8px;
+}
+
+.timelineContent {
+    padding: 20px 30px;
+    background-color: white;
+    position: relative;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-sm);
+}
+
+.timelineYear {
+    font-weight: 700;
+    font-size: 1.2rem;
+    color: var(--eco-primary);
+}
+
+/* Секция "Достижения" */
+.achievements {
+    padding: var(--section-gap) 0;
+    background: white;
+}
+
+.achievementsGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+    text-align: center;
+}
+
+.achievementCard {
+    background: linear-gradient(135deg, var(--eco-sand), var(--eco-cream));
+    padding: 2rem;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-sm);
+}
+
+.achievementNumber {
+    display: block;
+    font-size: 3rem;
+    font-weight: 800;
+    color: var(--eco-primary);
+}
+
+.achievementLabel {
+    color: var(--text-secondary);
+}
+
+/* Секция CTA */
+.ctaSection {
+  padding: var(--section-gap) 0;
+  background: var(--gradient-primary);
+  text-align: center;
+  color: white;
+}
+
+.ctaContent h2 {
+  font-size: 2.2rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+}
+
+.ctaContent p {
+    opacity: 0.9;
+    margin-bottom: 2rem;
+}
+
+.ctaButton {
+  display: inline-flex;
+  background: white;
+  color: var(--eco-primary);
+  padding: 16px 32px;
+  border-radius: var(--border-radius);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 1.1rem;
+  box-shadow: var(--shadow-md);
+  transition: all 0.3s ease;
+}
+
+.ctaButton:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 30px rgba(0,0,0, 0.2);
+}
+
+/* Анимации */
+.slideInLeft {
+  animation: slideInLeft 1s ease-out forwards;
+}
+.slideInRight {
+  animation: slideInRight 1s ease-out forwards;
+}
+
+@keyframes slideInLeft {
+  from { opacity: 0; transform: translateX(-30px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(30px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+/* Адаптивность */
+@media (max-width: 992px) {
+    .sectionTitle { font-size: 2.2rem; }
+    .heroContent h1 { font-size: 2.5rem; }
+}
+
+@media (max-width: 768px) {
+    :root { --section-gap: 4rem; }
+    
+    .missionContent {
+        grid-template-columns: 1fr;
+        text-align: center;
+    }
+
+    .missionIcon {
+        margin: 0 auto;
+    }
+    
+    /* Адаптация таймлайна */
+    .timeline::after {
+        left: 20px;
+    }
+
+    .timelineItem {
+        width: 100%;
+        padding-left: 60px;
+        padding-right: 15px;
+    }
+    
+    .timelineItem:nth-child(odd),
+    .timelineItem:nth-child(even) {
+        left: 0;
+        text-align: left;
+    }
+    
+    .timelineDot {
+        left: 12px;
+    }
+    .timelineItem:nth-child(odd) .timelineDot,
+    .timelineItem:nth-child(even) .timelineDot {
+        left: 12px;
+    }
+}
+
+@media (max-width: 480px) {
+    .heroContent h1 { font-size: 2rem; }
+    .heroSubtitle { font-size: 1rem; }
+    .sectionTitle { font-size: 1.8rem; }
+}

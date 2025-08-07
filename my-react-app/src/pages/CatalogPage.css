@@ -1,0 +1,376 @@
+/* src/pages/CatalogPage.css */
+.catalog-page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  color: #2d3748;
+}
+
+/* Хлебные крошки */
+.breadcrumbs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 24px;
+  font-size: 14px;
+  color: #718096;
+}
+
+.breadcrumbs .separator {
+  color: #cbd5e0;
+}
+
+/* Заголовок каталога */
+.catalog-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 32px;
+}
+
+.catalog-header h1 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #2f5233;
+  margin: 0;
+}
+
+.mobile-filters-toggle {
+  display: none;
+}
+
+/* Основной контент */
+.catalog-content {
+  display: flex;
+  gap: 32px;
+  position: relative;
+}
+
+/* Панель фильтров */
+.filters-panel {
+  flex: 0 0 280px;
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(47, 82, 51, 0.08);
+  padding: 24px;
+  height: fit-content;
+  position: sticky;
+  top: 20px;
+  border: 1px solid #e2e8f0;
+  transition: all 0.3s ease;
+}
+
+.filters-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.filters-header h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #2f5233;
+  margin: 0;
+}
+
+.close-filters {
+  display: none;
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #718096;
+  cursor: pointer;
+  padding: 4px;
+  line-height: 1;
+}
+
+/* Группы фильтров */
+.filter-group {
+  margin-bottom: 32px;
+}
+
+.filter-group:last-child {
+  margin-bottom: 0;
+}
+
+.filter-group h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #4a5568;
+  margin: 0 0 16px 0;
+}
+
+/* Список категорий */
+.category-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.category-item {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  padding: 8px 12px;
+  border-radius: 8px;
+  transition: background-color 0.2s ease;
+  font-size: 14px;
+}
+
+.category-item:hover {
+  background-color: #f7fafc;
+}
+
+.category-item input[type="radio"] {
+  margin-right: 12px;
+  accent-color: #38a169;
+}
+
+.category-item span {
+  color: #4a5568;
+}
+
+/* Диапазон цены */
+.price-range {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.price-range span {
+  color: #718096;
+  font-weight: 500;
+}
+
+/* Эко-фильтр */
+.eco-filter {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  font-size: 14px;
+  color: #4a5568;
+  position: relative;
+  padding-left: 32px;
+}
+
+.eco-filter input[type="checkbox"] {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+  height: 0;
+  width: 0;
+}
+
+.checkmark {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 20px;
+  width: 20px;
+  background-color: #fff;
+  border: 2px solid #e2e8f0;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.eco-filter:hover input ~ .checkmark {
+  border-color: #38a169;
+}
+
+.eco-filter input:checked ~ .checkmark {
+  background-color: #38a169;
+  border-color: #38a169;
+}
+
+.checkmark:after {
+  content: "";
+  position: absolute;
+  display: none;
+  left: 6px;
+  top: 2px;
+  width: 6px;
+  height: 12px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.eco-filter input:checked ~ .checkmark:after {
+  display: block;
+}
+
+/* Сетка товаров */
+.product-grid {
+  flex: 1;
+}
+
+.products-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.products-count {
+  font-size: 14px;
+  color: #718096;
+  font-weight: 500;
+}
+
+.products-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 24px;
+  margin-bottom: 40px;
+}
+
+/* Пагинация */
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  padding: 32px 0;
+}
+
+.page-numbers {
+  display: flex;
+  gap: 8px;
+}
+
+.page-number {
+  width: 40px;
+  height: 40px;
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  color: #4a5568;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-weight: 500;
+}
+
+.page-number:hover {
+  background-color: #f7fafc;
+  border-color: #cbd5e0;
+}
+
+.page-number.active {
+  background-color: #38a169;
+  border-color: #38a169;
+  color: white;
+}
+
+/* Overlay для мобильной версии */
+.filters-overlay {
+  display: none;
+}
+
+/* Мобильная адаптивность */
+@media (max-width: 768px) {
+  .catalog-page {
+    padding: 16px;
+  }
+
+  .catalog-header h1 {
+    font-size: 2rem;
+  }
+
+  .mobile-filters-toggle {
+    display: block;
+  }
+
+  .catalog-content {
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .filters-panel {
+    position: fixed;
+    top: 0;
+    left: -100%;
+    width: 300px;
+    height: 100vh;
+    z-index: 1000;
+    overflow-y: auto;
+    border-radius: 0;
+    transition: left 0.3s ease;
+  }
+
+  .filters-panel.visible {
+    left: 0;
+  }
+
+  .filters-overlay {
+    display: block;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+  }
+
+  .close-filters {
+    display: block;
+  }
+
+  .products-grid {
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 16px;
+  }
+
+  .pagination {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .page-numbers {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .catalog-page {
+    padding: 12px;
+  }
+
+  .catalog-header h1 {
+    font-size: 1.75rem;
+  }
+
+  .products-grid {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 12px;
+  }
+
+  .filters-panel {
+    width: 100%;
+  }
+}
+
+/* Улучшенная адаптивность для планшетов */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .products-grid {
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  }
+
+  .filters-panel {
+    flex: 0 0 240px;
+  }
+}
+
+/* Большие экраны */
+@media (min-width: 1400px) {
+  .catalog-page {
+    max-width: 1400px;
+  }
+
+  .products-grid {
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  }
+}

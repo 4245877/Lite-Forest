@@ -1,0 +1,113 @@
+/* Основной контейнер для поиска */
+.searchContainer {
+  position: relative;
+  width: 100%;
+  max-width: 500px; /* или любая другая ширина */
+  margin-bottom: 24px;
+}
+
+.searchInput {
+  width: 100%;
+  padding: 12px 20px 12px 45px; /* отступ для иконки */
+  font-size: 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  color: #2d3748;
+  transition: all 0.2s ease-in-out;
+  outline: none;
+}
+
+.searchInput::placeholder {
+  color: #a0aec0;
+}
+
+.searchInput:focus {
+  border-color: #38a169;
+  box-shadow: 0 0 0 3px rgba(56, 161, 105, 0.2);
+}
+
+/* Иконка поиска слева */
+.searchIcon {
+  position: absolute;
+  top: 50%;
+  left: 15px;
+  transform: translateY(-50%);
+  color: #a0aec0;
+  pointer-events: none; /* чтобы не мешала клику на инпут */
+}
+
+/* Кнопка очистки */
+.clearButton {
+  position: absolute;
+  top: 50%;
+  right: 15px;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  color: #718096;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.clearButton:hover {
+  color: #2d3748;
+}
+
+/* Спиннер загрузки */
+.loader {
+    position: absolute;
+    top: 50%;
+    right: 15px;
+    transform: translateY(-50%);
+    width: 18px;
+    height: 18px;
+    border: 2px solid #f3f3f3;
+    border-top: 2px solid #38a169;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: translateY(-50%) rotate(0deg); }
+    100% { transform: translateY(-50%) rotate(360deg); }
+}
+
+/* Список подсказок */
+.suggestionsList {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-top: none;
+  border-radius: 0 0 8px 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  list-style: none;
+  padding: 8px 0;
+  margin: 0;
+  z-index: 10;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+/* Отдельная подсказка */
+.suggestionItem {
+  padding: 10px 20px;
+  cursor: pointer;
+  font-size: 15px;
+}
+
+.suggestionItem b {
+    font-weight: 700;
+    color: #2f5233;
+}
+
+/* Активная/выбранная подсказка */
+.suggestionItem.active,
+.suggestionItem:hover {
+  background-color: #f7fafc;
+}

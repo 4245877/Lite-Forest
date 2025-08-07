@@ -1,0 +1,224 @@
+/* src/components/product/ProductCard.css */
+.product-card {
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(47, 82, 51, 0.08);
+  overflow: hidden;
+  transition: all 0.3s ease;
+  border: 1px solid #e2e8f0;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.product-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(47, 82, 51, 0.15);
+}
+
+/* Контейнер изображения */
+.product-image-container {
+  position: relative;
+  width: 100%;
+  height: 240px;
+  overflow: hidden;
+  background: #f7fafc;
+}
+
+.product-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.product-card:hover .product-image {
+  transform: scale(1.05);
+}
+
+/* Эко-бейдж */
+.eco-badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  background: linear-gradient(135deg, #38a169, #48bb78);
+  color: white;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  box-shadow: 0 2px 8px rgba(56, 161, 105, 0.3);
+  z-index: 2;
+}
+
+.eco-icon {
+  font-size: 14px;
+}
+
+/* Бейдж скидки */
+.discount-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: linear-gradient(135deg, #e53e3e, #f56565);
+  color: white;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(229, 62, 62, 0.3);
+  z-index: 2;
+}
+
+/* Информация о товаре */
+.product-info {
+  padding: 20px;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.product-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #2d3748;
+  margin: 0;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;  
+  line-clamp: 2;         
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-height: 44px;
+}
+
+/* Ценообразование */
+.product-pricing {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.current-price {
+  font-size: 20px;
+  font-weight: 700;
+  color: #2f5233;
+}
+
+.old-price {
+  font-size: 14px;
+  color: #a0aec0;
+  text-decoration: line-through;
+}
+
+.eco-discount-text {
+  font-size: 12px;
+  color: #38a169;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Действия с товаром */
+.product-actions {
+  padding: 0 20px 20px 20px;
+}
+
+.add-to-cart-btn {
+  width: 100%;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.add-to-cart-btn:hover {
+  transform: translateY(-1px);
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+  .product-image-container {
+    height: 200px;
+  }
+
+  .product-info {
+    padding: 16px;
+  }
+
+  .product-actions {
+    padding: 0 16px 16px 16px;
+  }
+
+  .product-title {
+    font-size: 15px;
+    min-height: 40px;
+  }
+
+  .current-price {
+    font-size: 18px;
+  }
+}
+
+@media (max-width: 480px) {
+  .product-image-container {
+    height: 180px;
+  }
+
+  .product-info {
+    padding: 14px;
+    gap: 10px;
+  }
+
+  .product-actions {
+    padding: 0 14px 14px 14px;
+  }
+
+  .eco-badge,
+  .discount-badge {
+    padding: 4px 8px;
+    font-size: 11px;
+  }
+}
+
+/* Улучшения для доступности */
+@media (prefers-reduced-motion: reduce) {
+  .product-card,
+  .product-image,
+  .add-to-cart-btn {
+    transition: none;
+  }
+
+  .product-card:hover {
+    transform: none;
+  }
+
+  .product-card:hover .product-image {
+    transform: none;
+  }
+}
+
+/* Состояния фокуса для доступности */
+.product-card:focus-within {
+  outline: 2px solid #38a169;
+  outline-offset: 2px;
+}
+
+/* Загрузочное состояние изображения */
+.product-image[loading] {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}

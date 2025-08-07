@@ -1,0 +1,23 @@
+body, #root {
+  width: 100%;  
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  /* Убираем возможность горизонтального скролла для всего документа */
+  overflow-x: hidden; 
+}
+
+.App {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  width: 100%;  
+}
+
+.container {
+  max-width: 1680px;
+  width: 100%; /* Добавлено */
+  margin: 0 auto;
+  padding: 0;
+  box-sizing: border-box; /* Добавлено */
+}
