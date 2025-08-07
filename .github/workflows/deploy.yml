@@ -1,0 +1,56 @@
+# Имя нашего рабочего процесса, будет отображаться в разделе "Actions" на GitHub
+name: Deploy React App to GitHub Pages
+
+# Условие для запуска: запускать при каждом пуше в ветку main
+on:
+  push:
+    branches: [ "main" ] # Или master, в зависимости от твоей основной ветки
+  workflow_dispatch:
+
+# Разрешения для токена, чтобы ворфклоу мог развернуть сайт
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Задачи, которые будут выполняться
+jobs:
+  # Одна задача под названием "deploy"
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest # Запускать на виртуальной машине с Ubuntu
+    steps:
+      # Шаг 1: Клонируем репозиторий в виртуальную машину
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Шаг 2: Устанавливаем Node.js
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20 # Можно указать твою версию Node.js
+
+      # Шаг 3: Устанавливаем все зависимости проекта
+      - name: Install dependencies
+        run: npm install
+
+      # Шаг 4: Собираем проект (Vite создаст папку 'dist')
+      - name: Build
+        run: npm run build
+
+      # Шаг 5: Готовим артефакт для загрузки на GitHub Pages
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      # Шаг 6: Загружаем собранную папку 'dist' как артефакт
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: './dist' # Указываем путь к нашей собранной папке
+
+      # Шаг 7: Разворачиваем (деплоим) сайт
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
