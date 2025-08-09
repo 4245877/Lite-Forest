@@ -3,6 +3,12 @@
 /* Подключение шрифтов */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
+
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
 /* CSS переменные для цветовой палитры */
 :root {
   --eco-primary: #2d5a27;
@@ -261,10 +267,6 @@
   animation: fadeIn 0.3s ease;
 }
 
-.mobile-menu-overlay.visible {
-  opacity: 1;
-  visibility: visible;
-}
 
 body.no-scroll {
   overflow: hidden;
@@ -300,8 +302,8 @@ body.no-scroll {
   .main-nav {
     position: fixed;
     top: 0;
-    right: -100%;
-    width: 280px;
+    right: 0;
+    width: min(280px, 100%);
     height: 100vh;
     background: var(--white);
     flex-direction: column;
@@ -309,15 +311,16 @@ body.no-scroll {
     padding: 2rem;
     padding-top: 80px;
     gap: 1rem;
-    transition: var(--transition-smooth);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     box-shadow: var(--shadow-medium);
     border-left: 1px solid rgba(82, 183, 136, 0.2);
     z-index: 1000;
     overflow-y: auto;
+    transform: translateX(100%);
   }
 
   .main-nav.mobile-open {
-    right: 0;
+    transform: translateX(0);
   }
 
   .nav-link {
@@ -362,7 +365,6 @@ body.no-scroll {
 
   .main-nav {
     width: 100vw;
-    right: -100vw;
     padding: 1.5rem;
   }
 }
