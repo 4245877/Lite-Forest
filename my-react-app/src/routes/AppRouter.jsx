@@ -7,7 +7,7 @@ import PromotionsPage from '../pages/PromotionsPage';
 import AboutPage from '../pages/AboutPage';
 import LoginPage from '../pages/LoginPage';
 import CartPage from '../pages/CartPage';
- 
+import ContactPage from '../pages/ContactPage';
 
 
 const AppRouter = () => {
@@ -18,8 +18,8 @@ const AppRouter = () => {
       <Route path="/promotions" element={<PromotionsPage />} /> 
       <Route path="/about" element={<AboutPage />} />
       <Route path="/login" element={<LoginPage />} />
-      <Route path="/cart" element={<CartPage />} /> 
-
+      <Route path="/cart" element={<CartPage />} />
+      <Route path="/contacts" element={<ContactPage />} />
 
 
 
