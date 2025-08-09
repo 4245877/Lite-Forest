@@ -1,4 +1,5 @@
 name: Deploy React App to GitHub Pages
+
 on:
   push:
     branches: [ main ]
@@ -29,6 +30,8 @@ jobs:
           ls -la
           ls -la my-react-app || true
           git ls-files | grep -E "package-lock.json|yarn.lock|pnpm-lock.yaml" || true
+          node --version || true
+          npm --version || true
 
       - name: Cache npm
         uses: actions/cache@v4
@@ -43,8 +46,21 @@ jobs:
         with:
           node-version: 20
 
-      - name: Install dependencies
-        run: npm ci
+      - name: Install dependencies (try ci, fallback to install --force)
+        run: |
+          # работаем в ./my-react-app (defaults.run.working-directory)
+          echo "Working directory: $(pwd)"
+          if [ -f package-lock.json ]; then
+            echo "package-lock.json found — attempting npm ci"
+            npm ci || (
+              echo "npm ci failed — cleaning and reinstalling with npm install --force"
+              rm -rf node_modules package-lock.json
+              npm install --force
+            )
+          else
+            echo "No package-lock.json — running npm install --force"
+            npm install --force
+          fi
 
       - name: Build
         run: npm run build
@@ -55,7 +71,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: './my-react-app/dist' # или './my-react-app/build' — проверьте, куда собирается ваш проект
+          path: './my-react-app/dist' # проверьте, куда ваш билд пишет артефакты
 
       - name: Deploy to GitHub Pages
         id: deployment
