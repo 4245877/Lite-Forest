@@ -51,7 +51,6 @@ jobs:
       - name: Build
         working-directory: ./my-react-app
         run: npm run build
-
       # 5. Настраиваем GitHub Pages
       - name: Setup Pages
         uses: actions/configure-pages@v5
@@ -66,4 +65,4 @@ jobs:
       # 7. Размещаем на GitHub Pages
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v4 
