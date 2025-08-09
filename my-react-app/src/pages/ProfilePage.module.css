@@ -1,0 +1,100 @@
+/* Базовая сетка страницы кабинета */
+.container {
+  padding: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+.headerRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+.title {
+  font-size: 28px;
+  margin: 0;
+}
+.smallNote {
+  color: #666;
+  font-size: 14px;
+}
+.grid {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 24px;
+}
+.sidebar {
+  background: #fff;
+  border: 1px solid #eee;
+  padding: 16px;
+  border-radius: 8px;
+  height: fit-content;
+}
+.userCard {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #e8f5ea;
+  font-weight: 700;
+  color: #2b6a3a;
+}
+.userInfo {
+  font-size: 14px;
+}
+.userName { font-weight: 600; }
+.userEmail { color: #666; font-size: 13px; }
+.menu { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
+.menuItem, .menuItemLink {
+  padding: 10px 12px;
+  border-radius: 6px;
+  background: transparent;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  font-size: 14px;
+  color: #222;
+  text-decoration: none;
+}
+.menuItem:hover, .menuItemLink:hover { background: #f6f6f6; }
+.active { background: #eaf5ec; }
+
+.main {
+  min-height: 400px;
+}
+.section { margin-bottom: 18px; }
+.sectionTitle { font-size: 18px; margin-bottom: 8px; }
+.card {
+  border: 1px solid #eee;
+  padding: 12px;
+  border-radius: 8px;
+  background: #fff;
+  margin-bottom: 12px;
+}
+.linkBtn { display: inline-block; margin-top: 8px; padding: 8px 12px; border-radius: 6px; background: #2b8a3e; color: white; text-decoration: none; }
+.actionsRow { display: flex; gap: 8px; margin-top: 8px; }
+.action { padding: 8px 10px; border-radius: 6px; background: #f3f3f3; text-decoration: none; }
+
+.ordersList { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.orderItem { border: 1px solid #eee; padding: 10px; border-radius: 8px; background: #fff; }
+.orderHead { display:flex; justify-content: space-between; margin-bottom: 6px; }
+.orderFoot { display:flex; gap: 12px; align-items: center; }
+.status { padding: 4px 8px; border-radius: 6px; background: #f0f0f0; font-size: 13px; }
+.btnSmall { margin-left: auto; text-decoration: none; padding: 6px 10px; border-radius: 6px; background: #f6f6f6; }
+
+/* Responsive */
+@media (max-width: 880px) {
+  .grid { grid-template-columns: 1fr; }
+  .sidebar { order: 2; }
+  .main { order: 1; }
+}

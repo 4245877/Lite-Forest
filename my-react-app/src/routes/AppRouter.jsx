@@ -6,7 +6,7 @@ import CatalogPage from '../pages/CatalogPage';
 import PromotionsPage from '../pages/PromotionsPage'; 
 import AboutPage from '../pages/AboutPage';
 import LoginPage from '../pages/LoginPage';
-
+import CartPage from '../pages/CartPage';
  
 
 
@@ -15,11 +15,10 @@ const AppRouter = () => {
     <Routes>
       <Route path="/" element={<HomePage />} />
       <Route path="/catalog" element={<CatalogPage />} />
-      <Route path="/promotions" element={<PromotionsPage />} /> {/* Новый маршрут */}
+      <Route path="/promotions" element={<PromotionsPage />} /> 
       <Route path="/about" element={<AboutPage />} />
       <Route path="/login" element={<LoginPage />} />
-
-
+      <Route path="/cart" element={<CartPage />} /> 
 
 
 

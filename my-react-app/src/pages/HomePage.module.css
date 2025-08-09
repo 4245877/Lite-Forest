@@ -349,10 +349,12 @@
 }
 
 .sliderTrack {
-  display: flex;
-  gap: 1.5rem;
+  --slide-width: 280px; /* десктопная ширина слайда */
   transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
   padding: 1rem 0;
+  display: flex;
+  gap: 1.5rem;
+  transform: translateX(calc(var(--current-slide, 0) * -1 * var(--slide-width)));
 }
 
 .productCard {
@@ -797,9 +799,5 @@
 
   .productCard {
     flex: 0 0 240px;
-  }
-
-  .sliderTrack {
-    transform: translateX(-${currentSlide * 260}px) !important; /* Учитываем новый размер и gap */
   }
 }
