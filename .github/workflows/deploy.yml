@@ -1,10 +1,7 @@
-# Имя вашего рабочего процесса
 name: Deploy React App to GitHub Pages
-
 on:
   push:
-    branches:
-      - main
+    branches: [ main ]
 
 permissions:
   contents: read
@@ -17,14 +14,7 @@ concurrency:
 
 jobs:
   deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-
     runs-on: ubuntu-latest
-
-    # 🔥 ИСПРАВЛЕНИЕ 1: Устанавливаем рабочую директорию по умолчанию
-    # Теперь все команды 'run' будут выполняться внутри папки 'my-react-app'
     defaults:
       run:
         working-directory: ./my-react-app
@@ -33,19 +23,29 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Debug repo files
+        run: |
+          echo "PWD: $(pwd)"
+          ls -la
+          ls -la my-react-app || true
+          git ls-files | grep -E "package-lock.json|yarn.lock|pnpm-lock.yaml" || true
+
+      - name: Cache npm
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('my-react-app/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm'
-          # 🔥 ИСПРАВЛЕНИЕ 2: Путь к lock-файлу теперь указывается относительно корня
-          cache-dependency-path: my-react-app/package-lock.json
 
-      # Теперь не нужно указывать 'working-directory'
       - name: Install dependencies
-        run: npm ci # Используем 'ci' для быстрой и надежной установки
+        run: npm ci
 
-      # И здесь тоже не нужно
       - name: Build
         run: npm run build
 
@@ -55,9 +55,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          # Важно: путь к артефакту указывается от корня репозитория
-          # Убедитесь, что папка называется 'dist'. Если вы используете Create React App, она называется 'build'.
-          path: './my-react-app/build' # или './my-react-app/dist'
+          path: './my-react-app/dist' # или './my-react-app/build' — проверьте, куда собирается ваш проект
 
       - name: Deploy to GitHub Pages
         id: deployment
