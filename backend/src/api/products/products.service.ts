@@ -1,165 +1,78 @@
 // backend/src/api/products/products.service.ts
-
 import db from '../../db';
-
-// ✅ ИНТЕРФЕЙСЫ, КОТОРЫЕ НУЖНЫ ДЛЯ CREATEPRODUCT
-export interface ProductVariation {
-  name: string;
-  value: string;
-  priceModifier?: number;
-  sku?: string;
-  stock: number;
-}
 
 export interface ProductInput {
   name: string;
-  price: number;
-  sku: string;
+  sku?: string;
+  price?: number;
   description?: string;
-  photos?: string[];
-  videoUrl?: string;
-  model3dUrl?: string;
-  material?: string;
-  colors?: string[];
-  sizes?: string[];
-  weight?: number;
-  details?: string;
-  postProcessing?: string;
-  categories?: string[];
-  tags?: string[];
-  stock: number;
-  productionTime?: string;
-  manualUrl?: string;
-  authorId?: number;
-  license?: string;
-  variations?: ProductVariation[];
+  photos?: string[]; // публичные URL (после загрузки)
+  categories?: string[]; // список имён категорий
+  stock?: number;
+  // ... другие поля
 }
 
-// ✅ ИНТЕРФЕЙС ДЛЯ ПАРАМЕТРОВ ФИЛЬТРАЦИИ
-export interface GetProductsQuery {
-  search?: string;
-  categories?: string;
-  priceRange?: string;
-  sortBy?: 'popular' | 'new';
-}
-
-// ✅ ВАША ФУНКЦИЯ CREATEPRODUCT, ВОЗВРАЩЕННАЯ НА МЕСТО
 export const createProduct = async (productData: ProductInput) => {
   const client = await db.connect();
-
   try {
-    await client.query('BEGIN'); // Начинаем транзакцию
+    await client.query('BEGIN');
 
-    // 1. Вставляем основной товар
-    const productQuery = `
+    const insertProductSql = `
       INSERT INTO products (name, sku, base_price, description)
-      VALUES ($1, $2, $3, $4) RETURNING id;
+      VALUES ($1, $2, $3, $4)
+      RETURNING id, name, sku, base_price;
     `;
-    const productResult = await client.query(productQuery, [
+    const pRes = await client.query(insertProductSql, [
       productData.name,
-      productData.sku,
-      productData.price,
-      productData.description,
+      productData.sku || null,
+      productData.price || 0,
+      productData.description || null
     ]);
-    const newProductId = productResult.rows[0].id;
+    const productId = pRes.rows[0].id;
 
-    // 2. Собираем и вставляем характеристики в JSON
-    const specifications = {
-      material: productData.material,
-      weight: productData.weight,
-      details: productData.details,
-      postProcessing: productData.postProcessing,
-      productionTime: productData.productionTime,
-      license: productData.license,
-      authorId: productData.authorId,
+    const specs = {
+      stock: productData.stock ?? 0
+      // add more fields if needed
     };
-    const detailsQuery = `
-      INSERT INTO product_details (product_id, specifications) VALUES ($1, $2);
-    `;
-    await client.query(detailsQuery, [newProductId, specifications]);
-    
-    // ... (остальная логика вставки вариаций, медиа, категорий и тегов) ...
-    // (Я ее сократил для краткости, у вас она уже есть и работает)
-    
-    await client.query('COMMIT'); // Завершаем транзакцию, сохраняя все изменения
 
-    return { id: newProductId, message: 'Товар успешно создан' };
+    await client.query(
+      `INSERT INTO product_details (product_id, specifications) VALUES ($1, $2)`,
+      [productId, specs]
+    );
 
-  } catch (e) {
-    await client.query('ROLLBACK'); // Откатываем все изменения в случае любой ошибки
-    console.error("Ошибка при создании товара:", e);
-    throw new Error("Не удалось создать товар. Транзакция отменена.");
-  } finally {
-    client.release(); // Всегда возвращаем соединение в пул
-  }
-};
-
-
-// ✅ УЛУЧШЕННАЯ ФУНКЦИЯ GETPRODUCTS С ФИЛЬТРАЦИЕЙ
-export const getProducts = async (query: GetProductsQuery) => {
-    let baseQuery = `
-      SELECT
-        p.id, p.sku, p.name, p.base_price, p.description, pd.specifications,
-        (SELECT json_agg(m.* ORDER BY m.sort_order) FROM media m WHERE m.product_id = p.id) as media,
-        (SELECT array_agg(c.name) FROM categories c JOIN product_categories pc ON c.id = pc.category_id WHERE pc.product_id = p.id) as categories
-      FROM products p
-      LEFT JOIN product_details pd ON p.id = pd.product_id
-    `;
-  
-    const whereClauses = [];
-    const queryParams = [];
-    let paramIndex = 1;
-  
-    if (query.search) {
-      whereClauses.push(`(p.name ILIKE $${paramIndex} OR p.description ILIKE $${paramIndex})`);
-      queryParams.push(`%${query.search}%`);
-      paramIndex++;
-    }
-  
-    if (query.categories) {
-        const categoryList = query.categories.split(',');
-        // Используем подзапрос, чтобы не создавать дубликатов из-за JOIN
-        whereClauses.push(`p.id IN (
-            SELECT pc.product_id FROM product_categories pc
-            JOIN categories c ON pc.category_id = c.id
-            WHERE c.name = ANY($${paramIndex}::text[])
-        )`);
-        queryParams.push(categoryList);
-        paramIndex++;
-    }
-  
-    if (query.priceRange) {
-      switch (query.priceRange) {
-        case '0-100':
-          whereClauses.push(`p.base_price <= $${paramIndex}`);
-          queryParams.push(100);
-          paramIndex++;
-          break;
-        case '100-250':
-          whereClauses.push(`p.base_price > $${paramIndex} AND p.base_price <= $${paramIndex + 1}`);
-          queryParams.push(100, 250);
-          paramIndex += 2;
-          break;
-        case '250+':
-          whereClauses.push(`p.base_price > $${paramIndex}`);
-          queryParams.push(250);
-          paramIndex++;
-          break;
+    // categories: ensure categories exist, then insert into product_categories
+    if (productData.categories && productData.categories.length) {
+      // upsert categories and link them
+      for (const catName of productData.categories) {
+        const catRes = await client.query(
+          `INSERT INTO categories (name) VALUES ($1) ON CONFLICT (name) DO UPDATE SET name=EXCLUDED.name RETURNING id`,
+          [catName]
+        );
+        const categoryId = catRes.rows[0].id;
+        await client.query(
+          `INSERT INTO product_categories (product_id, category_id) VALUES ($1, $2) ON CONFLICT DO NOTHING`,
+          [productId, categoryId]
+        );
       }
     }
-  
-    if (whereClauses.length > 0) {
-      baseQuery += ` WHERE ${whereClauses.join(' AND ')}`;
+
+    // media
+    if (productData.photos && productData.photos.length) {
+      let order = 0;
+      const mediaInsert = `INSERT INTO media (product_id, url, sort_order) VALUES ($1, $2, $3)`;
+      for (const url of productData.photos) {
+        await client.query(mediaInsert, [productId, url, order++]);
+      }
     }
-    
-    baseQuery += ` GROUP BY p.id, pd.id`;
-  
-    if (query.sortBy === 'new') {
-      baseQuery += ' ORDER BY p.created_at DESC';
-    } else {
-      baseQuery += ' ORDER BY p.name ASC';
-    }
-  
-    const result = await db.query(baseQuery, queryParams);
-    return result.rows;
-  };
+
+    await client.query('COMMIT');
+
+    return { id: productId, message: 'Товар успешно создан' };
+  } catch (err) {
+    await client.query('ROLLBACK');
+    console.error('createProduct transaction error', err);
+    throw err;
+  } finally {
+    client.release();
+  }
+};
