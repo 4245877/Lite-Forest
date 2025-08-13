@@ -6,6 +6,9 @@ import { BrowserRouter } from 'react-router-dom';
 import App from './App.jsx';
 import './index.css';
 
+// импорт глобальных стилей — ровно 1 раз в точке входа
+import './assets/styles/global.css';
+
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     {/* <HelmetProvider> <-- УДАЛИТЕ ЭТУ ОБЕРТКУ */}

@@ -4,29 +4,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
 /* CSS переменные */
-:root {
-  --eco-primary: #2d5a27;
-  --eco-secondary: #4a7c59;
-  --eco-accent: #52b788;
-  --eco-light: #95d5b2;
-  --eco-sand: #f1faee;
-  --eco-beige: #e9c46a;
-  --eco-cream: #fefcf3;
-  --eco-dark: #1b4332;
-  --text-primary: #2d3436;
-  --text-secondary: #636e72;
-  --text-light: #888;
-  --white: #ffffff;
-  --gradient-primary: linear-gradient(135deg, var(--eco-accent) 0%, var(--eco-secondary) 100%);
-  --gradient-hero: linear-gradient(135deg, var(--eco-sand) 0%, var(--eco-cream) 50%, #fff 100%);
-  --shadow-sm: 0 2px 8px rgba(45, 90, 39, 0.1);
-  --shadow-md: 0 4px 20px rgba(45, 90, 39, 0.15);
-  --shadow-lg: 0 8px 30px rgba(45, 90, 39, 0.2);
-  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  --border-radius: 16px;
-  --container-padding: 0 20px;
-  --section-gap: 6rem;
-}
+
 
 /* Основные стили */
 .homePage {

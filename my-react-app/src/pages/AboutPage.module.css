@@ -1,23 +1,6 @@
 /* Подключение шрифтов и CSS-переменных, аналогично HomePage */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
-/* Используем те же переменные, что и на главной странице */
-:root {
-  --eco-primary: #2d5a27;
-  --eco-secondary: #4a7c59;
-  --eco-accent: #52b788;
-  --eco-light: #95d5b2;
-  --eco-sand: #f1faee;
-  --eco-cream: #fefcf3;
-  --text-primary: #2d3436;
-  --text-secondary: #636e72;
-  --gradient-primary: linear-gradient(135deg, var(--eco-accent) 0%, var(--eco-secondary) 100%);
-  --shadow-sm: 0 2px 8px rgba(45, 90, 39, 0.1);
-  --shadow-md: 0 4px 20px rgba(45, 90, 39, 0.15);
-  --border-radius: 16px;
-  --section-gap: 6rem;
-  --container-padding: 0 20px;
-}
 
 /* Общие стили страницы */
 .aboutPage {
