@@ -2,10 +2,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@700&display=swap'); /* Для таймера */
 
-/* Мы используем CSS переменные (:root), определенные в глобальном файле стилей 
-  или в HomePage.module.css, если он загружается глобально. 
-  Например: --eco-primary, --eco-accent, --gradient-primary, --shadow-md и т.д.
-*/
+
 
 .promotionsPage {
   background-color: var(--eco-sand);

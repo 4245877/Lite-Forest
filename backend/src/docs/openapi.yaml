@@ -1,0 +1,51 @@
+openapi: 3.1.0
+info:
+  title: DRUKARNYA API
+  version: 1.0.0
+servers:
+  - url: https://api.example.com/api/v1
+paths:
+  /products:
+    get:
+      summary: List products
+      parameters:
+        - in: query
+          name: limit
+          schema: { type: integer, minimum: 1, maximum: 100, default: 20 }
+        - in: query
+          name: cursor
+          schema: { type: string }
+        - in: query
+          name: category_id
+          schema: { type: integer }
+        - in: query
+          name: brand
+          schema: { type: string }
+        - in: query
+          name: q
+          schema: { type: string }
+        - in: query
+          name: min_price
+          schema: { type: integer }
+        - in: query
+          name: max_price
+          schema: { type: integer }
+        - in: query
+          name: sort
+          schema: { type: string, enum: [relevance, newest, price_asc, price_desc], default: newest }
+      responses:
+        '200':
+          description: OK
+  /products/{id}:
+    get:
+      summary: Get product
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: OK
+        '404':
+          description: Not found

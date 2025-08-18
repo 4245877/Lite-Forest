@@ -1,31 +1,72 @@
-version: '3.8'
+version: "3.9"
 
 services:
-  # Название нашего сервиса (базы данных)
-  db:
-    # Используем официальный образ PostgreSQL версии 15
-    image: postgres:15
-    
-    # Всегда перезапускать контейнер, если он остановился
-    restart: always
-    
-    # Здесь мы передаем в контейнер данные из вашего .env файла
-    # ВАЖНО: Docker Compose автоматически подхватит ваш .env файл
-    environment:
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_DB: ${DB_NAME}
-      
-    # Пробрасываем порт. Делает базу данных доступной для подключения с вашего компьютера
-    # Формат: "порт_на_вашем_компьютере:порт_внутри_контейнера"
+  api:
+    build: .
+    image: drukarnya-api:dev
+    env_file: .env
     ports:
-      - "${DB_PORT}:5432"
-      
-    # Этот раздел КРИТИЧЕСКИ ВАЖЕН. Он сохраняет все данные вашей БД
-    # на вашем компьютере. Без него все товары исчезнут после перезапуска контейнера.
-    volumes:
-      - postgres-data:/var/lib/postgresql/data
+      - "8080:8080"
+    depends_on:
+      - postgres
+      - redis
+      - minio
+    command: ["sh", "-c", "npm run migrate:latest && npm run seed:run && node dist/server.js"]
+    restart: unless-stopped
 
-# Создаем "том" для хранения данных
+  worker:
+    build: .
+    image: drukarnya-worker:dev
+    env_file: .env
+    depends_on:
+      - postgres
+      - redis
+      - minio
+    command: ["npm", "run", "worker"]
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: drukarnya
+      POSTGRES_USER: drukarnya
+      POSTGRES_PASSWORD: drukarnya
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${PG_USER:-drukarnya} -d ${PG_DB:-drukarnya}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  redis:
+    image: redis:7
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
+  minio:
+    image: minio/minio:RELEASE.2024-07-25T18-49-40Z
+    environment:
+      MINIO_ROOT_USER: ${S3_ACCESS_KEY}
+      MINIO_ROOT_PASSWORD: ${S3_SECRET_KEY}
+    command: server /data --console-address ":9001"
+    ports:
+      - "9000:9000"   # S3 API
+      - "9001:9001"   # MinIO console
+    volumes:
+      - minio-data:/data
+    # NOTE: healthcheck for MinIO requires curl/wget inside image; many images don't have them.
+    # You can add an external healthcheck or use a small helper container if you need readiness checks.
+
 volumes:
-  postgres-data:
+  pgdata:
+  minio-data:

@@ -1,28 +1,41 @@
-// backend/src/server.ts
-
 import Fastify from 'fastify';
-import productRoutes from './api/products/products.routes';
+import cors from '@fastify/cors';
+import helmet from '@fastify/helmet';
+import sensible from '@fastify/sensible';
+import rateLimit from '@fastify/rate-limit';
+import { env } from './config/env';
+import { productsRoutes } from './api/products';
+import { healthRoutes } from './api/health';
+import { uploadRoutes } from './api/uploads';
+import { jobsRoutes } from './api/jobs';
+import { importRoutes } from './api/imports';
+import metricsPlugin from './monitoring/metrics';
+import errorHandler from './middlewares/errorHandler';
 
-const server = Fastify({ logger: true });
+async function bootstrap() {
+  const app = Fastify({ logger: { level: env.LOG_LEVEL } });
 
-// ✅ ПРАВИЛЬНО: Регистрируем все маршруты для продуктов,
-// которые мы определили в `products.routes.ts`.
-// Все запросы, начинающиеся с /api/products, будут переданы туда.
-server.register(productRoutes, { prefix: '/api/products' });
+  await app.register(sensible);
+  await app.register(helmet);
+  await app.register(cors, { origin: env.CORS_ORIGIN === '*' ? true : env.CORS_ORIGIN });
+  await app.register(rateLimit, { max: 100, timeWindow: '1 minute' });
+  await app.register(metricsPlugin);
+  await app.register(errorHandler);
 
-// ❌ Старый обработчик `server.get('/api/products', ...)` нужно удалить отсюда,
-// так как теперь эта логика находится внутри `products.routes.ts` и `products.controller.ts`.
+  await app.register(healthRoutes);
+  await app.register(productsRoutes);
 
+  // file uploads, jobs and import endpoints
+  await app.register(uploadRoutes);
+  await app.register(jobsRoutes);
+  await app.register(importRoutes);
 
-// Функция для запуска сервера
-const start = async () => {
-  try {
-    // Убедитесь, что вы используете другой порт, если фронтенд на 3000
-    await server.listen({ port: 3001, host: '0.0.0.0' }); 
-  } catch (err) {
-    server.log.error(err);
-    process.exit(1);
-  }
-};
+  await app.listen({ port: env.PORT, host: '0.0.0.0' });
+  app.log.info(`Server listening on :${env.PORT}`);
+}
 
-start();
+bootstrap().catch((e) => {
+  // eslint-disable-next-line no-console
+  console.error(e);
+  process.exit(1);
+});
