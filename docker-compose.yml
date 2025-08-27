@@ -1,3 +1,6 @@
+# Updated docker-compose.yml
+# Изменено: опубликованный хост-порт для postgres -> 5433:5432
+
 version: "3.9"
 
 services:
@@ -31,12 +34,14 @@ services:
       POSTGRES_DB: drukarnya
       POSTGRES_USER: drukarnya
       POSTGRES_PASSWORD: drukarnya
+    # Публикуем порт 5432 контейнера на 5433 хоста
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${PG_USER:-drukarnya} -d ${PG_DB:-drukarnya}"]
+      # Используем переменные POSTGRES_* чтобы соответствовать environment выше
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-drukarnya} -d ${POSTGRES_DB:-drukarnya}"]
       interval: 10s
       timeout: 5s
       retries: 5

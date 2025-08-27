@@ -46,13 +46,31 @@ importWorker.on('failed', (job: Job | undefined, err: Error) => {
   console.error(`bulk-imports: job ${job?.id} failed:`, err);
 });
 
-console.log('Workers started: image-processing, bulk-imports');
+// добавляем debug worker в конце файла
+const debugWorker = new Worker(
+  'debug',
+  async (job: Job) => {
+    console.log('Debug job received:', job.id, job.name, job.data);
+    return { ok: true };
+  },
+  { connection: redis }
+);
+
+debugWorker.on('completed', (job: Job, returnValue: unknown) => {
+  console.log(`debug: job ${job.id} completed`);
+});
+
+debugWorker.on('failed', (job: Job | undefined, err: Error) => {
+  console.error(`debug: job ${job?.id} failed:`, err);
+});
+
+console.log('Workers started: image-processing, bulk-imports, debug');
 
 // graceful shutdown
 async function shutdown(): Promise<void> {
   console.log('Shutting down workers...');
   try {
-    await Promise.all([imageWorker.close(), importWorker.close()]);
+    await Promise.all([imageWorker.close(), importWorker.close(), debugWorker.close()]);
     console.log('Workers stopped.');
     process.exit(0);
   } catch (err: unknown) {
@@ -68,3 +86,4 @@ process.on('SIGINT', () => {
 process.on('SIGTERM', () => {
   void shutdown();
 });
+

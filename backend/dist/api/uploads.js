@@ -7,11 +7,17 @@ export async function uploadRoutes(app) {
     await app.register(multipart, { limits: { fileSize: Number(process.env.UPLOAD_MAX_BYTES || 10 * 1024 * 1024) } });
     app.post('/api/v1/uploads', async (req, reply) => {
         const mp = await req.file();
-        if (!mp)
-            return reply.badRequest('No file');
+        if (!mp) {
+            return reply.code(400).send({
+                error: { code: 'VALIDATION_ERROR', message: 'No file' }
+            });
+        }
         const allowed = ['image/jpeg', 'image/png', 'image/webp'];
-        if (!allowed.includes(mp.mimetype))
-            return reply.badRequest('Unsupported content-type');
+        if (!allowed.includes(mp.mimetype)) {
+            return reply.code(400).send({
+                error: { code: 'VALIDATION_ERROR', message: 'Unsupported content-type' }
+            });
+        }
         const knex = getKnex();
         await ensureBucket(process.env.S3_BUCKET);
         const ext = mp.filename.split('.').pop()?.toLowerCase() || 'bin';

@@ -11,29 +11,29 @@ const Footer = () => {
           
           {/* Колонка 1: О компании */}
           <div className="footer-column">
-            <h3 className="footer-title">О компании</h3>
+            <h3 className="footer-title">Про компанію</h3>
             <div className="footer-logo">
               <div className="footer-logo-icon">🌿</div>
               <span>Lite-Forest</span>
             </div>
             <p className="footer-mission">
-              Мы создаём экологичное будущее через продвижение товаров из переработанных материалов и поддержку устойчивого потребления.
+             Ми створюємо екологічне майбутнє через просування товарів із перероблених матеріалів та підтримку сталого споживання.
             </p>
             <Link to="/about" className="footer-link-accent">
-              Узнать больше →
+              Дізнатися більше →
             </Link>
           </div>
 
           {/* Колонка 2: Категории */}
           <div className="footer-column">
-            <h3 className="footer-title">Категории</h3>
+            <h3 className="footer-title">Категорії</h3>
             <ul className="footer-links">
-              <li><Link to="/catalog/furniture">Мебель</Link></li>
+              <li><Link to="/catalog/furniture">Меблі</Link></li>
               <li><Link to="/catalog/textiles">Текстиль</Link></li>
-              <li><Link to="/catalog/accessories">Аксессуары</Link></li>
+              <li><Link to="/catalog/accessories">Аксесуари</Link></li>
               <li><Link to="/catalog/decor">Декор</Link></li>
               <li><Link to="/catalog/packaging">Упаковка</Link></li>
-              <li><Link to="/catalog/electronics">Электроника</Link></li>
+              <li><Link to="/catalog/electronics">Електроніка</Link></li>
             </ul>
           </div>
 
@@ -41,20 +41,20 @@ const Footer = () => {
           <div className="footer-column">
             <h3 className="footer-title">Поддержка</h3>
             <ul className="footer-links">
-              <li><Link to="/contacts">Контакты</Link></li>
-              <li><Link to="/faq">Вопросы и ответы</Link></li>
-              <li><Link to="/delivery">Условия доставки</Link></li>
-              <li><Link to="/returns">Возврат товара</Link></li>
-              <li><Link to="/support">Служба поддержки</Link></li>
-              <li><Link to="/help">Помощь покупателям</Link></li>
+              <li><Link to="/contacts">Контакти</Link></li>
+              <li><Link to="/faq">Питання та відповіді</Link></li>
+              <li><Link to="/delivery">Умови доставки</Link></li>
+              <li><Link to="/returns">Повернення товару</Link></li>
+              <li><Link to="/support">Служба підтримки</Link></li>
+              <li><Link to="/help">Допомога покупцям</Link></li>
             </ul>
           </div>
 
           {/* Колонка 4: Социальные сети */}
           <div className="footer-column">
-            <h3 className="footer-title">Мы в соцсетях</h3>
+            <h3 className="footer-title">Ми в соцмережах</h3>
             <p className="footer-social-text">
-              Следите за новостями и эко-трендами
+              Слідкуйте за новинами та еко-трендами
             </p>
             <div className="social-links">
               <a 
@@ -126,14 +126,14 @@ const Footer = () => {
         {/* Нижняя часть футера */}
         <div className="footer-bottom">
           <div className="footer-bottom-left">
-            <p>&copy; {new Date().getFullYear()} LiteForest. Все права защищены.</p>
+            <p>&copy; {new Date().getFullYear()} LiteForest. Усі права захищені.</p>
           </div>
           <div className="footer-bottom-right">
             <Link to="/privacy" className="footer-bottom-link">
-              Политика конфиденциальности
+              Політика конфіденційності
             </Link>
             <Link to="/terms" className="footer-bottom-link">
-              Пользовательское соглашение
+              Угода користувача
             </Link>
             <Link to="/cookies" className="footer-bottom-link">
               Cookies

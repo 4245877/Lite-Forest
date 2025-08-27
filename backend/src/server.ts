@@ -10,6 +10,7 @@ import { uploadRoutes } from './api/uploads';
 import { jobsRoutes } from './api/jobs';
 import { importRoutes } from './api/imports';
 import metricsPlugin from './monitoring/metrics';
+import readyPlugin from './monitoring/ready';
 import errorHandler from './middlewares/errorHandler';
 
 async function bootstrap() {
@@ -20,6 +21,7 @@ async function bootstrap() {
   await app.register(cors, { origin: env.CORS_ORIGIN === '*' ? true : env.CORS_ORIGIN });
   await app.register(rateLimit, { max: 100, timeWindow: '1 minute' });
   await app.register(metricsPlugin);
+  await app.register(readyPlugin);
   await app.register(errorHandler);
 
   await app.register(healthRoutes);

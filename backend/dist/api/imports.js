@@ -6,15 +6,21 @@ export async function importRoutes(app) {
     await app.register(multipart);
     app.post('/api/v1/imports', async (req, reply) => {
         const mp = await req.file();
-        if (!mp)
-            return reply.badRequest('No file');
+        if (!mp) {
+            return reply.code(400).send({
+                error: { code: 'VALIDATION_ERROR', message: 'No file' }
+            });
+        }
         const ok = [
             'text/csv',
             'application/vnd.ms-excel',
             'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
         ];
-        if (!ok.includes(mp.mimetype))
-            return reply.badRequest('Unsupported file type');
+        if (!ok.includes(mp.mimetype)) {
+            return reply.code(400).send({
+                error: { code: 'VALIDATION_ERROR', message: 'Unsupported file type' }
+            });
+        }
         await ensureBucket(process.env.S3_BUCKET);
         const ext = mp.filename.split('.').pop()?.toLowerCase() || 'csv';
         const key = `imports/${Date.now()}-${randomUUID()}.${ext}`;

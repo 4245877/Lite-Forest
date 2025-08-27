@@ -60,19 +60,19 @@ const Header = () => {
           aria-label="Основное меню"
         >
           <Link to="/" className="nav-link" onClick={handleNavLinkClick} ref={firstNavLinkRef}>
-            <span>Главная</span>
+            <span>Головна</span>
           </Link>
           <Link to="/catalog" className="nav-link" onClick={handleNavLinkClick}>
             <span>Каталог</span>
           </Link>
           <Link to="/promotions" className="nav-link" onClick={handleNavLinkClick}>
-            <span>Акции</span>
+            <span>Акції</span>
           </Link>
           <Link to="/about" className="nav-link" onClick={handleNavLinkClick}>
-            <span>О нас</span>
+            <span>Про нас</span>
           </Link>
           <Link to="/contacts" className="nav-link" onClick={handleNavLinkClick}>
-            <span>Контакты</span>
+            <span>Контакти</span>
           </Link>
         </nav>
 
