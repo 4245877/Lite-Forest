@@ -12,35 +12,35 @@ const HomePage = () => {
     {
       id: 1,
       name: 'Эко-бутылка из бамбука',
-      price: '1 290 ₽',
+      price: '1 290 ₴',
       image: '🌿',
       ecoScore: 95
     },
     {
       id: 2,
       name: 'Органическая косметичка',
-      price: '2 150 ₽',
+      price: '2 150 ₴',
       image: '🌱',
       ecoScore: 92
     },
     {
       id: 3,
       name: 'Набор эко-посуды',
-      price: '3 450 ₽',
+      price: '3 450 ₴',
       image: '🍃',
       ecoScore: 98
     },
     {
       id: 4,
       name: 'Органическое мыло',
-      price: '450 ₽',
+      price: '450 ₴',
       image: '🌾',
       ecoScore: 89
     },
     {
       id: 5,
       name: 'Льняная сумка-шоппер',
-      price: '890 ₽',
+      price: '890 ₴',
       image: '🌿',
       ecoScore: 94
     }
@@ -50,29 +50,29 @@ const HomePage = () => {
   const categories = [
     {
       id: 1,
-      name: 'Эко-упаковка',
-      slogan: 'Сохраним природу вместе',
+      name: 'Еко-упаковка',
+      slogan: 'Збережемо природу разом',
       icon: '📦',
       bgColor: '#f0fdf4'
     },
     {
       id: 2,
-      name: 'Сад и дача',
-      slogan: 'Выращивай экологично',
+      name: 'Сад та дача',
+      slogan: 'Вирощуй екологічно',
       icon: '🌱',
       bgColor: '#f7fee7'
     },
     {
       id: 3,
-      name: 'Домашний уют',
-      slogan: 'Комфорт без вреда',
+      name: 'Домашній затишок',
+      slogan: 'Комфорт без шкоди',
       icon: '🏠',
       bgColor: '#fefce8'
     },
     {
       id: 4,
-      name: 'Красота и здоровье',
-      slogan: 'Натуральная красота',
+      name: 'Краса та здоров я',
+      slogan: 'Натуральна краса',
       icon: '💚',
       bgColor: '#f0f9ff'
     }
@@ -82,23 +82,23 @@ const HomePage = () => {
   const benefits = [
     {
       icon: '♻️',
-      title: '100% эко-материалы',
-      description: 'Только сертифицированные экологичные товары'
+      title: '100% еко-матеріали',
+      description: 'Лише сертифіковані екологічні товари'
     },
     {
       icon: '🤝',
-      title: 'Поддержка локальных производителей',
-      description: 'Развиваем местную эко-экономику'
+      title: 'Підтримка локальних виробників',
+      description: 'Розвиваємо місцеву еко-економіку'
     },
     {
       icon: '🚚',
-      title: 'Быстрая доставка',
-      description: 'Доставка в эко-упаковке за 1-2 дня'
+      title: 'Швидка доставка',
+      description: 'Доставка в еко-упаковці за 1-2 дня'
     },
     {
       icon: '✅',
-      title: 'Гарантия качества',
-      description: '30 дней на возврат, пожизненная поддержка'
+      title: 'Гарантія якості',
+      description: '30 днів на повернення, пожиттєва підтримка'
     }
   ];
 
@@ -123,7 +123,7 @@ const HomePage = () => {
     e.preventDefault();
     if (email) {
       // Здесь будет логика подписки
-      alert('Спасибо за подписку на эко-новости!');
+      alert('Дякуємо за передплату на еко-новини!');
       setEmail('');
     }
   };
@@ -134,22 +134,22 @@ const HomePage = () => {
       <section className={styles.hero}>
         <div className={styles.heroContent}>
           <div className={styles.heroText}>
-            <span className={styles.heroLabel}>🌿 Экологичные покупки</span>
+            <span className={styles.heroLabel}>🌿 Екологічні покупки</span>
             <h1 className={styles.heroTitle}>
-              Добро пожаловать в <span className={styles.titleAccent}>Lite-Forest</span>
+              Ласкаво просимо в <span className={styles.titleAccent}>Lite-Forest</span>
             </h1>
             <p className={styles.heroSubtitle}>
-              Купи экологично — живи лучше. Откройте для себя мир устойчивых товаров, созданных с заботой о планете и будущих поколениях.
+              Купуй екологічно — живи краще. Відкрийте для себе світ сталих товарів, створених з турботою про країну і майбутні покоління.
             </p>
             <div className={styles.heroActions}>
               <Link to="/catalog" className={styles.ctaButton}>
-                <span>Перейти в каталог</span>
+                <span>Перейти до каталогу</span>
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                   <path d="M5 12h14M12 5l7 7-7 7"/>
                 </svg>
               </Link>
               <Link to="/about" className={styles.secondaryButton}>
-                Узнать больше
+                Дізнатися більше
               </Link>
             </div>
           </div>
@@ -169,9 +169,9 @@ const HomePage = () => {
       <section className={styles.categories}>
         <div className={styles.container}>
           <div className={styles.sectionHeader}>
-            <h2 className={styles.sectionTitle}>Популярные категории</h2>
+            <h2 className={styles.sectionTitle}>Популярні категорії</h2>
             <p className={styles.sectionSubtitle}>
-              Выбирайте из наших самых востребованных эко-категорий
+              Обирайте з наших найпопулярніших еко-категорій
             </p>
           </div>
           <div className={styles.categoriesGrid}>
@@ -198,14 +198,14 @@ const HomePage = () => {
           <div className={styles.sectionHeader}>
             <h2 className={styles.sectionTitle}>Новинки</h2>
             <p className={styles.sectionSubtitle}>
-              Свежие поступления эко-товаров от наших партнёров
+              Свіжі надходження еко-товарів від наших партнерів
             </p>
           </div>
           <div className={styles.slider}>
             <button
               className={`${styles.sliderBtn} ${styles.sliderBtnPrev}`}
               onClick={() => handleSlideChange('prev')}
-              aria-label="Предыдущий товар"
+              aria-label="Попередній товар"
             >
               ←
             </button>
@@ -225,7 +225,7 @@ const HomePage = () => {
                     <div className={styles.productInfo}>
                       <h4 className={styles.productName}>{product.name}</h4>
                       <div className={styles.productPrice}>{product.price}</div>
-                      <button className={styles.productBtn}>В корзину</button>
+                      <button className={styles.productBtn}>В кошик</button>
                     </div>
                   </div>
                 ))}
@@ -234,7 +234,7 @@ const HomePage = () => {
             <button
               className={`${styles.sliderBtn} ${styles.sliderBtnNext}`}
               onClick={() => handleSlideChange('next')}
-              aria-label="Следующий товар"
+              aria-label="Наступний товар"
             >
               →
             </button>
@@ -245,7 +245,7 @@ const HomePage = () => {
                 key={index}
                 className={`${styles.sliderDot} ${index === currentSlide ? styles.sliderDotActive : ''}`}
                 onClick={() => setCurrentSlide(index)}
-                aria-label={`Перейти к товару ${index + 1}`}
+                aria-label={`Перейти до товару ${index + 1}`}
               />
             ))}
           </div>
@@ -256,9 +256,9 @@ const HomePage = () => {
       <section className={styles.benefits}>
         <div className={styles.container}>
           <div className={styles.sectionHeader}>
-            <h2 className={styles.sectionTitle}>Почему выбирают нас?</h2>
+            <h2 className={styles.sectionTitle}>Чому обирають нас?</h2>
             <p className={styles.sectionSubtitle}>
-              Наши принципы и преимущества для осознанных покупателей
+              Наші принципи і переваги для усвідомлених покупців
             </p>
           </div>
           <div className={styles.benefitsGrid}>
@@ -279,10 +279,10 @@ const HomePage = () => {
           <div className={styles.newsletterContent}>
             <div className={styles.newsletterText}>
               <h2 className={styles.newsletterTitle}>
-                Будьте в курсе эко-новинок
+                Будьте в курсі еко-новинок
               </h2>
               <p className={styles.newsletterSubtitle}>
-                Подпишитесь на нашу рассылку и получайте информацию о новых товарах, акциях и эко-трендах
+                Підпишіться на нашу розсилку та отримуйте інформацію про нові товари, акції та еко-тренди
               </p>
             </div>
             <form className={styles.newsletterForm} onSubmit={handleNewsletterSubmit}>
@@ -296,11 +296,11 @@ const HomePage = () => {
                   required
                 />
                 <button type="submit" className={styles.newsletterBtn}>
-                  Подписаться
+                  Підписатися
                 </button>
               </div>
               <p className={styles.newsletterPrivacy}>
-                Нажимая "Подписаться", вы соглашаетесь с <Link to="/privacy">политикой конфиденциальности</Link>
+                Натискаючи "Підписатися", ви погоджуєтесь з <Link to="/privacy">політикою конфіденційності</Link>
               </p>
             </form>
           </div>

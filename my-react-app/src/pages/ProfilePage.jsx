@@ -5,18 +5,18 @@ import styles from './ProfilePage.module.css';
 // Небольшие демонстрационные подкомпоненты — можно вынести в отдельные файлы позже
 const Overview = ({ user }) => (
   <section className={styles.section} aria-label="Overview">
-    <h2 className={styles.sectionTitle}>Обзор</h2>
+    <h2 className={styles.sectionTitle}>Огляд</h2>
     <div className={styles.card}>
-      <h3>Профиль</h3>
-      <p><strong>Имя:</strong> {user.name}</p>
+      <h3>Профіль</h3>
+      <p><strong>Ім'я:</strong> {user.name}</p>
       <p><strong>Email:</strong> {user.email}</p>
-      <Link to="/profile/edit" className={styles.linkBtn}>Редактировать профиль</Link>
+      <Link to="/profile/edit" className={styles.linkBtn}>Редагувати профіль</Link>
     </div>
     <div className={styles.card}>
-      <h3>Быстрые действия</h3>
+      <h3>Швидкі дії</h3>
       <div className={styles.actionsRow}>
-        <Link to="/orders" className={styles.action}>Мои заказы</Link>
-        <Link to="/favorites" className={styles.action}>Избранное</Link>
+        <Link to="/orders" className={styles.action}>Мої замовлення</Link>
+        <Link to="/favorites" className={styles.action}>Обране</Link>
       </div>
     </div>
   </section>
@@ -31,9 +31,9 @@ const Orders = () => {
 
   return (
     <section className={styles.section} aria-label="Orders">
-      <h2 className={styles.sectionTitle}>Заказы</h2>
+      <h2 className={styles.sectionTitle}>Замовлення</h2>
       {demoOrders.length === 0 ? (
-        <p>У вас пока нет заказов.</p>
+        <p>У вас поки що немає замовлень.</p>
       ) : (
         <ul className={styles.ordersList}>
           {demoOrders.map(o => (
@@ -45,7 +45,7 @@ const Orders = () => {
               <div className={styles.orderFoot}>
                 <span>{o.total}</span>
                 <span className={styles.status}>{o.status}</span>
-                <Link to={`/orders/${o.id}`} className={styles.btnSmall}>Подробнее</Link>
+                <Link to={`/orders/${o.id}`} className={styles.btnSmall}>Докладніше</Link>
               </div>
             </li>
           ))}
@@ -59,8 +59,8 @@ const Addresses = () => (
   <section className={styles.section} aria-label="Addresses">
     <h2 className={styles.sectionTitle}>Адреса доставки</h2>
     <div className={styles.card}>
-      <p>Добавьте адрес для быстрой доставки.</p>
-      <Link to="/profile/addresses" className={styles.linkBtn}>Управлять адресами</Link>
+      <p>Додати адресу для швидкої доставки.</p>
+      <Link to="/profile/addresses" className={styles.linkBtn}>Керувати адресами</Link>
     </div>
   </section>
 );
@@ -74,8 +74,8 @@ const ProfilePage = () => {
   return (
     <div className={styles.container}>
       <div className={styles.headerRow}>
-        <h1 className={styles.title}>Личный кабинет</h1>
-        <div className={styles.smallNote}>Добро пожаловать, <strong>{user.name.split(' ')[0]}</strong></div>
+        <h1 className={styles.title}>Особистий кабінет</h1>
+        <div className={styles.smallNote}>Ласкаво просимо, <strong>{user.name.split(' ')[0]}</strong></div>
       </div>
 
       <div className={styles.grid}>
@@ -91,10 +91,10 @@ const ProfilePage = () => {
           <nav className={styles.menu} aria-label="Панель навигации">
             <button onClick={() => setTab('overview')} className={`${styles.menuItem} ${tab === 'overview' ? styles.active : ''}`}>Обзор</button>
             <button onClick={() => setTab('orders')} className={`${styles.menuItem} ${tab === 'orders' ? styles.active : ''}`}>Заказы</button>
-            <button onClick={() => setTab('addresses')} className={`${styles.menuItem} ${tab === 'addresses' ? styles.active : ''}`}>Адреса</button>
-            <Link to="/favorites" className={styles.menuItemLink}>Избранное</Link>
-            <Link to="/profile/settings" className={styles.menuItemLink}>Настройки</Link>
-            <Link to="/" className={styles.menuItemLink}>Вернуться в магазин</Link>
+            <button onClick={() => setTab('addresses')} className={`${styles.menuItem} ${tab === 'addresses' ? styles.active : ''}`}>Адреси</button>
+            <Link to="/favorites" className={styles.menuItemLink}>Обране</Link>
+            <Link to="/profile/settings" className={styles.menuItemLink}>Налаштування</Link>
+            <Link to="/" className={styles.menuItemLink}>Повернутись до магазину</Link>
           </nav>
         </aside>
 

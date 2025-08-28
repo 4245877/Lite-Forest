@@ -6,33 +6,33 @@ import './CatalogPage.css';
 
 // Категории — структурированные (slug/id, name, parent)
 const structuredCategories = [
-  { id: 'all', name: 'Все категории', parent: null },
-  { id: 'novelties', name: 'Новинки и хиты', parent: null },
+  { id: 'all', name: 'Усі категорії', parent: null },
+  { id: 'novelties', name: 'Новинки та хіти', parent: null },
   { id: 'custom-print', name: 'Печать на заказ', parent: null },
 
-  { id: 'dom-i-interer', name: 'Дом и интерьер', parent: null },
+  { id: 'dom-i-interer', name: 'Будинок та інтер єр', parent: null },
   { id: 'decor', name: 'Декор', parent: 'dom-i-interer' },
-  { id: 'lighting', name: 'Освещение', parent: 'dom-i-interer' },
+  { id: 'lighting', name: 'Освітлення', parent: 'dom-i-interer' },
   { id: 'kitchen', name: 'Кухня', parent: 'dom-i-interer' },
-  { id: 'storage', name: 'Хранение и организация', parent: 'dom-i-interer' },
+  { id: 'storage', name: 'Зберігання та організація', parent: 'dom-i-interer' },
 
-  { id: 'toys-gaming', name: 'Игрушки и настольные игры', parent: null },
-  { id: 'miniatures', name: 'Миниатюры и коллекционные модели', parent: 'toys-gaming' },
+  { id: 'toys-gaming', name: 'Іграшки та настільні ігри', parent: null },
+  { id: 'miniatures', name: 'Мініатюри та колекційні моделі', parent: 'toys-gaming' },
 
-  { id: 'electronics', name: 'Электроника и гаджеты', parent: null },
-  { id: 'gadgets-accessories', name: 'Аксессуары для гаджетов', parent: 'electronics' },
+  { id: 'electronics', name: 'Електроніка та гаджети', parent: null },
+  { id: 'gadgets-accessories', name: 'Аксесуари для гаджетів', parent: 'electronics' },
 
-  { id: 'wearables-merch', name: 'Одежда, украшения и мерч', parent: null },
-  { id: 'hobby-diy', name: 'Хобби, модели и DIY', parent: null },
-  { id: 'auto-moto', name: 'Авто и мото', parent: null },
-  { id: 'sport-outdoor', name: 'Спорт, туризм и отдых', parent: null },
-  { id: 'tools-workshop', name: 'Инструменты, оснастка и мастерская', parent: null },
-  { id: 'parts-fasteners', name: 'Запчасти и крепёж', parent: null },
-  { id: 'pets', name: 'Товары для животных', parent: null },
-  { id: 'medical', name: 'Медицина и реабилитация', parent: null },
-  { id: 'gifts', name: 'Праздники, подарки и сувениры', parent: null },
-  { id: 'materials', name: 'Материалы и расходные (filament и пр.)', parent: null },
-  { id: 'education-stem', name: 'Образование, наука и STEM', parent: null },
+  { id: 'wearables-merch', name: 'Одяг, прикраси та мерч', parent: null },
+  { id: 'hobby-diy', name: 'Хобі, моделі та DIY', parent: null },
+  { id: 'auto-moto', name: 'Авто та мото', parent: null },
+  { id: 'sport-outdoor', name: 'Спорт, туризм та відпочинок', parent: null },
+  { id: 'tools-workshop', name: 'Інструменти, оснащення та майстерня', parent: null },
+  { id: 'parts-fasteners', name: 'Запчастини та кріплення', parent: null },
+  { id: 'pets', name: 'Товари для тварин', parent: null },
+  { id: 'medical', name: 'Медицина та реабілітація', parent: null },
+  { id: 'gifts', name: 'Свята, подарунки та сувеніри', parent: null },
+  { id: 'materials', name: 'Матеріали та видаткові (filament та ін.)', parent: null },
+  { id: 'education-stem', name: 'Освіта, наука та STEM', parent: null },
 ];
 
 const buildCategoryTree = (cats) => {
@@ -166,8 +166,8 @@ const CatalogPage = () => {
   });
 
   const renderContent = () => {
-    if (isLoading) return <p>Загрузка товаров...</p>;
-    if (error) return <p className="error">Ошибка: {error}</p>;
+    if (isLoading) return <p>Завантаження товарів...</p>;
+    if (error) return <p className="error">Помилка: {error}</p>;
     if (products.length > 0) {
       return products.map(p => (
         <div role="listitem" key={p.id ?? p._id ?? JSON.stringify(p)}>
@@ -178,7 +178,7 @@ const CatalogPage = () => {
     return <p>По вашему запросу ничего не найдено.</p>;
   };
 
-  useEffect(() => { document.title = 'Каталог товаров - DRUKARNYA'; }, []);
+  useEffect(() => { document.title = 'Каталог товарів - Lite Forest'; }, []);
 
   return (
     <div className="catalog-page">
@@ -186,15 +186,15 @@ const CatalogPage = () => {
 
       <header className="catalog-header">
         <h1>Каталог</h1>
-        <button className="mobile-filters-toggle" onClick={toggleFiltersVisibility} aria-expanded={isFiltersVisible}>Фильтры</button>
+        <button className="mobile-filters-toggle" onClick={toggleFiltersVisibility} aria-expanded={isFiltersVisible}>Фільтри</button>
       </header>
 
       <SearchBar onSearch={handleSearch} allProducts={products} />
 
       <div className="catalog-content">
-        <aside className={`filters-panel ${isFiltersVisible ? 'visible' : ''}`} aria-label="Фильтры каталога">
+        <aside className={`filters-panel ${isFiltersVisible ? 'visible' : ''}`} aria-label="Фільтри каталогу">
           <div className="filter-group">
-            <h3>Категории</h3>
+            <h3>Категорії</h3>
             <div className="category-list">
               {categoryTree.map(cat => (
                 <div key={cat.id} className="category-block">
@@ -228,18 +228,18 @@ const CatalogPage = () => {
           </div>
 
           <div className="filter-group">
-            <h3>Цена, ₴</h3>
+            <h3>Ціна, ₴</h3>
             <div className="price-filter">
-              <input type="number" placeholder="от" value={minPrice} onChange={handleMinPriceChange} className="price-input" />
+              <input type="number" placeholder="від" value={minPrice} onChange={handleMinPriceChange} className="price-input" />
               <span className="price-separator">–</span>
               <input type="number" placeholder="до" value={maxPrice} onChange={handleMaxPriceChange} className="price-input" />
             </div>
           </div>
 
           <div className="filter-group">
-            <h3>Материал</h3>
-            <select value={material} onChange={handleMaterialChange} aria-label="Фильтр по материалу">
-              <option value="">— любой —</option>
+            <h3>Матеріал</h3>
+            <select value={material} onChange={handleMaterialChange} aria-label="Фільтр по матеріалу">
+              <option value="">— будь-який —</option>
               <option value="PLA">PLA</option>
               <option value="PETG">PETG</option>
               <option value="ABS">ABS</option>
@@ -249,9 +249,9 @@ const CatalogPage = () => {
           </div>
 
           <div className="filter-group">
-            <h3>Технология печати</h3>
-            <select value={printTech} onChange={handlePrintTechChange} aria-label="Фильтр по технологии печати">
-              <option value="">— любая —</option>
+            <h3>Технологія друку</h3>
+            <select value={printTech} onChange={handlePrintTechChange} aria-label="Фільтр по технології друку">
+              <option value="">— будь-яка —</option>
               <option value="FDM">FDM</option>
               <option value="SLA">SLA</option>
               <option value="SLS">SLS</option>
@@ -268,18 +268,18 @@ const CatalogPage = () => {
               setPrintTech('');
               setSearchInput('');
               setSearchQuery('');
-            }}>Сбросить фильтры</button>
+            }}>Скинути фільтри</button>
           </div>
         </aside>
 
         <main className="product-grid">
           <div className="products-header">
-            <span className="products-count">Найдено товаров: {products.length}</span>
+            <span className="products-count">Знайдено товарів: {products.length}</span>
             <select className="sort-by" value={sortBy} onChange={handleSortChange} aria-label="Сортировка">
-              <option value="popular">Сначала популярные</option>
-              <option value="new">Сначала новые</option>
-              <option value="price_asc">Сначала дешёвые</option>
-              <option value="price_desc">Сначала дорогие</option>
+              <option value="popular">Спочатку популярні</option>
+              <option value="new">Спочатку нові</option>
+              <option value="price_asc">Спершу дешеві</option>
+              <option value="price_desc">Спочатку дорогі</option>
             </select>
           </div>
 

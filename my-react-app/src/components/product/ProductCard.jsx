@@ -44,11 +44,11 @@ const ProductCard = ({
         
         <div className="product-pricing">
           <div className="current-price">
-            {formatPrice(price)} ₽
+            {formatPrice(price)} ₴
           </div>
           {oldPrice && (
             <div className="old-price">
-              {formatPrice(oldPrice)} ₽
+              {formatPrice(oldPrice)} ₴
             </div>
           )}
         </div>

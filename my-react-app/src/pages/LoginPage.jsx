@@ -26,10 +26,10 @@ const LoginForm = ({ onToggleForm }) => {
     // ЗАМЕНИТЕ ЭТОТ КОД РЕАЛЬНЫМ ВЫЗОВОМ API
     await new Promise(resolve => setTimeout(resolve, 1500));
     if (email === "test@example.com" && password === "password123") {
-      alert('Успешный вход!');
+      alert('Успішний вхід!');
       // Здесь должен быть редирект на главную страницу
     } else {
-      setError('Неверный email или пароль.');
+      setError('Неправильний email або пароль.');
     }
     // ------------------------------------
 
@@ -38,7 +38,7 @@ const LoginForm = ({ onToggleForm }) => {
 
   return (
     <form onSubmit={handleSubmit}>
-      <h2 className={styles.formTitle}>Вход в аккаунт</h2>
+      <h2 className={styles.formTitle}>Вхід в аккаунт</h2>
 
       {error && <div className={styles.serverError}>{error}</div>}
 
@@ -63,30 +63,30 @@ const LoginForm = ({ onToggleForm }) => {
           className={styles.input}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          aria-label="Поле для ввода пароля"
+          aria-label="Поле для введення пароля"
           required
         />
         <span
           className={styles.passwordToggle}
           onClick={() => setShowPassword(!showPassword)}
-          aria-label={showPassword ? "Скрыть пароль" : "Показать пароль"}
+          aria-label={showPassword ? "Приховати пароль" : "Показати пароль"}
         >
           {showPassword ? <FaEyeSlash /> : <FaEye />}
         </span>
       </div>
       
       <div className={styles.linkGroup}>
-          <a href="#" className={styles.formLink}>Забыли пароль?</a>
+          <a href="#" className={styles.formLink}>Забули пароль?</a>
       </div>
 
       <button type="submit" className={styles.submitButton} disabled={!isFormValid || loading}>
-        {loading ? 'Входим...' : 'Войти'}
+        {loading ? 'Входимо...' : 'Війти'}
       </button>
 
       <p className={styles.toggleForm}>
-        Нет аккаунта?{' '}
+        Немає аккаунта?{' '}
         <a href="#" onClick={onToggleForm} className={styles.formLink}>
-          Зарегистрироваться
+          Зареєструватися
         </a>
       </p>
     </form>
@@ -104,9 +104,9 @@ const RegisterForm = ({ onToggleForm }) => {
 
   const validateForm = () => {
     const newErrors = {};
-    if (!email.includes('@')) newErrors.email = 'Введите корректный email.';
-    if (password.length < 8) newErrors.password = 'Пароль должен быть не менее 8 символов.';
-    if (password !== confirmPassword) newErrors.confirmPassword = 'Пароли не совпадают.';
+    if (!email.includes('@')) newErrors.email = 'Введіть правильний email.';
+    if (password.length < 8) newErrors.password = 'Пароль має бути не менше 8 символів.';
+    if (password !== confirmPassword) newErrors.confirmPassword = 'Паролі не збігаються.';
     
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -126,9 +126,9 @@ const RegisterForm = ({ onToggleForm }) => {
     await new Promise(resolve => setTimeout(resolve, 1500));
     // Допустим, email уже занят
     if (email === "test@example.com") {
-      setServerError('Пользователь с таким email уже существует.');
+      setServerError('Користувач із таким email вже існує.');
     } else {
-       alert('Регистрация прошла успешно!');
+       alert('Реєстрація пройшла успішно!');
       // Здесь можно переключить на форму входа или сделать редирект
     }
     // ------------------------------------
@@ -138,7 +138,7 @@ const RegisterForm = ({ onToggleForm }) => {
 
   return (
     <form onSubmit={handleSubmit}>
-      <h2 className={styles.formTitle}>Создание аккаунта</h2>
+      <h2 className={styles.formTitle}>Створення аккаунта</h2>
 
        {serverError && <div className={styles.serverError}>{serverError}</div>}
 
@@ -173,7 +173,7 @@ const RegisterForm = ({ onToggleForm }) => {
       </div>
       
       <div className={styles.inputGroup}>
-        <label htmlFor="reg-confirm-password" className={styles.inputLabel}>Подтвердите пароль</label>
+        <label htmlFor="reg-confirm-password" className={styles.inputLabel}>Підтвердьте пароль</label>
         <input
           id="reg-confirm-password"
           type="password"
@@ -192,9 +192,9 @@ const RegisterForm = ({ onToggleForm }) => {
       </button>
 
       <p className={styles.toggleForm}>
-        Уже есть аккаунт?{' '}
+        Вже є обліковий аккаунт?{' '}
         <a href="#" onClick={onToggleForm} className={styles.formLink}>
-          Войти
+          Увійти
         </a>
       </p>
     </form>
@@ -218,9 +218,9 @@ const LoginPage = () => {
         <div className={styles.brandLogo} aria-hidden="true">
           🌿
         </div>
-        <h1 className={styles.brandTitle}>DRUKARNYA</h1>
+        <h1 className={styles.brandTitle}>Lite Forest</h1>
         <p className={styles.brandSlogan}>
-          Ваш надежный партнер в мире экологичной продукции и осознанного потребления.
+          Ваш надійний партнер у світі екологічної продукції та усвідомленого споживання.
         </p>
       </div>
 
