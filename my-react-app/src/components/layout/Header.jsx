@@ -25,6 +25,21 @@ const Header = () => {
     };
   }, [isMobileMenuOpen]);
 
+
+  // Закрывать мобильное меню, если перешли на десктоп (>768px)
+  useEffect(() => {
+    const mql = window.matchMedia('(min-width: 769px)');
+    const onChange = (e) => { if (e.matches) setIsMobileMenuOpen(false); };
+    // поддержка старых браузеров
+    if (mql.addEventListener) mql.addEventListener('change', onChange);
+    else mql.addListener(onChange);
+    return () => {
+      if (mql.removeEventListener) mql.removeEventListener('change', onChange);
+      else mql.removeListener(onChange);
+    };
+  }, []);
+
+
   // Закрыть меню по Escape
   useEffect(() => {
     const onKeyDown = (e) => {

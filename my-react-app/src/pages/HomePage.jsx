@@ -136,7 +136,7 @@ const HomePage = () => {
           <div className={styles.heroText}>
             <span className={styles.heroLabel}>🌿 Екологічні покупки</span>
             <h1 className={styles.heroTitle}>
-              Ласкаво просимо в <span className={styles.titleAccent}>Lite-Forest</span>
+              Ласкаво просимо в <span className={styles.titleAccent}>Lite Forest</span>
             </h1>
             <p className={styles.heroSubtitle}>
               Купуй екологічно — живи краще. Відкрийте для себе світ сталих товарів, створених з турботою про країну і майбутні покоління.
