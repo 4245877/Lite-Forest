@@ -31,16 +31,16 @@ export default function ContactPage() {
   const [form, setForm] = useState({ name: '', email: '', order: '', topic: 'order', message: '' });
 
   const faqItems = [
-    { q: 'Какие сроки изготовления и доставки?', a: 'Срок печати 2–5 рабочих дней в зависимости от загрузки. Доставка по Украине обычно 1–3 дня.' },
-    { q: 'Как я могу отследить свой заказ?', a: 'После отправки на e-mail придёт трек-номер курьерской службы и ссылка для отслеживания.' },
-    { q: 'Сколько стоит доставка в мой город?', a: 'Стоимость доставки зависит от региона. Стандартная ставка — 50 грн, при достижении порога бесплатной доставки — доставка бесплатна.' },
-    { q: 'Из какого материала вы печатаете? Насколько он прочный?', a: 'Мы используем фотополимер для деталей высокой точности и PLA/ABS для крупных элементов. Подберём материал под задачу.' },
-    { q: 'Можно ли заказать модель в другом цвете/размере?', a: 'Да — укажите желаемые параметры в теме заказа или через форму кастомного заказа.' },
-    { q: 'Что делать, если товар пришел с дефектом?', a: 'Свяжитесь с нами, приложите фото дефекта и номер заказа. Мы оперативно решим вопрос — возврат или переделка.' },
-    { q: 'Можете ли вы напечатать по моей 3D-модели?', a: 'Да. Отправьте STL/OBJ-файл — мы оценим и согласуем стоимость и сроки.' },
-    { q: 'Как рассчитывается стоимость индивидуального заказа?', a: 'Стоимость зависит от времени печати, материалов и постобработки. Мы предоставляем коммерческое предложение после оценки модели.' },
-    { q: 'Какие есть способы оплаты?', a: 'Принимаем карту (Visa/MasterCard), Google Pay, а также безналичный перевод для юрлиц.' },
-    { q: 'Можете ли вы выставить счет для компании (юрлица)?', a: 'Да, можем выставить счёт и отправить реквизиты для оплаты. Укажите это в форме — мы подготовим документы.' },
+    { q: 'Які терміни виготовлення та доставки?', a: 'Термін друку 2–5 робочих днів, залежно від завантаження. Доставка по Україні зазвичай 1-3 дні.' },
+    { q: 'Як я можу відстежити своє замовлення?', a: 'Після відправки на e-mail прийде трек-номер кур єрської служби та посилання для відстеження.' },
+    { q: 'Скільки коштує доставка до мого міста?', a: 'Вартість доставки залежить від регіону. Стандартна ставка - 50 грн, при досягненні порога безкоштовної доставки - доставка безкоштовна.' },
+    { q: 'З якого матеріалу ви друкуєте? Наскільки він міцний?', a: 'Ми використовуємо фотополімер для деталей високої точності та PLA/ABS для великих елементів. Підберемо матеріал під завдання.' },
+    { q: 'Чи можна замовити модель в іншому кольорі/розмірі?', a: 'Так, вкажіть бажані параметри в темі замовлення або через форму кастомного замовлення.' },
+    { q: 'Що робити, якщо товар прийшов із дефектом?', a: 'Зв яжіться з нами, додайте фото дефекту та номер замовлення. Ми оперативно вирішимо питання — повернення чи переробка.' },
+    { q: 'Чи можете ви надрукувати за моєю 3D-моделлю?', a: 'Так. Надішліть STL/OBJ-файл — ми оцінимо та узгодимо вартість та терміни.' },
+    { q: 'Як розраховується вартість індивідуального замовлення?', a: 'Вартість залежить від часу друку, матеріалів та постобробки. Ми надаємо комерційну пропозицію після оцінки моделі.' },
+    { q: 'Які є способи оплати?', a: 'Приймаємо карту (Visa/MasterCard), Google Pay, а також безготівковий переклад для юросіб.' },
+    { q: 'Чи можете ви виставити рахунок для компанії (юридичні особи)?', a: 'Так, можемо виставити рахунок та надіслати реквізити для оплати. Вкажіть це у формі – ми підготуємо документи.' },
   ];
 
   function handleChange(e) {
@@ -60,10 +60,10 @@ export default function ContactPage() {
         body: JSON.stringify(form),
       });
       if (!res.ok) throw new Error('network');
-      setStatus({ ok: true, msg: 'Сообщение отправлено! Мы свяжемся в течение 24 часов.' });
+      setStatus({ ok: true, msg: 'Повідомлення надіслано! Ми зв яжемося протягом 24 годин.' });
       setForm({ name: '', email: '', order: '', topic: 'order', message: '' });
     } catch (err) {
-      setStatus({ ok: false, msg: 'Ошибка отправки. Попробуйте позже или свяжитесь по телефону.' });
+      setStatus({ ok: false, msg: 'Помилка надсилання. Спробуйте пізніше або зв яжіться за телефоном.' });
     } finally {
       setSending(false);
     }
@@ -79,24 +79,24 @@ export default function ContactPage() {
   return (
     <div className={styles.container}>
       <header className={styles.header}>
-        <h1>Контакты и Помощь</h1>
-        <p className={styles.lead}>Нужна помощь? Выберите удобный способ: сначала посмотрите FAQ — он закрывает самые частые вопросы.</p>
+        <h1>Контакти та Допомога</h1>
+        <p className={styles.lead}>Потрібна допомога? Виберіть зручний спосіб: спочатку подивіться FAQ - він закриває найчастіші питання.</p>
       </header>
 
       <section className={styles.faqSection}>
-        <h2>Найдите ответ мгновенно</h2>
-        <p className={styles.small}>Часто задаваемые вопросы</p>
+        <h2>Знайдіть відповідь миттєво</h2>
+        <p className={styles.small}>Часті питання</p>
         <FAQ items={faqItems} />
       </section>
 
       <section className={styles.channels}>
-        <h2>Свяжитесь с нами напрямую</h2>
-        <p className={styles.small}>Выберите удобный способ связи</p>
+        <h2>Зв'яжіться з нами безпосередньо</h2>
+        <p className={styles.small}>Оберіть зручний спосіб зв'язку</p>
         <div className={styles.grid}>
           <a className={styles.channelCard} href="tel:+380XXXXXXXXX">
             <div className={styles.icon} aria-hidden>📞</div>
             <div>
-              <div className={styles.chTitle}>Позвонить нам</div>
+              <div className={styles.chTitle}>Зателефонувати нам</div>
               <div className={styles.chDesc}>+380 XX XXX XX XX<br/><span className={styles.muted}>Пн–Пт 10:00–19:00</span></div>
             </div>
           </a>
@@ -104,7 +104,7 @@ export default function ContactPage() {
           <a className={styles.channelCard} href="mailto:info@yourshop.com">
             <div className={styles.icon} aria-hidden>✉️</div>
             <div>
-              <div className={styles.chTitle}>Написать на Email</div>
+              <div className={styles.chTitle}>Написати на Email</div>
               <div className={styles.chDesc}>info@yourshop.com<br/><span className={styles.muted}>Отвечаем в течение 2–4 рабочих часов</span></div>
             </div>
           </a>
@@ -112,7 +112,7 @@ export default function ContactPage() {
           <div className={styles.channelCard}> 
             <div className={styles.icon} aria-hidden>💬</div>
             <div>
-              <div className={styles.chTitle}>Мессенджеры</div>
+              <div className={styles.chTitle}>Месенджери</div>
               <div className={styles.chDesc}>
                 <a href={messengers.telegram} target="_blank" rel="noreferrer">Telegram</a> · <a href={messengers.whatsapp} target="_blank" rel="noreferrer">WhatsApp</a> · <a href={messengers.viber} target="_blank" rel="noreferrer">Viber</a>
               </div>
@@ -122,7 +122,7 @@ export default function ContactPage() {
           <a className={styles.channelCard} href="/instagram" aria-label="Instagram">
             <div className={styles.icon} aria-hidden>❤️</div>
             <div>
-              <div className={styles.chTitle}>Следите за нами</div>
+              <div className={styles.chTitle}>Слідкуйте за нами</div>
               <div className={styles.chDesc}>Instagram · TikTok · Facebook</div>
             </div>
           </a>
@@ -130,11 +130,11 @@ export default function ContactPage() {
       </section>
 
       <section className={styles.formSection}>
-        <h2>Для оптовых заказов, сотрудничества или вопросов по конкретному заказу</h2>
+        <h2>Для оптових замовлень, співпраці чи питань щодо конкретного замовлення</h2>
         <form className={styles.form} onSubmit={handleSubmit}>
           <div className={styles.rowTwo}>
             <label>
-              Ваше имя
+              Ваше ім'я
               <input name="name" value={form.name} onChange={handleChange} required />
             </label>
             <label>
@@ -145,24 +145,24 @@ export default function ContactPage() {
 
           <div className={styles.rowTwo}>
             <label>
-              Номер заказа (необязательно)
+              Номер замовлення (необов'язково)
               <input name="order" value={form.order} onChange={handleChange} />
             </label>
 
             <label>
-              Тема обращения
+              Тема звернення
               <select name="topic" value={form.topic} onChange={handleChange}>
-                <option value="order">Вопрос по моему заказу</option>
-                <option value="wholesale">Оптовый/Корпоративный заказ</option>
-                <option value="partner">Сотрудничество и партнерство</option>
-                <option value="print">Предложение по печати моей модели</option>
-                <option value="other">Другое</option>
+                <option value="order">Питання на моє замовлення</option>
+                <option value="wholesale">Оптове/Корпоративне замовлення</option>
+                <option value="partner">Співробітництво та партнерство</option>
+                <option value="print">Пропозиція щодо друку моєї моделі</option>
+                <option value="other">Інше</option>
               </select>
             </label>
           </div>
 
           <label>
-            Ваше сообщение
+            Ваше повідомлення
             <textarea name="message" rows={6} value={form.message} onChange={handleChange} required />
           </label>
 
@@ -175,7 +175,7 @@ export default function ContactPage() {
 
       <section className={styles.bottom}>
         <div className={styles.mapCol}>
-          <h3>Наше присутствие</h3>
+          <h3>Наша присутність</h3>
           <div className={styles.mapWrap}>
             {/* Replace the src query with your actual location */}
             <iframe
@@ -188,15 +188,15 @@ export default function ContactPage() {
         </div>
 
         <div className={styles.infoCol}>
-          <h3>Наш адрес и реквизиты</h3>
+          <h3>Наша адреса та реквізити</h3>
           <address className={styles.address}>
-            г. Киев, ул. Примерная, 10<br />
+            г. Киев, ул. Прилужна 4/15, 10<br />
             Тел: <a href="tel:+380XXXXXXXXX">+380 XX XXX XX XX</a><br />
             Email: <a href="mailto:info@yourshop.com">info@yourshop.com</a>
           </address>
 
           <div className={styles.company}> 
-            <strong>ФОП Иванов Иван Иванович</strong><br />
+            <strong>ФОП Головач Михайло Дмитрович</strong><br />
             ІПН/ЄДРПОУ: 1234567890
           </div>
         </div>
