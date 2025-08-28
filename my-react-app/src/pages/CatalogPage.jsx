@@ -10,7 +10,7 @@ const structuredCategories = [
   { id: 'novelties', name: 'Новинки та хіти', parent: null },
   { id: 'custom-print', name: 'Печать на заказ', parent: null },
 
-  { id: 'dom-i-interer', name: 'Будинок та інтер єр', parent: null },
+  { id: 'dom-i-interer', name: "Будинок та інтерʼєр", parent: null },
   { id: 'decor', name: 'Декор', parent: 'dom-i-interer' },
   { id: 'lighting', name: 'Освітлення', parent: 'dom-i-interer' },
   { id: 'kitchen', name: 'Кухня', parent: 'dom-i-interer' },
@@ -48,7 +48,7 @@ const buildCategoryTree = (cats) => {
     if (b.id === 'all') return 1;
     if (a.id === 'novelties') return -1;
     if (b.id === 'novelties') return 1;
-    return a.name.localeCompare(b.name, 'ru');
+    return a.name.localeCompare(b.name, 'uk');
   });
   return tree;
 };
@@ -93,7 +93,8 @@ const CatalogPage = () => {
 
       const params = new URLSearchParams();
       if (searchQuery) params.append('search', searchQuery);
-      if (selectedCategories.length > 0) params.append('categories', selectedCategories.join(','));
+      const activeCats = selectedCategories.filter(id => id !== 'all');
+      if (activeCats.length > 0) params.append('categories', activeCats.join(','));
       if (minPrice !== '') params.append('minPrice', Number(minPrice));
       if (maxPrice !== '') params.append('maxPrice', Number(maxPrice));
       if (material) params.append('material', material);
@@ -203,7 +204,6 @@ const CatalogPage = () => {
                       type="checkbox"
                       checked={selectedCategories.includes(cat.id)}
                       onChange={() => handleCategoryChange(cat.id)}
-                      aria-checked={selectedCategories.includes(cat.id)}
                     />
                     <span>{cat.name}</span>
                   </label>
@@ -230,9 +230,11 @@ const CatalogPage = () => {
           <div className="filter-group">
             <h3>Ціна, ₴</h3>
             <div className="price-filter">
-              <input type="number" placeholder="від" value={minPrice} onChange={handleMinPriceChange} className="price-input" />
-              <span className="price-separator">–</span>
-              <input type="number" placeholder="до" value={maxPrice} onChange={handleMaxPriceChange} className="price-input" />
+              <div className="price-inputs">
+                <input type="number" placeholder="від" value={minPrice} onChange={handleMinPriceChange} className="price-input" />
+                <span className="price-separator">–</span>
+                <input type="number" placeholder="до" value={maxPrice} onChange={handleMaxPriceChange} className="price-input" />
+              </div>
             </div>
           </div>
 
@@ -283,9 +285,17 @@ const CatalogPage = () => {
             </select>
           </div>
 
-          <div className="products-grid" role="list">
-            {renderContent()}
-          </div>
+        <div className="products-list-grid" role="list">
+          {isLoading || error || products.length === 0
+            ? renderContent()
+            : products.map((p, idx) => (
+                <div role="listitem" key={p.id ?? p._id ?? p.sku ?? p.slug ?? idx}>
+                  <ProductCardWithHighlight product={p} query={searchQuery} />
+                  </div>
+                ))
+          }
+        </div>
+        
         </main>
       </div>
     </div>

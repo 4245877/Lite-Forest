@@ -216,6 +216,20 @@
   color: var(--color-text-secondary);
 }
 
+
+.visually-hidden {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0 0 0 0) !important;
+  clip-path: inset(50%) !important;
+  border: 0 !important;
+  white-space: nowrap !important;
+}
+
 /* Активные фильтры */
 .active-filters {
   margin-bottom: var(--spacing-2xl);
@@ -368,6 +382,16 @@
   gap: var(--spacing-md);
 }
 
+/* контейнер блока */
+.category-block {
+  position: relative;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-md);
+  padding: 6px 10px;
+}
+
+
 .category-item {
   display: flex;
   align-items: center;
@@ -385,7 +409,10 @@
   background-color: rgba(47, 82, 51, 0.05);
   transform: translateX(4px);
 }
-
+.category-item.selected {
+  background: linear-gradient(135deg, rgba(82,183,136,0.1) 0%, rgba(82,183,136,0.05) 100%);
+  outline: 2px solid rgba(82,183,136,0.35);
+}
 .category-item:focus-within {
   outline: 3px solid var(--color-focus);
   outline-offset: 2px;
@@ -431,6 +458,55 @@
 .category-item:hover span {
   color: var(--color-primary);
 }
+
+.category-children {
+  margin: 4px 0 8px 34px;
+  padding-left: 12px;
+  border-left: 2px dashed var(--color-border-light);
+  display: grid;
+  gap: 6px;
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 220ms ease;
+}
+.category-children.open {
+  max-height: 800px; /* достаточно для плавного раскрытия */
+}
+
+
+.category-item.child {
+  padding: 8px 6px;
+}
+
+/* кнопка caret */
+.category-toggle {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: transform var(--transition-fast), background-color var(--transition-fast), border-color var(--transition-fast);
+}
+
+
+.category-toggle:hover {
+  background: var(--color-border-light);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.category-toggle.open svg {
+  transform: rotate(180deg);
+}
+
 
 /* Фильтр по цене */
 .price-filter {
@@ -716,10 +792,10 @@
 
 /* Мобильная адаптивность */
 @media (max-width: 768px) {
-  .catalog-page {
-    padding: var(--spacing-md);
-    background-color: var(--color-surface);
-  }
+  .category-block { padding: 8px 12px; }
+  .category-item { padding: 12px 10px; }
+  .category-toggle { top: 12px; right: 12px; }
+
 
   .catalog-header {
     flex-direction: column;
