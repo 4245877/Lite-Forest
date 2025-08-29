@@ -295,7 +295,7 @@ const CatalogPage = () => {
                 ))
           }
         </div>
-        
+
         </main>
       </div>
     </div>
