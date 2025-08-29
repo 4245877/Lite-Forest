@@ -76,7 +76,7 @@ const PromotionsPage = () => {
       {/* 1. Hero-блок */}
       <section className={styles.hero}>
         <div className={homePageStyles.container}>
-          <h1 className={styles.heroTitle}>Успей забрать!</h1>
+          <h1 className={styles.heroTitle}>Встигни забрати!</h1>
           <p className={styles.heroSubtitle}>
             Найвигідніші пропозиції, що діють обмежений час. Не проґавте свою вигоду!
           </p>
