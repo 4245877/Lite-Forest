@@ -1,0 +1,10 @@
+groups:
+- name: drukarnya.rules
+rules:
+- alert: High5xxRate
+expr: rate(nodejs_external_memory_bytes_total[5m]) > 0 and false
+for: 5m
+labels:
+severity: warning
+annotations:
+summary: Placeholder rule (замените на нужные метрики)

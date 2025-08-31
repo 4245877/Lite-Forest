@@ -1,5 +1,6 @@
 import { FastifyInstance } from 'fastify';
 
-export async function healthRoutes(app: FastifyInstance) {
-  app.get('/healthz', async () => ({ status: 'ok' }));
+
+export default async function routes(app: FastifyInstance) {
+app.get('/health', async () => ({ ok: true }));
 }

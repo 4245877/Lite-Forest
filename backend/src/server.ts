@@ -1,43 +1,7 @@
-import Fastify from 'fastify';
-import cors from '@fastify/cors';
-import helmet from '@fastify/helmet';
-import sensible from '@fastify/sensible';
-import rateLimit from '@fastify/rate-limit';
-import { env } from './config/env';
-import { productsRoutes } from './api/products';
-import { healthRoutes } from './api/health';
-import { uploadRoutes } from './api/uploads';
-import { jobsRoutes } from './api/jobs';
-import { importRoutes } from './api/imports';
-import metricsPlugin from './monitoring/metrics';
-import readyPlugin from './monitoring/ready';
-import errorHandler from './middlewares/errorHandler';
+// backend/src/server.ts
+import { buildApp } from './app.js';
+import { env } from './core/env.js';
 
-async function bootstrap() {
-  const app = Fastify({ logger: { level: env.LOG_LEVEL } });
-
-  await app.register(sensible);
-  await app.register(helmet);
-  await app.register(cors, { origin: env.CORS_ORIGIN === '*' ? true : env.CORS_ORIGIN });
-  await app.register(rateLimit, { max: 100, timeWindow: '1 minute' });
-  await app.register(metricsPlugin);
-  await app.register(readyPlugin);
-  await app.register(errorHandler);
-
-  await app.register(healthRoutes);
-  await app.register(productsRoutes);
-
-  // file uploads, jobs and import endpoints
-  await app.register(uploadRoutes);
-  await app.register(jobsRoutes);
-  await app.register(importRoutes);
-
-  await app.listen({ port: env.PORT, host: '0.0.0.0' });
-  app.log.info(`Server listening on :${env.PORT}`);
-}
-
-bootstrap().catch((e) => {
-  // eslint-disable-next-line no-console
-  console.error(e);
-  process.exit(1);
-});
+const app = await buildApp(); // top-level await — в ESM это работает
+await app.listen({ host: env.HOST, port: env.PORT });
+app.log.info(`Server listening on http://${env.HOST}:${env.PORT}`);

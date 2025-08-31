@@ -1,0 +1,98 @@
+openapi: 3.0.3
+responses:
+'200': { description: OK }
+post:
+summary: Create product
+requestBody:
+required: true
+content:
+application/json:
+schema:
+$ref: '#/components/schemas/ProductCreate'
+responses:
+'201': { description: Created }
+/api/products/{id}:
+get:
+summary: Get product by id
+parameters:
+- in: path
+name: id
+required: true
+schema: { type: string }
+responses:
+'200': { description: OK }
+'404': { description: Not found }
+patch:
+summary: Update product
+parameters:
+- in: path
+name: id
+required: true
+schema: { type: string }
+requestBody:
+required: true
+content:
+application/json:
+schema: { $ref: '#/components/schemas/ProductPatch' }
+responses:
+'200': { description: OK }
+'404': { description: Not found }
+delete:
+summary: Delete product
+parameters:
+- in: path
+name: id
+required: true
+schema: { type: string }
+responses:
+'204': { description: Deleted }
+'404': { description: Not found }
+/api/uploads:
+post:
+summary: Upload file (multipart)
+requestBody:
+required: true
+content:
+multipart/form-data:
+schema:
+type: object
+properties:
+file:
+type: string
+format: binary
+responses:
+'201': { description: Created }
+/api/jobs/reindex:
+post:
+summary: Enqueue reindex job (requires Redis)
+responses:
+'202': { description: Accepted }
+'501': { description: Jobs disabled }
+/api/jobs/{id}:
+get:
+summary: Job status
+parameters:
+- in: path
+name: id
+required: true
+schema: { type: string }
+responses:
+'200': { description: OK }
+'404': { description: Not found }
+'501': { description: Jobs disabled }
+components:
+schemas:
+ProductCreate:
+type: object
+required: [sku, name, price]
+properties:
+sku: { type: string }
+name: { type: string }
+description: { type: string }
+price: { type: number }
+currency: { type: string, default: UAH }
+stock: { type: integer, default: 0 }
+image_url: { type: string }
+ProductPatch:
+allOf:
+- $ref: '#/components/schemas/ProductCreate'

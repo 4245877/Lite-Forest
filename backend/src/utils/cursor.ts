@@ -1,14 +1,7 @@
-export function encodeCursor(obj: Record<string, unknown>): string {
-  const json = JSON.stringify(obj);
-  return Buffer.from(json).toString('base64url');
+export function encodeCursor(v: unknown): string {
+return Buffer.from(JSON.stringify(v), 'utf8').toString('base64url');
 }
-
-export function decodeCursor<T = any>(cursor?: string | null): T | null {
-  if (!cursor) return null;
-  try {
-    const json = Buffer.from(cursor, 'base64url').toString('utf8');
-    return JSON.parse(json) as T;
-  } catch {
-    return null;
-  }
+export function decodeCursor<T = any>(v?: string | null): T | null {
+if (!v) return null;
+try { return JSON.parse(Buffer.from(v, 'base64url').toString('utf8')) as T; } catch { return null; }
 }

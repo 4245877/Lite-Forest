@@ -1,89 +1,42 @@
-// backend/src/worker.ts
-import { Worker, type Job } from 'bullmq';
-import { redis } from './config/redis';
-import { processImage } from './jobs/imageProcessing';
-import { processBulkImport } from './jobs/bulkImport';
-import { getKnex } from './db/knex';
+import { Worker } from 'bullmq';
+import { redis } from './core/redis.js';
+import { logger } from './core/logger.js';
+import { db } from './db/knex.js';
 
-// убедимся, что есть подключение к БД (для обработчиков)
-getKnex();
 
-const imageWorker = new Worker(
-  'image-processing',
-  async (job: Job) => {
-    // processImage может возвращать любое значение или void — аннотируем job как Job
-    return await processImage(job);
-  },
-  {
-    connection: redis,
-  }
-);
-
-imageWorker.on('completed', (job: Job, returnValue: unknown) => {
-  console.log(`image-processing: job ${job.id} completed`);
-  // при необходимости можно использовать returnValue
-});
-
-imageWorker.on('failed', (job: Job | undefined, err: Error) => {
-  console.error(`image-processing: job ${job?.id} failed:`, err);
-});
-
-const importWorker = new Worker(
-  'bulk-imports',
-  async (job: Job) => {
-    return await processBulkImport(job);
-  },
-  {
-    connection: redis,
-  }
-);
-
-importWorker.on('completed', (job: Job, returnValue: unknown) => {
-  console.log(`bulk-imports: job ${job.id} completed`);
-});
-
-importWorker.on('failed', (job: Job | undefined, err: Error) => {
-  console.error(`bulk-imports: job ${job?.id} failed:`, err);
-});
-
-// добавляем debug worker в конце файла
-const debugWorker = new Worker(
-  'debug',
-  async (job: Job) => {
-    console.log('Debug job received:', job.id, job.name, job.data);
-    return { ok: true };
-  },
-  { connection: redis }
-);
-
-debugWorker.on('completed', (job: Job, returnValue: unknown) => {
-  console.log(`debug: job ${job.id} completed`);
-});
-
-debugWorker.on('failed', (job: Job | undefined, err: Error) => {
-  console.error(`debug: job ${job?.id} failed:`, err);
-});
-
-console.log('Workers started: image-processing, bulk-imports, debug');
-
-// graceful shutdown
-async function shutdown(): Promise<void> {
-  console.log('Shutting down workers...');
-  try {
-    await Promise.all([imageWorker.close(), importWorker.close(), debugWorker.close()]);
-    console.log('Workers stopped.');
-    process.exit(0);
-  } catch (err: unknown) {
-    console.error('Error while shutting down workers:', err);
-    process.exit(1);
-  }
+if (!redis) {
+logger.warn('REDIS_URL not set — worker will not start.');
+process.exit(0);
 }
 
-// При получении сигнала — запускаем shutdown (void чтобы избежать Promise-предупреждений)
-process.on('SIGINT', () => {
-  void shutdown();
-});
-process.on('SIGTERM', () => {
-  void shutdown();
-});
 
+const worker = new Worker('jobs', async (job) => {
+if (job.name === 'reindex') {
+// Здесь может быть логика пересборки поискового индекса
+return { ok: true };
+}
+
+
+if (job.name === 'import:csv') {
+const text: string = job.data.content as string;
+const lines = text.split(/\r?\n/).filter(Boolean);
+// Простейший CSV: sku,name,description,price,currency,stock,image_url
+const rows = lines.slice(1).map((ln) => ln.split(',')).filter(r => r.length >= 6);
+for (const r of rows) {
+const [sku, name, description, price, currency, stock, image_url] = r;
+await db('products').insert({
+sku, name, description,
+price: Number(price ?? 0), currency: currency ?? 'UAH',
+stock: Number(stock ?? 0), image_url
+}).onConflict('sku').merge();
+}
+return { imported: rows.length };
+}
+
+
+return { skipped: true };
+}, { connection: redis });
+
+
+worker.on('completed', (j) => logger.info({ id: j.id }, 'job completed'));
+worker.on('failed', (j, err) => logger.error({ id: j?.id, err }, 'job failed'));

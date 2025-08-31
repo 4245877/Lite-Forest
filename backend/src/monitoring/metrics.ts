@@ -1,6 +1,14 @@
 import fp from 'fastify-plugin';
-import metrics from 'fastify-metrics';
+import client from 'prom-client';
+
+
+const register = new client.Registry();
+client.collectDefaultMetrics({ register });
+
 
 export default fp(async (app) => {
-  await app.register(metrics, { endpoint: '/metrics' });
+app.get('/metrics', async (_req, reply) => {
+reply.header('Content-Type', register.contentType);
+return register.metrics();
+});
 });

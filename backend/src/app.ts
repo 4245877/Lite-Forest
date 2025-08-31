@@ -1,51 +1,42 @@
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
-import helmet from '@fastify/helmet';
-import sensible from '@fastify/sensible';
-import rateLimit from '@fastify/rate-limit';
-import metricsPlugin from './monitoring/metrics';
-import readyPlugin from './monitoring/ready';
-import errorHandler from './middlewares/errorHandler';
-import { env } from './config/env';
-import { healthRoutes } from './api/health';
-import { productsRoutes } from './api/products';
-import { uploadRoutes } from './api/uploads';
-import { importRoutes } from './api/imports';
-import { jobsRoutes } from './api/jobs';
+import formbody from '@fastify/formbody';
+import multipart from '@fastify/multipart';
+import fastifyStatic from '@fastify/static';
+import path from 'node:path';
+import fs from 'node:fs';
+import { env } from './core/env.js';
+import { logger } from './core/logger.js';
 
-type CreateAppOptions = {
-  /** По умолчанию false — чтобы health/ready регистрировались только в server.ts */
-  registerSystemRoutes?: boolean;
-};
 
-export async function createApp(options: CreateAppOptions = {}) {
-  const { registerSystemRoutes = false } = options;
+import health from './api/health.js';
+import uploads from './api/uploads.js';
+import products from './api/products.js';
+import jobs from './api/jobs.js';
+import imports from './api/imports.js';
+import metrics from './monitoring/metrics.js';
+import ready from './monitoring/ready.js';
 
-  const app = Fastify({ logger: { level: env.LOG_LEVEL } });
 
-  await app.register(sensible);
-  await app.register(helmet);
-  await app.register(cors, { origin: env.CORS_ORIGIN === '*' ? true : env.CORS_ORIGIN });
-  await app.register(rateLimit, { max: 100, timeWindow: '1 minute' });
-  await app.register(metricsPlugin);
-  await app.register(errorHandler);
+export function buildApp() {
+  const app = Fastify({ logger });
 
-  // --- Системные маршруты /healthz и /readyz ---
-  // Регистрируем их ТОЛЬКО если явно попросили (registerSystemRoutes = true).
-  // Дополнительно ставим защиту через decorate, чтобы избежать повторной регистрации.
-  if (registerSystemRoutes) {
-    if (!app.hasDecorator('systemRoutesRegistered')) {
-      await app.register(healthRoutes); // /healthz
-      await app.register(readyPlugin);  // /readyz
-      app.decorate('systemRoutesRegistered', true);
-    }
-  }
+  app.register(cors, { origin: env.CORS_ORIGIN === '*' ? true : env.CORS_ORIGIN.split(',') });
+  app.register(formbody);
+  app.register(multipart);
 
-  // Бизнес-маршруты
-  await app.register(productsRoutes);
-  await app.register(uploadRoutes);
-  await app.register(importRoutes);
-  await app.register(jobsRoutes);
+  // Гарантируем существование каталога для статики загрузок
+  try { fs.mkdirSync(env.UPLOADS_DIR, { recursive: true }); } catch {}
+
+  app.register(fastifyStatic, { root: env.UPLOADS_DIR, prefix: '/uploads/' });
+
+  app.register(health);
+  app.register(ready);
+  app.register(metrics);
+  app.register(uploads);
+  app.register(products);
+  app.register(jobs);
+  app.register(imports);
 
   return app;
 }
