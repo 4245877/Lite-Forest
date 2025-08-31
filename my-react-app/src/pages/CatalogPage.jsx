@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import ProductCard from '../components/product/ProductCard';
 import SearchBar from '../components/search/SearchBar';
 import { highlightMatch } from '../utils/searchUtils';
+import { api } from '../api/client';
 import './CatalogPage.css';
 
 // Категории — структурированные (slug/id, name, parent)
@@ -83,29 +84,15 @@ const CatalogPage = () => {
 
   const categoryTree = useMemo(() => buildCategoryTree(structuredCategories), []);
 
-  // fetch с AbortController
   useEffect(() => {
     const controller = new AbortController();
 
     const fetchProducts = async () => {
       setIsLoading(true);
       setError(null);
-
-      const params = new URLSearchParams();
-      if (searchQuery) params.append('search', searchQuery);
-      const activeCats = selectedCategories.filter(id => id !== 'all');
-      if (activeCats.length > 0) params.append('categories', activeCats.join(','));
-      if (minPrice !== '') params.append('minPrice', Number(minPrice));
-      if (maxPrice !== '') params.append('maxPrice', Number(maxPrice));
-      if (material) params.append('material', material);
-      if (printTech) params.append('printTech', printTech);
-      if (sortBy) params.append('sortBy', sortBy);
-
       try {
-        const response = await fetch(`/api/products?${params.toString()}`, { signal: controller.signal });
-        if (!response.ok) throw new Error(`Сервер вернул ${response.status}`);
-        const data = await response.json();
-        setProducts(normalizeProducts(data));
+        const data = await api.listProducts(searchQuery, 50);
+        setProducts(normalizeProducts(data)); // заберёт data.items
       } catch (err) {
         if (err.name === 'AbortError') return;
         setError(err.message || 'Ошибка загрузки');
@@ -116,9 +103,8 @@ const CatalogPage = () => {
     };
 
     fetchProducts();
-
     return () => controller.abort();
-  }, [searchQuery, selectedCategories, minPrice, maxPrice, material, printTech, sortBy]);
+  }, [searchQuery]);
 
   // debounce для поиска
   const handleSearch = useCallback((value) => {
@@ -159,8 +145,10 @@ const CatalogPage = () => {
     const productForCard = useMemo(() => ({
       ...product,
       name: highlightedName,
-      price: product.base_price ?? product.price ?? 0,
-      image: product.media?.find(m => m.media_type === 'image')?.url || 'https://placehold.co/300x300'
+      price: product.price ?? product.base_price ?? 0,
+      image: product.image_url
+          ?? product.media?.find(m => m.media_type === 'image')?.url
+          ?? 'https://placehold.co/300x300'
     }), [product, highlightedName]);
 
     return <ProductCard product={productForCard} />;
