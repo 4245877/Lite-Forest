@@ -142,14 +142,22 @@ const CatalogPage = () => {
   // wrapper для подсветки
   const ProductCardWithHighlight = React.memo(function ProductCardWithHighlight({ product, query }) {
     const highlightedName = useMemo(() => highlightMatch(product.name, query), [product.name, query]);
-    const productForCard = useMemo(() => ({
-      ...product,
-      name: highlightedName,
-      price: product.price ?? product.base_price ?? 0,
-      image: product.image_url
-          ?? product.media?.find(m => m.media_type === 'image')?.url
-          ?? 'https://placehold.co/300x300'
-    }), [product, highlightedName]);
+    const productForCard = useMemo(() => {
+      const priceNumber =
+        typeof product.price === 'number'
+          ? product.price
+          : Number(product.price ?? product.base_price ?? 0);
+
+      return {
+        ...product,
+        name: highlightedName,
+        price: Number.isFinite(priceNumber) ? priceNumber : 0,
+        image:
+          product.image_url ??
+          product.media?.find(m => m.media_type === 'image')?.url ??
+          'https://placehold.co/300x300'
+      };
+    }, [product, highlightedName]);
 
     return <ProductCard product={productForCard} />;
   });

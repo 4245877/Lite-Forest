@@ -8,6 +8,7 @@ import AboutPage from '../pages/AboutPage';
 import LoginPage from '../pages/LoginPage';
 import CartPage from '../pages/CartPage';
 import ContactPage from '../pages/ContactPage';
+import AdminProducts from '../pages/AdminProducts'; // <-- added
 
 const AppRouter = () => {
   return (
@@ -22,6 +23,9 @@ const AppRouter = () => {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/cart" element={<CartPage />} />
       <Route path="/contacts" element={<ContactPage />} />
+
+      {/* Админ: товары */}
+      <Route path="/admin/products" element={<AdminProducts />} />
 
       {/* Любой неизвестный путь — перенаправляем на главную */}
       <Route path="*" element={<Navigate to="/" replace />} />

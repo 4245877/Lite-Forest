@@ -32,6 +32,8 @@ const EnvSchema = z.object({
   S3_ACCESS_KEY_ID: z.string().optional(),
   S3_SECRET_ACCESS_KEY: z.string().optional(),
 
+  ADMIN_TOKEN: z.string().optional(),
+
   METRICS_ENABLED: z.coerce.boolean().default(true),
 });
 
