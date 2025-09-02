@@ -6,35 +6,127 @@ import { api } from '../api/client';
 import './CatalogPage.css';
 
 // Категории — структурированные (slug/id, name, parent)
+// Категорії — структуровані (slug/id, name, parent)
+// v2 (уніфікована ієрархія на базі двох списків + практики MakerWorld/Creality)
+// Принципи: 1) послідовні слаги (latin-kebab), 2) максимум 2 рівні, 3) тільки те, що доречно для магазину готових друків.
+// Примітка: позначив кілька гілок як optional — вмикайте лише якщо реально продаєте ці товари.
+
 const structuredCategories = [
+  // Meta
   { id: 'all', name: 'Усі категорії', parent: null },
   { id: 'novelties', name: 'Новинки та хіти', parent: null },
-  { id: 'custom-print', name: 'Печать на заказ', parent: null },
+  { id: 'custom-print', name: 'Друк на замовлення', parent: null },
 
-  { id: 'dom-i-interer', name: "Будинок та інтерʼєр", parent: null },
-  { id: 'decor', name: 'Декор', parent: 'dom-i-interer' },
-  { id: 'lighting', name: 'Освітлення', parent: 'dom-i-interer' },
-  { id: 'kitchen', name: 'Кухня', parent: 'dom-i-interer' },
-  { id: 'storage', name: 'Зберігання та організація', parent: 'dom-i-interer' },
+  // Дім та інтерʼєр
+  { id: 'home', name: 'Будинок та інтерʼєр', parent: null },
+  { id: 'decor', name: 'Декор', parent: 'home' },
+  { id: 'lighting', name: 'Освітлення', parent: 'home' },
+  { id: 'kitchen', name: 'Кухня', parent: 'home' },
+  { id: 'storage', name: 'Зберігання та організація', parent: 'home' },
+  { id: 'office', name: 'Офіс та робоче місце', parent: 'home' },
+  { id: 'garden', name: 'Сад і двір', parent: 'home' },
+  { id: 'appliance-accessories', name: 'Аксесуари для побутової техніки', parent: 'home' }, // туди як теги: fridge, washer, coffee
 
-  { id: 'toys-gaming', name: 'Іграшки та настільні ігри', parent: null },
-  { id: 'miniatures', name: 'Мініатюри та колекційні моделі', parent: 'toys-gaming' },
+  // Іграшки та ігри
+  { id: 'toys', name: 'Іграшки та настільні ігри', parent: null },
+  { id: 'board-games', name: 'Настільні ігри', parent: 'toys' },
+  { id: 'puzzles', name: 'Пазли', parent: 'toys' },
+  { id: 'construction-sets', name: 'Конструктори', parent: 'toys' },
+  { id: 'characters', name: 'Персонажі', parent: 'toys' },
+  { id: 'outdoor-toys', name: 'Вуличні іграшки', parent: 'toys' },
 
+  // Мініатюри (окремий топ-рівень)
+  { id: 'miniatures', name: 'Мініатюри та колекційні моделі', parent: null },
+  { id: 'min-animals', name: 'Тварини', parent: 'miniatures' },
+  { id: 'min-architecture', name: 'Архітектура та діорами', parent: 'miniatures' },
+  { id: 'min-creatures', name: 'Істоти та фантастика', parent: 'miniatures' },
+  { id: 'min-people', name: 'Люди та фігурки', parent: 'miniatures' },
+  { id: 'min-wargame', name: 'Варґеймінг: терен і аксесуари', parent: 'miniatures' },
+  { id: 'min-vehicles', name: 'Техніка та машинерія', parent: 'miniatures' },
+
+  // Пропси та косплей
+  { id: 'props-cosplay', name: 'Пропси та косплей', parent: null },
+  { id: 'cos-costumes', name: 'Костюми та елементи', parent: 'props-cosplay' },
+  { id: 'cos-masks', name: 'Маски та шоломи', parent: 'props-cosplay' },
+  { id: 'cos-weapons', name: 'Реквізит та зброя для косплею', parent: 'props-cosplay' },
+  { id: 'cos-badges', name: 'Значки, логотипи та емблеми', parent: 'props-cosplay' },
+
+  // Одяг і мерч
+  { id: 'wearables', name: 'Одяг, прикраси та мерч', parent: null },
+  { id: 'bags', name: 'Сумки та чохли', parent: 'wearables' },
+  { id: 'clothes', name: 'Одяг', parent: 'wearables' },
+  { id: 'footwear', name: 'Взуття', parent: 'wearables' },
+  { id: 'jewelry', name: 'Прикраси', parent: 'wearables' },
+  { id: 'glasses', name: 'Окуляри', parent: 'wearables' },
+  { id: 'keychains', name: 'Брелоки та дрібний мерч', parent: 'wearables' }, // Кільця як підтип jewelry
+
+  // Електроніка та гаджети
   { id: 'electronics', name: 'Електроніка та гаджети', parent: null },
-  { id: 'gadgets-accessories', name: 'Аксесуари для гаджетів', parent: 'electronics' },
+  { id: 'device-cases', name: 'Корпуси та чохли', parent: 'electronics' },
+  { id: 'holders', name: 'Тримачі та підставки', parent: 'electronics' },
+  { id: 'cable-management', name: 'Кабель-менеджмент', parent: 'electronics' },
+  { id: 'accessories-gadgets', name: 'Аксесуари для гаджетів', parent: 'electronics' }, // RC/роботи → як теги (rc, robotics)
 
-  { id: 'wearables-merch', name: 'Одяг, прикраси та мерч', parent: null },
-  { id: 'hobby-diy', name: 'Хобі, моделі та DIY', parent: null },
-  { id: 'auto-moto', name: 'Авто та мото', parent: null },
-  { id: 'sport-outdoor', name: 'Спорт, туризм та відпочинок', parent: null },
-  { id: 'tools-workshop', name: 'Інструменти, оснащення та майстерня', parent: null },
+  // Інструменти та майстерня
+  { id: 'tools', name: 'Інструменти, оснащення та майстерня', parent: null },
+  { id: 'fixtures', name: 'Пристосування/фікстури', parent: 'tools' },
+  { id: 'hand-tools', name: 'Ручний інструмент', parent: 'tools' },
+  { id: 'measuring-tools', name: 'Вимірювальний інструмент', parent: 'tools' },
+  { id: 'organizers', name: 'Органайзери для інструментів', parent: 'tools' },
+
+  // Частини та кріплення
   { id: 'parts-fasteners', name: 'Запчастини та кріплення', parent: null },
+  { id: 'brackets', name: 'Кронштейни та кріплення', parent: 'parts-fasteners' },
+  { id: 'replacement-parts', name: 'Запчастини та ремонт', parent: 'parts-fasteners' }, // без printer-parts
+
+  // Транспорт
+  { id: 'auto-moto', name: 'Авто та мото', parent: null },
+  { id: 'car-interior', name: 'Інтерʼєр та органайзери', parent: 'auto-moto' },
+  { id: 'car-exterior', name: 'Екстерʼєр та тюнінг', parent: 'auto-moto' },
+  { id: 'mounts-car', name: 'Кріплення та тримачі', parent: 'auto-moto' },
+
+  // Спорт і аутдор
+  { id: 'sport-outdoor', name: 'Спорт, туризм та відпочинок', parent: null },
+  { id: 'camping', name: 'Кемпінг та туризм', parent: 'sport-outdoor' },
+  { id: 'sport-gear', name: 'Спортивне спорядження', parent: 'sport-outdoor' },
+  { id: 'cycling', name: 'Велоспорядження', parent: 'sport-outdoor' },
+
+  // Освіта
+  { id: 'education', name: 'Освіта, наука та STEM', parent: null },
+  { id: 'edu-stationery', name: 'Канцелярія та навчальні інструменти', parent: 'education' },
+  { id: 'edu-biology', name: 'Біологія', parent: 'education' },
+  { id: 'edu-chemistry', name: 'Хімія', parent: 'education' },
+  { id: 'edu-engineering', name: 'Інженерія', parent: 'education' },
+  { id: 'edu-geography', name: 'Географія', parent: 'education' },
+  { id: 'edu-math', name: 'Математика', parent: 'education' },
+  { id: 'edu-physics', name: 'Фізика та астрономія', parent: 'education' },
+
+  // Домашні тварини
   { id: 'pets', name: 'Товари для тварин', parent: null },
+  { id: 'pet-toys', name: 'Іграшки та аксесуари', parent: 'pets' },
+  { id: 'pet-housing', name: 'Будиночки та утримання', parent: 'pets' },
+
+  // Медицина та реабілітація
   { id: 'medical', name: 'Медицина та реабілітація', parent: null },
+  { id: 'med-equipment', name: 'Обладнання та допоміжні засоби', parent: 'medical' },
+  { id: 'personal-care', name: 'Пристрої для догляду', parent: 'medical' }, // сюди йдуть pill-boxes, massage-tools
+  { id: 'medical-tools', name: 'Медичні інструменти', parent: 'medical' },
+
+  // Свята та подарунки
   { id: 'gifts', name: 'Свята, подарунки та сувеніри', parent: null },
-  { id: 'materials', name: 'Матеріали та видаткові (filament та ін.)', parent: null },
-  { id: 'education-stem', name: 'Освіта, наука та STEM', parent: null },
+  { id: 'holiday-xmas', name: 'Новорічні та різдвяні', parent: 'gifts' },
+  { id: 'holiday-halloween', name: 'Хелловін', parent: 'gifts' },
+  { id: 'holiday-wedding', name: 'Весілля', parent: 'gifts' },
+  { id: 'holiday-birthday', name: 'День народження', parent: 'gifts' },
+
+  // Матеріали (optional — якщо продаєте)
+  { id: 'materials', name: 'Матеріали та витратні', parent: null },
+  { id: 'filaments', name: 'Філаменти', parent: 'materials' },
+  { id: 'resins', name: 'Смоли', parent: 'materials' },
+  { id: 'build-plates', name: 'Поверхні/підкладки', parent: 'materials' },
 ];
+
+ 
 
 const buildCategoryTree = (cats) => {
   const map = {};
@@ -142,24 +234,29 @@ const CatalogPage = () => {
   // wrapper для подсветки
   const ProductCardWithHighlight = React.memo(function ProductCardWithHighlight({ product, query }) {
     const highlightedName = useMemo(() => highlightMatch(product.name, query), [product.name, query]);
-    const productForCard = useMemo(() => {
-      const priceNumber =
-        typeof product.price === 'number'
-          ? product.price
-          : Number(product.price ?? product.base_price ?? 0);
 
-      return {
-        ...product,
-        name: highlightedName,
-        price: Number.isFinite(priceNumber) ? priceNumber : 0,
-        image:
-          product.image_url ??
-          product.media?.find(m => m.media_type === 'image')?.url ??
-          'https://placehold.co/300x300'
-      };
-    }, [product, highlightedName]);
+    // гарантируем корректные поля
+    const image =
+      product.image_url
+      ?? product.image
+      ?? product.media?.find(m => m.media_type === 'image')?.url
+      ?? 'https://placehold.co/300x300';
 
-    return <ProductCard product={productForCard} />;
+    const priceRaw = typeof product.price === 'number'
+      ? product.price
+      : Number(product.price ?? product.base_price ?? 0);
+
+    const price = Number.isFinite(priceRaw) ? priceRaw : 0;
+
+    return (
+      <ProductCard
+        image={image}
+        title={highlightedName}
+        price={price}
+        // oldPrice={...} // если появится
+        onAddToCart={() => {}}
+      />
+    );
   });
 
   const renderContent = () => {

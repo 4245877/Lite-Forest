@@ -243,8 +243,8 @@
   padding: 10px 12px;
   background: rgba(255, 255, 255, 0.1);
   border: 1px solid rgba(82, 183, 136, 0.3);
-  border-radius: 8px;
-  color: var(--white);
+  border-radius: 8px; 
+  color: var(--text-dark);
   font-size: 0.9rem;
   transition: var(--transition-smooth);
 }
