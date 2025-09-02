@@ -5,11 +5,10 @@ import { highlightMatch } from '../utils/searchUtils';
 import { api } from '../api/client';
 import './CatalogPage.css';
 
-// Категории — структурированные (slug/id, name, parent)
 // Категорії — структуровані (slug/id, name, parent)
 // v2 (уніфікована ієрархія на базі двох списків + практики MakerWorld/Creality)
 // Принципи: 1) послідовні слаги (latin-kebab), 2) максимум 2 рівні, 3) тільки те, що доречно для магазину готових друків.
-// Примітка: позначив кілька гілок як optional — вмикайте лише якщо реально продаєте ці товари.
+// Примітка: кілька гілок позначено як optional — вмикайте лише якщо реально продаєте ці товари.
 
 const structuredCategories = [
   // Meta
@@ -25,7 +24,7 @@ const structuredCategories = [
   { id: 'storage', name: 'Зберігання та організація', parent: 'home' },
   { id: 'office', name: 'Офіс та робоче місце', parent: 'home' },
   { id: 'garden', name: 'Сад і двір', parent: 'home' },
-  { id: 'appliance-accessories', name: 'Аксесуари для побутової техніки', parent: 'home' }, // туди як теги: fridge, washer, coffee
+  { id: 'appliance-accessories', name: 'Аксесуари для побутової техніки', parent: 'home' },
 
   // Іграшки та ігри
   { id: 'toys', name: 'Іграшки та настільні ігри', parent: null },
@@ -58,14 +57,14 @@ const structuredCategories = [
   { id: 'footwear', name: 'Взуття', parent: 'wearables' },
   { id: 'jewelry', name: 'Прикраси', parent: 'wearables' },
   { id: 'glasses', name: 'Окуляри', parent: 'wearables' },
-  { id: 'keychains', name: 'Брелоки та дрібний мерч', parent: 'wearables' }, // Кільця як підтип jewelry
+  { id: 'keychains', name: 'Брелоки та дрібний мерч', parent: 'wearables' },
 
   // Електроніка та гаджети
   { id: 'electronics', name: 'Електроніка та гаджети', parent: null },
   { id: 'device-cases', name: 'Корпуси та чохли', parent: 'electronics' },
   { id: 'holders', name: 'Тримачі та підставки', parent: 'electronics' },
   { id: 'cable-management', name: 'Кабель-менеджмент', parent: 'electronics' },
-  { id: 'accessories-gadgets', name: 'Аксесуари для гаджетів', parent: 'electronics' }, // RC/роботи → як теги (rc, robotics)
+  { id: 'accessories-gadgets', name: 'Аксесуари для гаджетів', parent: 'electronics' },
 
   // Інструменти та майстерня
   { id: 'tools', name: 'Інструменти, оснащення та майстерня', parent: null },
@@ -77,7 +76,7 @@ const structuredCategories = [
   // Частини та кріплення
   { id: 'parts-fasteners', name: 'Запчастини та кріплення', parent: null },
   { id: 'brackets', name: 'Кронштейни та кріплення', parent: 'parts-fasteners' },
-  { id: 'replacement-parts', name: 'Запчастини та ремонт', parent: 'parts-fasteners' }, // без printer-parts
+  { id: 'replacement-parts', name: 'Запчастини та ремонт', parent: 'parts-fasteners' },
 
   // Транспорт
   { id: 'auto-moto', name: 'Авто та мото', parent: null },
@@ -109,7 +108,7 @@ const structuredCategories = [
   // Медицина та реабілітація
   { id: 'medical', name: 'Медицина та реабілітація', parent: null },
   { id: 'med-equipment', name: 'Обладнання та допоміжні засоби', parent: 'medical' },
-  { id: 'personal-care', name: 'Пристрої для догляду', parent: 'medical' }, // сюди йдуть pill-boxes, massage-tools
+  { id: 'personal-care', name: 'Пристрої для догляду', parent: 'medical' },
   { id: 'medical-tools', name: 'Медичні інструменти', parent: 'medical' },
 
   // Свята та подарунки
@@ -125,8 +124,6 @@ const structuredCategories = [
   { id: 'resins', name: 'Смоли', parent: 'materials' },
   { id: 'build-plates', name: 'Поверхні/підкладки', parent: 'materials' },
 ];
-
- 
 
 const buildCategoryTree = (cats) => {
   const map = {};
@@ -150,11 +147,13 @@ const normalizeProducts = (data) => {
   if (Array.isArray(data)) return data;
   if (!data) return [];
   if (Array.isArray(data.items)) return data.items;
-  // если пришёл объект с ключом results / products
+  // якщо прийшов обʼєкт з ключем results / products
   if (Array.isArray(data.products)) return data.products;
   if (Array.isArray(data.results)) return data.results;
   return [];
 };
+
+const uaNumber = (n) => new Intl.NumberFormat('uk-UA').format(n);
 
 const CatalogPage = () => {
   const [products, setProducts] = useState([]);
@@ -184,11 +183,11 @@ const CatalogPage = () => {
       setError(null);
       try {
         const data = await api.listProducts(searchQuery, 50);
-        setProducts(normalizeProducts(data)); // заберёт data.items
+        setProducts(normalizeProducts(data));
       } catch (err) {
         if (err.name === 'AbortError') return;
-        setError(err.message || 'Ошибка загрузки');
-        console.error('Ошибка при получении товаров:', err);
+        setError(err.message || 'Помилка завантаження');
+        console.error('Помилка під час отримання товарів:', err);
       } finally {
         setIsLoading(false);
       }
@@ -198,7 +197,7 @@ const CatalogPage = () => {
     return () => controller.abort();
   }, [searchQuery]);
 
-  // debounce для поиска
+  // debounce для пошуку
   const handleSearch = useCallback((value) => {
     setSearchInput(value);
     if (debounceTimer.current) clearTimeout(debounceTimer.current);
@@ -212,7 +211,7 @@ const CatalogPage = () => {
     return () => { if (debounceTimer.current) clearTimeout(debounceTimer.current); };
   }, []);
 
-  // handlers
+  // обробники
   const handleCategoryChange = (categoryId) => {
     if (categoryId === 'all') {
       setSelectedCategories(prev => (prev.includes('all') ? [] : ['all']));
@@ -231,11 +230,11 @@ const CatalogPage = () => {
   const handleSortChange = (e) => setSortBy(e.target.value);
   const toggleFiltersVisibility = () => setIsFiltersVisible(v => !v);
 
-  // wrapper для подсветки
+  // обгортка для підсвічування
   const ProductCardWithHighlight = React.memo(function ProductCardWithHighlight({ product, query }) {
     const highlightedName = useMemo(() => highlightMatch(product.name, query), [product.name, query]);
 
-    // гарантируем корректные поля
+    // гарантуємо коректні поля
     const image =
       product.image_url
       ?? product.image
@@ -253,7 +252,7 @@ const CatalogPage = () => {
         image={image}
         title={highlightedName}
         price={price}
-        // oldPrice={...} // если появится
+        // oldPrice={...} // якщо зʼявиться
         onAddToCart={() => {}}
       />
     );
@@ -269,7 +268,7 @@ const CatalogPage = () => {
         </div>
       ));
     }
-    return <p>По вашему запросу ничего не найдено.</p>;
+    return <p>За вашим запитом нічого не знайдено.</p>;
   };
 
   useEffect(() => { document.title = 'Каталог товарів - Lite Forest'; }, []);
@@ -333,7 +332,7 @@ const CatalogPage = () => {
 
           <div className="filter-group">
             <h3>Матеріал</h3>
-            <select value={material} onChange={handleMaterialChange} aria-label="Фільтр по матеріалу">
+            <select value={material} onChange={handleMaterialChange} aria-label="Фільтр за матеріалом">
               <option value="">— будь-який —</option>
               <option value="PLA">PLA</option>
               <option value="PETG">PETG</option>
@@ -345,7 +344,7 @@ const CatalogPage = () => {
 
           <div className="filter-group">
             <h3>Технологія друку</h3>
-            <select value={printTech} onChange={handlePrintTechChange} aria-label="Фільтр по технології друку">
+            <select value={printTech} onChange={handlePrintTechChange} aria-label="Фільтр за технологією друку">
               <option value="">— будь-яка —</option>
               <option value="FDM">FDM</option>
               <option value="SLA">SLA</option>
@@ -369,8 +368,8 @@ const CatalogPage = () => {
 
         <main className="product-grid">
           <div className="products-header">
-            <span className="products-count">Знайдено товарів: {products.length}</span>
-            <select className="sort-by" value={sortBy} onChange={handleSortChange} aria-label="Сортировка">
+            <span className="products-count">Знайдено товарів: {uaNumber(products.length)}</span>
+            <select className="sort-by" value={sortBy} onChange={handleSortChange} aria-label="Сортування">
               <option value="popular">Спочатку популярні</option>
               <option value="new">Спочатку нові</option>
               <option value="price_asc">Спершу дешеві</option>
@@ -378,16 +377,16 @@ const CatalogPage = () => {
             </select>
           </div>
 
-        <div className="products-list-grid" role="list">
-          {isLoading || error || products.length === 0
-            ? renderContent()
-            : products.map((p, idx) => (
-                <div role="listitem" key={p.id ?? p._id ?? p.sku ?? p.slug ?? idx}>
-                  <ProductCardWithHighlight product={p} query={searchQuery} />
+          <div className="products-list-grid" role="list">
+            {isLoading || error || products.length === 0
+              ? renderContent()
+              : products.map((p, idx) => (
+                  <div role="listitem" key={p.id ?? p._id ?? p.sku ?? p.slug ?? idx}>
+                    <ProductCardWithHighlight product={p} query={searchQuery} />
                   </div>
                 ))
-          }
-        </div>
+            }
+          </div>
 
         </main>
       </div>

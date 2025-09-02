@@ -1,9 +1,10 @@
 import knex, { Knex } from 'knex';
 import { env } from '../core/env.js';
 
-// 👇 ДОБАВЛЕНО:
-import { types } from 'pg';
-types.setTypeParser(1700, (v) => (v === null ? null : parseFloat(v))); // numeric/decimal → number
+// ✅ типобезопасно: numeric(1700) -> number
+import pg from 'pg';
+const { types } = pg;
+types.setTypeParser(1700, (val: string) => parseFloat(val)); // NUMERIC/DECIMAL => number
 
 export const db: Knex = knex({
   client: 'pg',
