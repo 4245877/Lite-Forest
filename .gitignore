@@ -44,3 +44,4 @@ my-react-app/node_modules/
 # Optional
 # coverage/
 # .cache/
+# .turbo/ 
