@@ -7,10 +7,15 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Dependencies / build outputs
 node_modules
 dist
 dist-ssr
 *.local
+
+# Postgres data (don't track DB files)
+.pgdata/
+pgdata/
 
 # Editor directories and files
 .vscode/*
@@ -23,9 +28,19 @@ dist-ssr
 *.sln
 *.sw?
 
-# Игнорировать lock-файл, чтобы избежать конфликтов между ОС
-backend/dist
-backend/node_modules
-my-react-app/dist
-my-react-app/node_modules
+# Project folders
+backend/
+backend/dist/
+backend/node_modules/
+my-react-app/dist/
+my-react-app/node_modules/
+
+# Environment files (secrets)
 .env
+.env.example
+.env.local
+.env.*.local
+
+# Optional
+# coverage/
+# .cache/
