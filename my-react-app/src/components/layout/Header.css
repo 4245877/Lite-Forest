@@ -9,23 +9,6 @@
   box-sizing: border-box;
 }
 
-/* CSS переменные для цветовой палитры */
-:root {
-  --eco-primary: #2d5a27;
-  --eco-secondary: #4a7c59;
-  --eco-accent: #52b788;
-  --eco-light: #95d5b2;
-  --eco-sand: #f1faee;
-  --eco-beige: #e9c46a;
-  --eco-dark: #1b4332;
-  --text-dark: #2d3436;
-  --text-light: #636e72;
-  --white: #ffffff;
-  --shadow-light: 0 2px 10px rgba(45, 90, 39, 0.1);
-  --shadow-medium: 0 4px 20px rgba(45, 90, 39, 0.15);
-  --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
 /* Основной хедер */
 .app-header {
   position: sticky;

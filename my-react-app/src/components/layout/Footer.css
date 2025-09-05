@@ -3,20 +3,7 @@
 /* Используем те же шрифты и переменные из Header.css */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
-:root {
-  --eco-primary: #2d5a27;
-  --eco-secondary: #4a7c59;
-  --eco-accent: #52b788;
-  --eco-light: #95d5b2;
-  --eco-sand: #f1faee;
-  --eco-beige: #e9c46a;
-  --eco-dark: #1b4332;
-  --text-dark: #2d3436;
-  --text-light: #636e72;
-  --white: #ffffff;
-  --footer-bg: linear-gradient(135deg, var(--eco-dark) 0%, var(--eco-primary) 100%);
-  --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
+
 
 /* Основной футер */
 .app-footer {
@@ -462,17 +449,5 @@
   .footer-bottom-right {
     flex-direction: column;
     gap: 0.5rem;
-  }
-}
-
-/* Специальные стили для темного режима (если понадобится) */
-@media (prefers-color-scheme: dark) {
-  .newsletter-input {
-    background: rgba(255, 255, 255, 0.05);
-    border-color: rgba(82, 183, 136, 0.2);
-  }
-  
-  .newsletter-input:focus {
-    background: rgba(255, 255, 255, 0.1);
   }
 }
