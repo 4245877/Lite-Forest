@@ -14,10 +14,10 @@
   position: sticky;
   top: 0;
   z-index: 100;
-  background: linear-gradient(135deg, var(--eco-sand) 0%, rgba(241, 250, 238, 0.95) 100%);
+  background: linear-gradient(135deg, var(--color-sand) 0%, rgba(241, 250, 238, 0.95) 100%);
   backdrop-filter: blur(10px);
   border-bottom: 1px solid rgba(82, 183, 136, 0.2);
-  box-shadow: var(--shadow-light);
+  box-shadow: var(--shadow-sm);
   
   /* Добавляем subtle паттерн листьев */
   background-image: 
@@ -41,7 +41,7 @@
   display: flex;
   align-items: center;
   text-decoration: none;
-  transition: var(--transition-smooth);
+  transition: var(--transition-normal);
 }
 
 .logo:hover {
@@ -58,12 +58,12 @@
   font-family: 'Inter', sans-serif;
   font-size: 1.75rem;
   font-weight: 700;
-  color: var(--eco-primary);
+  color: var(--color-primary);
   letter-spacing: -0.02em;
 }
 
 .logo-accent {
-  color: var(--eco-accent);
+  color: var(--color-accent);
   position: relative;
 }
 
@@ -74,10 +74,10 @@
   left: 0;
   width: 100%;
   height: 2px;
-  background: linear-gradient(90deg, var(--eco-accent), var(--eco-light));
+  background: linear-gradient(90deg, var(--color-accent), var(--color-light));
   border-radius: 1px;
   opacity: 0;
-  transition: var(--transition-smooth);
+  transition: var(--transition-normal);
 }
 
 .logo:hover .logo-accent::after {
@@ -94,13 +94,13 @@
 .nav-link {
   position: relative;
   text-decoration: none;
-  color: var(--text-dark);
+  color: var(--color-text-primary);
   font-family: 'Inter', sans-serif;
   font-size: 1rem;
   font-weight: 500;
   padding: 8px 16px;
   border-radius: 8px;
-  transition: var(--transition-smooth);
+  transition: var(--transition-normal);
   overflow: hidden;
 }
 
@@ -112,7 +112,7 @@
   width: 100%;
   height: 100%;
   background: linear-gradient(90deg, transparent, rgba(82, 183, 136, 0.1), transparent);
-  transition: var(--transition-smooth);
+  transition: var(--transition-normal);
 }
 
 .nav-link:hover::before {
@@ -120,7 +120,7 @@
 }
 
 .nav-link:hover {
-  color: var(--eco-primary);
+  color: var(--color-primary);
   background-color: rgba(82, 183, 136, 0.1);
   box-shadow: 0 0 20px rgba(82, 183, 136, 0.3);
   transform: translateY(-1px);
@@ -145,26 +145,26 @@
   justify-content: center;
   width: 44px;
   height: 44px;
-  background: var(--white);
+  background: var(--color-surface);
   border: 1px solid rgba(82, 183, 136, 0.2);
   border-radius: 12px;
-  color: var(--text-dark);
+  color: var(--color-text-primary);
   cursor: pointer;
   text-decoration: none;
-  transition: var(--transition-smooth);
+  transition: var(--transition-normal);
   box-shadow: var(--shadow-light);
 }
 
 .action-btn:hover {
-  background: var(--eco-accent);
-  color: var(--white);
-  border-color: var(--eco-accent);
+  background: var(--color-accent);
+  color: var(--color-surface);
+  border-color: var(--color-accent);
   transform: translateY(-2px);
-  box-shadow: var(--shadow-medium);
+  box-shadow: var(--shadow-md);
 }
 
 .action-btn svg {
-  transition: var(--transition-smooth);
+  transition: var(--transition-normal);
 }
 
 .action-btn:hover svg {
@@ -180,8 +180,8 @@
   position: absolute;
   top: -8px;
   right: -8px;
-  background: var(--eco-beige);
-  color: var(--eco-dark);
+  background: var(--color-accent-alt);
+  color: var(--color-dark);
   font-size: 0.75rem;
   font-weight: 600;
   padding: 2px 6px;
@@ -208,20 +208,20 @@
   display: block;
   width: 22px;
   height: 2px;
-  background: var(--text-dark);
+  background: var(--color-border-light);
   margin: 0;
   border-radius: 1px;
-  transition: var(--transition-smooth);
+  transition: var(--transition-normal);
   transform-origin: center center;
 }
 
 .mobile-menu-btn:hover {
-  background: var(--eco-accent);
-  border-color: var(--eco-accent);
+  background: var(--color-accent);
+  border-color: var(--color-accent);
 }
 
 .mobile-menu-btn:hover span {
-  background: var(--white);
+  background: var(--color-surface);
 }
 
 .mobile-menu-btn.active span:nth-child(1) {
@@ -269,8 +269,9 @@ body.no-scroll {
 /* Адаптивность */
 @media (max-width: 768px) {
   .mobile-menu-btn {
-    display: flex;
-    z-index: 1001;
+    display: flex;            /* уже есть, но не повредит */
+    background: var(--color-accent);
+    border: 1px solid var(--color-accent);
   }
 
   .logo-text {
@@ -287,14 +288,14 @@ body.no-scroll {
     right: 0;
     width: min(280px, 100%);
     height: 100vh;
-    background: var(--white);
+    background: var(--color-surface);
     flex-direction: column;
     align-items: flex-start;
     padding: 2rem;
     padding-top: 80px;
     gap: 1rem;
     transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: var(--shadow-medium);
+    box-shadow: var(--shadow-md);
     border-left: 1px solid rgba(82, 183, 136, 0.2);
     z-index: 1000;
     overflow-y: auto;
