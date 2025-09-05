@@ -24,6 +24,12 @@
   --color-sand: #f1faee; /* Теплый светлый фон */
   --color-cream: #fefcf3; /* Очень светлый, почти белый фон */
   
+
+ /* использовалось в Header.css */
+  --color-light: #ffffff;
+  --shadow-light: 0 2px 6px rgba(47, 82, 51, 0.12);
+
+
   /* --- Границы и разделители (Borders) --- */
   --color-border: #e2e8f0; /* Основной цвет границ */
   --color-border-light: #f1f5f9; /* Светлый цвет границ */
