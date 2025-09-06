@@ -82,7 +82,7 @@ const Footer = () => {
               </a>
               
               <a 
-                href="https://t.me/ecomarket" 
+                href="https://t.me/Lite_Forest" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="social-link"
@@ -129,15 +129,10 @@ const Footer = () => {
             <p>&copy; {new Date().getFullYear()} LiteForest. Усі права захищені.</p>
           </div>
           <div className="footer-bottom-right">
-            <Link to="/privacy" className="footer-bottom-link">
-              Політика конфіденційності
-            </Link>
-            <Link to="/terms" className="footer-bottom-link">
-              Угода користувача
-            </Link>
-            <Link to="/cookies" className="footer-bottom-link">
-              Cookies
-            </Link>
+            <Link to="/legal#privacy" className="footer-bottom-link">Політика конфіденційності</Link>
+            <Link to="/legal#terms"   className="footer-bottom-link">Угода користувача</Link>
+            <Link to="/legal#cookies" className="footer-bottom-link">Cookies</Link>
+
           </div>
         </div>
       </div>

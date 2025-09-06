@@ -8,15 +8,13 @@ import AboutPage from '../pages/AboutPage';
 import LoginPage from '../pages/LoginPage';
 import CartPage from '../pages/CartPage';
 import ContactPage from '../pages/ContactPage';
-import AdminProducts from '../pages/AdminProducts'; // <-- added
+import AdminProducts from '../pages/AdminProducts';
+import LegalPages from '../pages/LegalPages';
 
 const AppRouter = () => {
   return (
     <Routes>
-      {/* Главная страница */}
       <Route path="/" element={<HomePage />} />
-
-      {/* Другие страницы */}
       <Route path="/catalog" element={<CatalogPage />} />
       <Route path="/promotions" element={<PromotionsPage />} />
       <Route path="/about" element={<AboutPage />} />
@@ -24,10 +22,15 @@ const AppRouter = () => {
       <Route path="/cart" element={<CartPage />} />
       <Route path="/contacts" element={<ContactPage />} />
 
-      {/* Админ: товары */}
-      <Route path="/admin/products" element={<AdminProducts />} />
+      {/* Єдина сторінка з якорями */}
+      <Route path="/legal" element={<LegalPages />} />
 
-      {/* Любой неизвестный путь — перенаправляем на главную */}
+      {/* Редиректи на відповідні розділи */}
+      <Route path="/privacy" element={<Navigate to="/legal#privacy" replace />} />
+      <Route path="/terms"   element={<Navigate to="/legal#terms" replace />} />
+      <Route path="/cookies" element={<Navigate to="/legal#cookies" replace />} />
+
+      <Route path="/admin/products" element={<AdminProducts />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
