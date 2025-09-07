@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { db } from '../db/knex.js';
 import { decodeCursor, encodeCursor } from '../utils/cursor.js';
 import { env } from '../core/env.js';
+import { toStaticUrl } from '../utils/static.js';
 
 const ImageInput = z.object({
   url: z.string().url(),
@@ -40,7 +41,7 @@ export default async function routes(app: FastifyInstance) {
     const limit = Number((req.query as any).limit ?? 20);
     const cursor = decodeCursor<{ id: string }>((req.query as any).cursor);
 
-    let query = db('products').select('*').orderBy('created_at', 'desc').orderBy('id', 'desc').limit(limit + 1);
+    let query = db('products').select('*').orderBy('created_at', 'asc').orderBy('id', 'desc').limit(limit + 1);
     if (cursor) {
       // keyset по id (дополнительно по created_at можно расширить)
       query = query.where('id', '<', cursor.id);
@@ -71,16 +72,33 @@ export default async function routes(app: FastifyInstance) {
     }
 
     const hasMore = rows.length > limit;
+
     const items = rows.slice(0, limit).map((p: any) => {
-      const gallery = imagesById[p.id] || [];
-      const primary = gallery[0];
+      const raw = imagesById[p.id] || [];
+
+      // проклеиваем url/thumb_url из key/thumb_key при необходимости
+      const gallery = raw.map((im: any) => {
+        const guessThumbKey =
+          im.thumb_key ??
+          im.key?.replace('/original/', '/thumb/')?.replace(/\.(jpe?g|png)$/i, '.webp');
+
+        return {
+          ...im,
+          url: im.url ?? toStaticUrl(im.key),
+          thumb_url: im.thumb_url ?? toStaticUrl(guessThumbKey),
+        };
+      });
+
+      // выбираем primary, если помечен role='primary', иначе первый
+      const primary = gallery.find(g => g.role === 'primary') ?? gallery[0];
+
       return {
         ...p,
         categories: p.categories ?? [],
         attributes: p.attributes ?? {},
-        // для каталога используем миниатюру
+        // для карточки каталога — миниатюра primary (или оставляем старое поле, если есть)
         image_url: primary?.thumb_url ?? p.image_url ?? null,
-        images: gallery
+        images: gallery,
       };
     });
 
@@ -95,12 +113,25 @@ export default async function routes(app: FastifyInstance) {
     const row = await db('products').where({ id }).first();
     if (!row) return reply.code(404).send({ message: 'Not found' });
 
-    const gallery = await db('product_images')
+    const raw = await db('product_images')
       .where({ product_id: id })
       .orderBy([
         { column: 'sort_order', order: 'asc' },
         { column: 'created_at', order: 'asc' }
       ]);
+
+    // подставляем url из key, если пусто
+    const gallery = raw.map((im: any) => {
+      const guessThumbKey =
+        im.thumb_key ??
+        im.key?.replace('/original/', '/thumb/')?.replace(/\.(jpe?g|png)$/i, '.webp');
+
+      return {
+        ...im,
+        url: im.url ?? toStaticUrl(im.key),
+        thumb_url: im.thumb_url ?? toStaticUrl(guessThumbKey),
+      };
+    });
 
     return reply.send({
       ...row,

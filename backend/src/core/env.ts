@@ -15,6 +15,7 @@ const EnvSchema = z.object({
   HOST: z.string().default('0.0.0.0'),
   PORT: z.coerce.number().default(3000),
   CORS_ORIGIN: z.string().default('*'),
+  CDN_BASE_URL: z.string().optional(),
 
   DATABASE_URL: z.string().optional(),
   DB_HOST: z.string().default('127.0.0.1'),
