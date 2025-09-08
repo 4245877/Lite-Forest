@@ -12,7 +12,7 @@ import './CatalogPage.css';
  * ✔ ПК и Моб: категории – показываем первые 7, затем «Більше/Згорнути» с aria-атрибутами и анимацией
  * ✔ Моб: шапка «Фільтри» с крестиком прилипает к верху без «щели» (safe-area)
  * ✔ Моб: плашка «Скинути/Показати» прилипает к НИЗУ без «щели» (safe-area)
- * ✔ Корректная фокусировка при развороте/сворачивании
+ * ✔ Новое: более наглядная стрелка-розкривач для підкатегорій (chevron ▶→▼) внутри строки категории
  */
 
 // --- Categories -----------------------------------------------------------------
@@ -87,7 +87,7 @@ const structuredCategories = [
   // Транспорт
   { id: 'auto-moto', name: 'Авто та мото', parent: null },
   { id: 'car-interior', name: 'Інтерʼєр та органайзери', parent: 'auto-moto' },
-  { id: 'car-exterior', name: 'Екстерʼєр та тюнінг', parent: 'auto-moto' },
+  { id: 'car-exterior', name: 'Екстерʼєр та тюнінг', parent: 'auto-mото' },
   { id: 'mounts-car', name: 'Кріплення та тримачі', parent: 'auto-moto' },
 
   // Спорт і аутдор
@@ -345,16 +345,9 @@ const CatalogPage = () => {
   const handleSortChange = (e) => setSortBy(e.target.value);
   const toggleFiltersVisibility = () => setIsFiltersVisible(v => !v);
 
-  // --- Sticky header (mobile), no visible gap ---
-  const stickyHeaderStyle = isMobile ? {
-    position: 'sticky',
-    top: 0,
-    paddingTop: 'env(safe-area-inset-top, 0px)',
-    zIndex: 2,
-    background: 'var(--color-surface)'
-  } : undefined;
+  useEffect(() => { document.title = 'Каталог товарів - Lite Forest'; }, []);
 
-  // --- Category list collapse (both desktop & mobile) ---
+  // --- Collapse (both desktop & mobile) ---
   const recomputeCollapsedHeight = useCallback(() => {
     if (!categoryListRef.current) { setCollapsedMaxHeight(0); setShouldCollapse(false); return; }
     if (categorySearch.trim()) { setShouldCollapse(false); setCollapsedMaxHeight(0); return; }
@@ -433,8 +426,6 @@ const CatalogPage = () => {
     return <div className="empty-state"><div className="empty-icon" aria-hidden>🕵️‍♂️</div><h3>Нічого не знайдено</h3><p>Спробуйте змінити фільтри або скинути їх.</p></div>;
   };
 
-  useEffect(() => { document.title = 'Каталог товарів - Lite Forest'; }, []);
-
   // List style when collapsed
   const categoryListStyle = (shouldCollapse && !catExpanded)
     ? { overflow: 'hidden', maxHeight: `${collapsedMaxHeight}px`, transition: 'max-height 260ms ease' }
@@ -484,10 +475,9 @@ const CatalogPage = () => {
           role={isMobile ? 'dialog' : undefined}
           aria-modal={isMobile ? true : undefined}
           aria-label="Фільтри каталогу"
-          // убираем внутренние зазоры сверху/снизу на мобиле, чтобы шапка/футер прилегали плотно
           style={isMobile ? { paddingTop: 0, paddingBottom: 0 } : undefined}
         >
-          <div className="filters-header" ref={headerRef} style={stickyHeaderStyle}>
+          <div className="filters-header" ref={headerRef} style={isMobile ? { position:'sticky', top:0, zIndex:2, background:'var(--color-surface)', paddingTop:'env(safe-area-inset-top, 0px)' } : undefined}>
             <h2>Фільтри</h2>
             <button className="close-filters" onClick={toggleFiltersVisibility} aria-label="Закрити фільтри">×</button>
           </div>
@@ -505,43 +495,50 @@ const CatalogPage = () => {
               aria-label="Пошук у категоріях"
             />
 
-            <div
-              id="categoryListTop"
-              className="category-list"
-              ref={categoryListRef}
-              style={categoryListStyle}
-            >
+            <div id="categoryListTop" className="category-list" ref={categoryListRef} style={categoryListStyle}>
               {filteredCategoryTree.map(cat => (
                 <div key={cat.id} className="category-block">
-                  <label tabIndex={0} className={`category-item ${selectedCategories.includes(cat.id) ? 'selected' : ''}`}>
-                    <input
-                      type="checkbox"
-                      checked={selectedCategories.includes(cat.id)}
-                      onChange={() => handleCategoryChange(cat.id)}
-                    />
-                    <span className="custom-checkbox" aria-hidden />
-                    <span>{cat.name}</span>
-                  </label>
+                  <div className="category-header">
+                    {cat.children?.length > 0 && (
+                      <button
+                        className={`category-disclosure ${isCatOpen(cat) ? 'open' : ''}`}
+                        onClick={() => toggleCat(cat.id)}
+                        aria-label={`${isCatOpen(cat) ? 'Згорнути' : 'Розгорнути'} ${cat.name}`}
+                        aria-expanded={isCatOpen(cat)}
+                        aria-controls={`children-${cat.id}`}
+                      >
+                        {/* chevron-right, rotates 90° when open */}
+                        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+                          <path fill="currentColor" d="M9 6l6 6-6 6"/>
+                        </svg>
+                      </button>
+                    )}
+
+                    <label tabIndex={0} className={`category-item ${selectedCategories.includes(cat.id) ? 'selected' : ''}`}>
+                      <input
+                        type="checkbox"
+                        checked={selectedCategories.includes(cat.id)}
+                        onChange={() => handleCategoryChange(cat.id)}
+                      />
+                      <span className="custom-checkbox" aria-hidden />
+                      <span>{cat.name}</span>
+                    </label>
+                  </div>
 
                   {cat.children?.length > 0 && (
-                    <>
-                      <button className={`category-toggle ${isCatOpen(cat) ? 'open' : ''}`} onClick={() => toggleCat(cat.id)} aria-label={`Розгорнути ${cat.name}`} aria-expanded={isCatOpen(cat)} aria-controls={`children-${cat.id}`}>
-                        <svg width="18" height="18" viewBox="0 0 24 24"><path fill="currentColor" d="M7 10l5 5 5-5z"/></svg>
-                      </button>
-                      <div id={`children-${cat.id}`} className={`category-children ${isCatOpen(cat) ? 'open' : ''}`}>
-                        {cat.children.map(child => (
-                          <label key={child.id} className={`category-item child ${selectedCategories.includes(child.id) ? 'selected' : ''}`}>
-                            <input
-                              type="checkbox"
-                              checked={selectedCategories.includes(child.id)}
-                              onChange={() => handleCategoryChange(child.id)}
-                            />
-                            <span className="custom-checkbox" aria-hidden />
-                            <span>{child.name}</span>
-                          </label>
-                        ))}
-                      </div>
-                    </>
+                    <div id={`children-${cat.id}`} className={`category-children ${isCatOpen(cat) ? 'open' : ''}`}>
+                      {cat.children.map(child => (
+                        <label key={child.id} className={`category-item child ${selectedCategories.includes(child.id) ? 'selected' : ''}`}>
+                          <input
+                            type="checkbox"
+                            checked={selectedCategories.includes(child.id)}
+                            onChange={() => handleCategoryChange(child.id)}
+                          />
+                          <span className="custom-checkbox" aria-hidden />
+                          <span>{child.name}</span>
+                        </label>
+                      ))}
+                    </div>
                   )}
                 </div>
               ))}
@@ -568,29 +565,9 @@ const CatalogPage = () => {
             <h3>Ціна, ₴</h3>
             <div className="price-filter">
               <div className="price-inputs">
-                <input
-                  type="number"
-                  inputMode="numeric"
-                  pattern="[0-9]*"
-                  placeholder="від"
-                  value={minPrice}
-                  onChange={handleMinPriceChange}
-                  className="price-input input"
-                  min={0}
-                  step={1}
-                />
+                <input type="number" inputMode="numeric" pattern="[0-9]*" placeholder="від" value={minPrice} onChange={handleMinPriceChange} className="price-input input" min={0} step={1} />
                 <span className="price-separator">–</span>
-                <input
-                  type="number"
-                  inputMode="numeric"
-                  pattern="[0-9]*"
-                  placeholder="до"
-                  value={maxPrice}
-                  onChange={handleMaxPriceChange}
-                  className="price-input input"
-                  min={0}
-                  step={1}
-                />
+                <input type="number" inputMode="numeric" pattern="[0-9]*" placeholder="до" value={maxPrice} onChange={handleMaxPriceChange} className="price-input input" min={0} step={1} />
               </div>
               <div className="price-presets" aria-label="Швидкі діапазони цін">
                 <button onClick={() => { setMinPrice(''); setMaxPrice('500'); }}>до ₴500</button>
@@ -632,18 +609,7 @@ const CatalogPage = () => {
 
           {/* Мобильный нижний футер — прилипает к НИЗУ без щели */}
           {isMobile && (
-            <div
-              className="filters-footer"
-              style={{
-                position: 'sticky',
-                bottom: 0,
-                zIndex: 2,
-                background: 'var(--color-surface)',
-                padding: 'var(--spacing-lg)',
-                paddingBottom: 'calc(var(--spacing-lg) + env(safe-area-inset-bottom, 0px))',
-                borderTop: '1px solid var(--color-border-light)'
-              }}
-            >
+            <div className="filters-footer">
               <button className="btn btn--secondary" onClick={clearAll}>Скинути</button>
               <button className="btn btn--primary" onClick={toggleFiltersVisibility}>Показати {uaNumber(products.length)}</button>
             </div>
@@ -667,16 +633,11 @@ const CatalogPage = () => {
               ? renderContent()
               : products.map((p, idx) => (
                   <div role="listitem" key={p.id ?? p._id ?? p.sku ?? p.slug ?? idx}>
-                    <Link
-                      to={`/products/${p.id ?? p._id}`}
-                      className="product-card-link"
-                      aria-label={`Відкрити ${p.name}`}
-                    >
+                    <Link to={`/products/${p.id ?? p._id}`} className="product-card-link" aria-label={`Відкрити ${p.name}`}>
                       <ProductCardWithHighlight product={p} query={searchQuery} />
                     </Link>
                   </div>
-                ))
-            }
+                ))}
           </div>
 
         </main>
