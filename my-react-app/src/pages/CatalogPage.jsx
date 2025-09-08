@@ -82,7 +82,7 @@ const structuredCategories = [
   // Транспорт
   { id: 'auto-moto', name: 'Авто та мото', parent: null },
   { id: 'car-interior', name: 'Інтерʼєр та органайзери', parent: 'auto-moto' },
-  { id: 'car-exterior', name: 'Екстерʼєр та тюнінг', parent: 'auto-mото' },
+  { id: 'car-exterior', name: 'Екстерʼєр та тюнінг', parent: 'auto-мото' },
   { id: 'mounts-car', name: 'Кріплення та тримачі', parent: 'auto-moto' },
 
   // Спорт і аутдор
@@ -176,6 +176,12 @@ const CatalogPage = () => {
 
   const categoryTree = useMemo(() => buildCategoryTree(structuredCategories), []);
 
+  // ✅ Обчислюємо список категорій для запиту (без 'all')
+  const selectedCatsForQuery = useMemo(
+    () => selectedCategories.filter(c => c !== 'all'),
+    [selectedCategories]
+  );
+
   useEffect(() => {
     const controller = new AbortController();
 
@@ -183,7 +189,14 @@ const CatalogPage = () => {
       setIsLoading(true);
       setError(null);
       try {
-        const data = await api.listProducts(searchQuery, 50);
+        const data = await api.listProducts(searchQuery, 50, {
+          categories: selectedCatsForQuery,
+          minPrice,
+          maxPrice,
+          material,
+          printTech,
+          sortBy,
+        });
         setProducts(normalizeProducts(data));
       } catch (err) {
         if (err.name === 'AbortError') return;
@@ -196,7 +209,7 @@ const CatalogPage = () => {
 
     fetchProducts();
     return () => controller.abort();
-  }, [searchQuery]);
+  }, [searchQuery, selectedCatsForQuery, minPrice, maxPrice, material, printTech, sortBy]);
 
   // debounce для пошуку
   const handleSearch = useCallback((value) => {

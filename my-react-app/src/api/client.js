@@ -2,11 +2,40 @@ export const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:3000'
 const ADMIN_TOKEN = import.meta.env.VITE_ADMIN_TOKEN || '';
 
 export const api = {
-  async listProducts(q = '', limit = 20, cursor = '') {
+  /**
+   * listProducts(q, limit, filtersOrCursor, cursor?)
+   * - Обратная совместимость:
+   *   - Старый вызов: listProducts('q', 20, 'cursor123')
+   *   - Новый вызов:  listProducts('q', 20, { categories: [], ... }, 'cursor123')
+   */
+  async listProducts(q = '', limit = 20, filtersOrCursor = {}, cursor = '') {
+    // Разруливаем 3-й аргумент: это либо объект фильтров, либо строка курсора из старых вызовов
+    let filters = {};
+    if (typeof filtersOrCursor === 'string') {
+      cursor = filtersOrCursor || cursor;
+    } else if (filtersOrCursor && typeof filtersOrCursor === 'object') {
+      filters = filtersOrCursor;
+    }
+
     const u = new URL(`${API_BASE}/api/products`);
     if (q) u.searchParams.set('q', q);
     if (limit) u.searchParams.set('limit', String(limit));
     if (cursor) u.searchParams.set('cursor', cursor);
+
+    // --- ФИЛЬТРЫ ---
+    const cats = Array.isArray(filters.categories) ? filters.categories.filter(Boolean) : [];
+    if (cats.length) u.searchParams.set('categories', cats.join(',')); // decor,lighting,...
+
+    if (filters.minPrice != null && filters.minPrice !== '')
+      u.searchParams.set('minPrice', String(filters.minPrice));
+    if (filters.maxPrice != null && filters.maxPrice !== '')
+      u.searchParams.set('maxPrice', String(filters.maxPrice));
+
+    if (filters.material) u.searchParams.set('material', String(filters.material));
+    if (filters.printTech) u.searchParams.set('printTech', String(filters.printTech));
+
+    // popular | new | price_asc | price_desc
+    if (filters.sortBy) u.searchParams.set('sort', String(filters.sortBy));
 
     console.log('[api] GET', u.toString()); // 👈 покаже куди реально йде запит
 

@@ -50,27 +50,78 @@ function glueGallery(raw: any[]) {
 }
 
 export default async function routes(app: FastifyInstance) {
-  // list with cursor pagination & search
+  // list with cursor pagination & search + FILTERS
   app.get('/api/products', async (req, reply) => {
     const q = (req.query as any).q as string | undefined;
     const limit = Number((req.query as any).limit ?? 20);
     const cursor = decodeCursor<{ id: string }>((req.query as any).cursor);
 
-    let query = db('products').select('*').orderBy('created_at', 'asc').orderBy('id', 'desc').limit(limit + 1);
-    if (cursor) {
-      // keyset по id (дополнительно по created_at можно расширить)
-      query = query.where('id', '<', cursor.id);
-    }
+    const categoriesParam = (req.query as any).categories as string | undefined; // "decor,lighting"
+    const cats = categoriesParam ? categoriesParam.split(',').map(s => s.trim()).filter(Boolean) : [];
+
+    const minPrice = (req.query as any).minPrice;
+    const maxPrice = (req.query as any).maxPrice;
+    const material = (req.query as any).material as string | undefined;   // attributes->>'material'
+    const printTech = (req.query as any).printTech as string | undefined; // attributes->>'printTech'
+    const sort = ((req.query as any).sort as string | undefined) || 'popular';
+
+    let query = db('products').select('*');
+
+    // поиск
     if (q) {
       query = query.where((b) => {
         b.whereILike('name', `%${q}%`).orWhereILike('sku', `%${q}%`);
       });
     }
 
+    // фильтр по категориям (jsonb-массив строк; условие: есть любая из выбранных)
+    if (cats.length) {
+      query = query.where((b) => {
+        for (const c of cats) {
+          b.orWhereRaw('categories ? ?', [c]);
+        }
+      });
+    }
+
+    // фильтр по цене
+    if (minPrice !== undefined && minPrice !== '') {
+      query = query.andWhere('price', '>=', Number(minPrice));
+    }
+    if (maxPrice !== undefined && maxPrice !== '') {
+      query = query.andWhere('price', '<=', Number(maxPrice));
+    }
+
+    // фильтр по material/printTech (в jsonb attributes)
+    if (material) {
+      query = query.andWhereRaw("LOWER(COALESCE(attributes->>'material','')) = LOWER(?)", [material]);
+    }
+    if (printTech) {
+      query = query.andWhereRaw("LOWER(COALESCE(attributes->>'printTech','')) = LOWER(?)", [printTech]);
+    }
+
+    // сортировка
+    if (sort === 'price_asc') {
+      query = query.orderBy('price', 'asc').orderBy('id', 'desc');
+    } else if (sort === 'price_desc') {
+      query = query.orderBy('price', 'desc').orderBy('id', 'desc');
+    } else if (sort === 'new') {
+      query = query.orderBy('created_at', 'desc').orderBy('id', 'desc');
+    } else {
+      // popular (пока равносильно "новые сначала")
+      query = query.orderBy('created_at', 'desc').orderBy('id', 'desc');
+    }
+
+    // пагинация по cursor (замечание: корректна для сортировки по created_at/id)
+    query = query.limit(limit + 1);
+    if (cursor && (sort === 'popular' || sort === 'new')) {
+      // keyset по id (можно расширить по created_at)
+      query = query.where('id', '<', cursor.id);
+    }
+
     const rows = await query;
 
-    // подгружаем галереи
-    const ids = rows.map((r: any) => r.id);
+    // подтягиваем галереи
+    const ids = rows.slice(0, limit).map((r: any) => r.id);
     let imagesById: Record<string, any[]> = {};
     if (ids.length) {
       const imgs = await db('product_images')
@@ -87,30 +138,33 @@ export default async function routes(app: FastifyInstance) {
     }
 
     const hasMore = rows.length > limit;
-
     const items = rows.slice(0, limit).map((p: any) => {
       const raw = imagesById[p.id] || [];
+      const gallery = raw.map((im: any) => {
+        const guessThumbKey =
+          im.thumb_key ??
+          im.key?.replace('/original/', '/thumb/')?.replace(/\.(jpe?g|png)$/i, '.webp');
 
-      // проклеиваем url/thumb_url из key/thumb_key при необходимости
-      const gallery = glueGallery(raw);
-
-      // выбираем primary, если помечен role='primary', иначе первый
+        return {
+          ...im,
+          url: im.url ?? toStaticUrl(im.key),
+          thumb_url: im.thumb_url ?? toStaticUrl(guessThumbKey),
+        };
+      });
       const primary = gallery.find(g => g.role === 'primary') ?? gallery[0];
 
       return {
         ...p,
         categories: p.categories ?? [],
         attributes: p.attributes ?? {},
-        // для карточки каталога — миниатюра primary (или оставляем старое поле, если есть)
         image_url: primary?.thumb_url ?? p.image_url ?? null,
-        images: gallery,
+        images: gallery
       };
     });
 
     const nextCursor = hasMore && items.length ? encodeCursor({ id: items[items.length - 1].id }) : null;
     return reply.send({ items, nextCursor });
   });
-
 
   // get by id
   app.get('/api/products/:id', async (req, reply) => {
@@ -137,7 +191,6 @@ export default async function routes(app: FastifyInstance) {
       images: gallery
     });
   });
-
 
   // create
   app.post('/api/products', { preHandler: requireAdmin }, async (req, reply) => {
@@ -199,7 +252,6 @@ export default async function routes(app: FastifyInstance) {
     return reply.code(204).send();
   });
 
-
   // update
   app.patch('/api/products/:id', { preHandler: requireAdmin }, async (req, reply) => {
     const { id } = req.params as any;
@@ -208,7 +260,6 @@ export default async function routes(app: FastifyInstance) {
     if (!row) return reply.code(404).send({ message: 'Not found' });
     return reply.send(row);
   });
-
 
   // delete
   app.delete('/api/products/:id', { preHandler: requireAdmin }, async (req, reply) => {
