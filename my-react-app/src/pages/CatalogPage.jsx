@@ -6,11 +6,19 @@ import { highlightMatch } from '../utils/searchUtils';
 import { api } from '../api/client';
 import './CatalogPage.css';
 
-// Категорії — структуровані (slug/id, name, parent)
-// v2 (уніфікована ієрархія на базі двох списків + практики MakerWorld/Creality)
-// Принципи: 1) послідовні слаги (latin-kebab), 2) максимум 2 рівні, 3) тільки те, що доречно для магазину готових друків.
-// Примітка: кілька гілок позначено як optional — вмикайте лише якщо реально продаєте ці товари.
+/**
+ * ✅ Mobile-first improvements in this version:
+ * - Sticky drawer header & footer on mobile (Apply / Reset)
+ * - Visible custom checkboxes, larger touch targets
+ * - Collapsible category groups with caret
+ * - Category search inside the drawer
+ * - Active filter chips with one-tap removal
+ * - Quick price presets (<=500, 500–1500, 1500–3000)
+ * - Filter toggle shows a badge with active counter
+ * - Body-scroll lock while drawer is open
+ */
 
+// --- Categories -----------------------------------------------------------------
 const structuredCategories = [
   // Meta
   { id: 'all', name: 'Усі категорії', parent: null },
@@ -79,10 +87,10 @@ const structuredCategories = [
   { id: 'brackets', name: 'Кронштейни та кріплення', parent: 'parts-fasteners' },
   { id: 'replacement-parts', name: 'Запчастини та ремонт', parent: 'parts-fasteners' },
 
-  // Транспорт
+  // Транспорт (fixed parent id typo: 'auto-мото' -> 'auto-moto')
   { id: 'auto-moto', name: 'Авто та мото', parent: null },
   { id: 'car-interior', name: 'Інтерʼєр та органайзери', parent: 'auto-moto' },
-  { id: 'car-exterior', name: 'Екстерʼєр та тюнінг', parent: 'auto-мото' },
+  { id: 'car-exterior', name: 'Екстерʼєр та тюнінг', parent: 'auto-moto' },
   { id: 'mounts-car', name: 'Кріплення та тримачі', parent: 'auto-moto' },
 
   // Спорт і аутдор
@@ -119,7 +127,7 @@ const structuredCategories = [
   { id: 'holiday-wedding', name: 'Весілля', parent: 'gifts' },
   { id: 'holiday-birthday', name: 'День народження', parent: 'gifts' },
 
-  // Матеріали (optional — якщо продаєте)
+  // Матеріали (optional)
   { id: 'materials', name: 'Матеріали та витратні', parent: null },
   { id: 'filaments', name: 'Філаменти', parent: 'materials' },
   { id: 'resins', name: 'Смоли', parent: 'materials' },
@@ -148,7 +156,6 @@ const normalizeProducts = (data) => {
   if (Array.isArray(data)) return data;
   if (!data) return [];
   if (Array.isArray(data.items)) return data.items;
-  // якщо прийшов обʼєкт з ключем results / products
   if (Array.isArray(data.products)) return data.products;
   if (Array.isArray(data.results)) return data.results;
   return [];
@@ -172,15 +179,100 @@ const CatalogPage = () => {
 
   const [searchInput, setSearchInput] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [categorySearch, setCategorySearch] = useState('');
+  const [openCats, setOpenCats] = useState({});
+  const [isMobile, setIsMobile] = useState(false);
+
   const debounceTimer = useRef(null);
+
+  // body scroll lock while drawer open (mobile)
+  useEffect(() => {
+    if (isFiltersVisible) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => { document.body.style.overflow = ''; };
+  }, [isFiltersVisible]);
+
+  // watch viewport
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 768px)');
+    const update = () => setIsMobile(mq.matches);
+    update();
+    if (mq.addEventListener) mq.addEventListener('change', update); else mq.addListener(update);
+    return () => { if (mq.removeEventListener) mq.removeEventListener('change', update); else mq.removeListener(update); };
+  }, []);
 
   const categoryTree = useMemo(() => buildCategoryTree(structuredCategories), []);
 
-  // ✅ Обчислюємо список категорій для запиту (без 'all')
   const selectedCatsForQuery = useMemo(
     () => selectedCategories.filter(c => c !== 'all'),
     [selectedCategories]
   );
+
+  const filteredCategoryTree = useMemo(() => {
+    const q = categorySearch.trim().toLowerCase();
+    if (!q) return categoryTree;
+
+    const filterNode = (node) => {
+      const matchesSelf = node.name.toLowerCase().includes(q);
+      const children = (node.children || []).map(filterNode).filter(Boolean);
+      if (matchesSelf || children.length) return { ...node, children };
+      return null;
+    };
+    return categoryTree.map(filterNode).filter(Boolean);
+  }, [categorySearch, categoryTree]);
+
+  const activeFiltersCount = useMemo(() => {
+    let count = 0;
+    count += selectedCatsForQuery.length;
+    if (minPrice) count++;
+    if (maxPrice) count++;
+    if (material) count++;
+    if (printTech) count++;
+    if (searchQuery) count++;
+    return count;
+  }, [selectedCatsForQuery.length, minPrice, maxPrice, material, printTech, searchQuery]);
+
+  const activeTags = useMemo(() => {
+    const tags = [];
+    selectedCatsForQuery.forEach(id => {
+      const cat = structuredCategories.find(c => c.id === id);
+      if (cat) tags.push({ type: 'category', id, label: cat.name });
+    });
+    if (minPrice) tags.push({ type: 'minPrice', label: `від ₴${uaNumber(Number(minPrice))}` });
+    if (maxPrice) tags.push({ type: 'maxPrice', label: `до ₴${uaNumber(Number(maxPrice))}` });
+    if (material) tags.push({ type: 'material', label: `Матеріал: ${material}` });
+    if (printTech) tags.push({ type: 'printTech', label: `Технологія: ${printTech}` });
+    if (searchQuery) tags.push({ type: 'search', label: `Пошук: "${searchQuery}"` });
+    return tags;
+  }, [selectedCatsForQuery, minPrice, maxPrice, material, printTech, searchQuery]);
+
+  const clearAll = useCallback(() => {
+    setSelectedCategories([]);
+    setMinPrice('');
+    setMaxPrice('');
+    setMaterial('');
+    setPrintTech('');
+    setSearchInput('');
+    setSearchQuery('');
+    setCategorySearch('');
+  }, []);
+
+  const removeTag = useCallback((tag) => {
+    switch (tag.type) {
+      case 'category':
+        setSelectedCategories(prev => prev.filter(c => c !== tag.id));
+        break;
+      case 'minPrice': setMinPrice(''); break;
+      case 'maxPrice': setMaxPrice(''); break;
+      case 'material': setMaterial(''); break;
+      case 'printTech': setPrintTech(''); break;
+      case 'search': setSearchInput(''); setSearchQuery(''); break;
+      default: break;
+    }
+  }, []);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -211,7 +303,6 @@ const CatalogPage = () => {
     return () => controller.abort();
   }, [searchQuery, selectedCatsForQuery, minPrice, maxPrice, material, printTech, sortBy]);
 
-  // debounce для пошуку
   const handleSearch = useCallback((value) => {
     setSearchInput(value);
     if (debounceTimer.current) clearTimeout(debounceTimer.current);
@@ -221,11 +312,8 @@ const CatalogPage = () => {
     }, 450);
   }, []);
 
-  useEffect(() => {
-    return () => { if (debounceTimer.current) clearTimeout(debounceTimer.current); };
-  }, []);
+  useEffect(() => () => { if (debounceTimer.current) clearTimeout(debounceTimer.current); }, []);
 
-  // обробники
   const handleCategoryChange = (categoryId) => {
     if (categoryId === 'all') {
       setSelectedCategories(prev => (prev.includes('all') ? [] : ['all']));
@@ -237,6 +325,12 @@ const CatalogPage = () => {
     });
   };
 
+  const isCatOpen = useCallback((cat) => {
+    return !!(openCats[cat.id] || (cat.children && cat.children.some(ch => selectedCategories.includes(ch.id))));
+  }, [openCats, selectedCategories]);
+
+  const toggleCat = (id) => setOpenCats(prev => ({ ...prev, [id]: !prev[id] }));
+
   const handleMinPriceChange = (e) => setMinPrice(e.target.value);
   const handleMaxPriceChange = (e) => setMaxPrice(e.target.value);
   const handleMaterialChange = (e) => setMaterial(e.target.value);
@@ -244,11 +338,9 @@ const CatalogPage = () => {
   const handleSortChange = (e) => setSortBy(e.target.value);
   const toggleFiltersVisibility = () => setIsFiltersVisible(v => !v);
 
-  // обгортка для підсвічування
   const ProductCardWithHighlight = React.memo(function ProductCardWithHighlight({ product, query }) {
     const highlightedName = useMemo(() => highlightMatch(product.name, query), [product.name, query]);
 
-    // гарантуємо коректні поля
     const image =
       product.image_url
       ?? product.image
@@ -266,29 +358,24 @@ const CatalogPage = () => {
         image={image}
         title={highlightedName}
         price={price}
-        // oldPrice={...} // якщо зʼявиться
         onAddToCart={() => {}}
       />
     );
   });
 
   const renderContent = () => {
-    if (isLoading) return <p>Завантаження товарів...</p>;
-    if (error) return <p className="error">Помилка: {error}</p>;
+    if (isLoading) return <div className="loading-container"><div className="loading-spinner" aria-hidden="true" /><p>Завантаження товарів...</p></div>;
+    if (error) return <div className="error-container"><p className="error">Помилка: {error}</p></div>;
     if (products.length > 0) {
       return products.map((p, idx) => (
         <div role="listitem" key={p.id ?? p._id ?? p.sku ?? p.slug ?? idx}>
-          <Link
-            to={`/products/${p.id ?? p._id}`}
-            className="product-card-link"
-            aria-label={`Відкрити ${p.name}`}
-          >
+          <Link to={`/products/${p.id ?? p._id}`} className="product-card-link" aria-label={`Відкрити ${p.name}`}>
             <ProductCardWithHighlight product={p} query={searchQuery} />
           </Link>
         </div>
       ));
     }
-    return <p>За вашим запитом нічого не знайдено.</p>;
+    return <div className="empty-state"><div className="empty-icon" aria-hidden>🕵️‍♂️</div><h3>Нічого не знайдено</h3><p>Спробуйте змінити фільтри або скинути їх.</p></div>;
   };
 
   useEffect(() => { document.title = 'Каталог товарів - Lite Forest'; }, []);
@@ -299,57 +386,139 @@ const CatalogPage = () => {
 
       <header className="catalog-header">
         <h1>Каталог</h1>
-        <button className="mobile-filters-toggle" onClick={toggleFiltersVisibility} aria-expanded={isFiltersVisible}>Фільтри</button>
+        <button
+          className="btn btn--secondary mobile-filters-toggle"
+          onClick={toggleFiltersVisibility}
+          aria-expanded={isFiltersVisible}
+          aria-controls="filtersDrawer"
+        >
+          <span className="filter-icon" aria-hidden>⚙️</span>
+          Фільтри{activeFiltersCount > 0 && <span className="badge" aria-label={`Активні фільтри: ${activeFiltersCount}`}>{activeFiltersCount}</span>}
+        </button>
       </header>
 
       <SearchBar onSearch={handleSearch} allProducts={products} />
 
+      {/* Active filter chips (always visible above the grid) */}
+      {activeTags.length > 0 && (
+        <div className="active-filters" role="region" aria-label="Активні фільтри">
+          <div className="active-filters-header">
+            <h4>Активні фільтри</h4>
+            <button className="clear-all" onClick={clearAll}>Очистити все</button>
+          </div>
+          <div className="filter-tags">
+            {activeTags.map((tag, i) => (
+              <span key={`${tag.type}-${tag.id || i}`} className="filter-tag">
+                {tag.label}
+                <button aria-label={`Прибрати ${tag.label}`} onClick={() => removeTag(tag)}>×</button>
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className="catalog-content">
-        <aside className={`filters-panel ${isFiltersVisible ? 'visible' : ''}`} aria-label="Фільтри каталогу">
+        <aside
+          id="filtersDrawer"
+          className={`filters-panel ${isFiltersVisible ? 'visible' : ''}`}
+          role={isMobile ? 'dialog' : undefined}
+          aria-modal={isMobile ? true : undefined}
+          aria-label="Фільтри каталогу"
+        >
+          <div className="filters-header">
+            <h2>Фільтри</h2>
+            <button className="close-filters" onClick={toggleFiltersVisibility} aria-label="Закрити фільтри">×</button>
+          </div>
+
+          {/* Категорії */}
           <div className="filter-group">
             <h3>Категорії</h3>
+
+            <input
+              className="input input--sm category-search"
+              type="search"
+              placeholder="Пошук у категоріях"
+              value={categorySearch}
+              onChange={(e) => setCategorySearch(e.target.value)}
+              aria-label="Пошук у категоріях"
+            />
+
             <div className="category-list">
-              {categoryTree.map(cat => (
+              {filteredCategoryTree.map(cat => (
                 <div key={cat.id} className="category-block">
-                  <label className="category-item">
+                  <label className={`category-item ${selectedCategories.includes(cat.id) ? 'selected' : ''}`}>
                     <input
                       type="checkbox"
                       checked={selectedCategories.includes(cat.id)}
                       onChange={() => handleCategoryChange(cat.id)}
                     />
+                    <span className="custom-checkbox" aria-hidden />
                     <span>{cat.name}</span>
                   </label>
 
                   {cat.children?.length > 0 && (
-                    <div className="category-children">
-                      {cat.children.map(child => (
-                        <label key={child.id} className="category-item child">
-                          <input
-                            type="checkbox"
-                            checked={selectedCategories.includes(child.id)}
-                            onChange={() => handleCategoryChange(child.id)}
-                          />
-                          <span>{child.name}</span>
-                        </label>
-                      ))}
-                    </div>
+                    <>
+                      <button className={`category-toggle ${isCatOpen(cat) ? 'open' : ''}`} onClick={() => toggleCat(cat.id)} aria-label={`Розгорнути ${cat.name}`}>
+                        <svg width="18" height="18" viewBox="0 0 24 24"><path fill="currentColor" d="M7 10l5 5 5-5z"/></svg>
+                      </button>
+                      <div className={`category-children ${isCatOpen(cat) ? 'open' : ''}`}>
+                        {cat.children.map(child => (
+                          <label key={child.id} className={`category-item child ${selectedCategories.includes(child.id) ? 'selected' : ''}`}>
+                            <input
+                              type="checkbox"
+                              checked={selectedCategories.includes(child.id)}
+                              onChange={() => handleCategoryChange(child.id)}
+                            />
+                            <span className="custom-checkbox" aria-hidden />
+                            <span>{child.name}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </>
                   )}
                 </div>
               ))}
             </div>
           </div>
 
+          {/* Ціна */}
           <div className="filter-group">
             <h3>Ціна, ₴</h3>
             <div className="price-filter">
               <div className="price-inputs">
-                <input type="number" placeholder="від" value={minPrice} onChange={handleMinPriceChange} className="price-input" />
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  placeholder="від"
+                  value={minPrice}
+                  onChange={handleMinPriceChange}
+                  className="price-input input"
+                  min={0}
+                  step={1}
+                />
                 <span className="price-separator">–</span>
-                <input type="number" placeholder="до" value={maxPrice} onChange={handleMaxPriceChange} className="price-input" />
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  placeholder="до"
+                  value={maxPrice}
+                  onChange={handleMaxPriceChange}
+                  className="price-input input"
+                  min={0}
+                  step={1}
+                />
+              </div>
+              <div className="price-presets" aria-label="Швидкі діапазони цін">
+                <button onClick={() => { setMinPrice(''); setMaxPrice('500'); }}>до ₴500</button>
+                <button onClick={() => { setMinPrice('500'); setMaxPrice('1500'); }}>₴500–₴1 500</button>
+                <button onClick={() => { setMinPrice('1500'); setMaxPrice('3000'); }}>₴1 500–₴3 000</button>
               </div>
             </div>
           </div>
 
+          {/* Матеріал */}
           <div className="filter-group">
             <h3>Матеріал</h3>
             <select value={material} onChange={handleMaterialChange} aria-label="Фільтр за матеріалом">
@@ -362,6 +531,7 @@ const CatalogPage = () => {
             </select>
           </div>
 
+          {/* Технологія друку */}
           <div className="filter-group">
             <h3>Технологія друку</h3>
             <select value={printTech} onChange={handlePrintTechChange} aria-label="Фільтр за технологією друку">
@@ -373,23 +543,26 @@ const CatalogPage = () => {
             </select>
           </div>
 
+          {/* Desktop-only clear actions (mobile has sticky footer) */}
           <div className="filter-actions">
-            <button onClick={() => {
-              setSelectedCategories([]);
-              setMinPrice('');
-              setMaxPrice('');
-              setMaterial('');
-              setPrintTech('');
-              setSearchInput('');
-              setSearchQuery('');
-            }}>Скинути фільтри</button>
+            <button className="btn btn--secondary" onClick={clearAll}>Скинути фільтри</button>
           </div>
+
+          {/* Mobile sticky footer */}
+          {isMobile && (
+            <div className="filters-footer">
+              <button className="btn btn--secondary" onClick={clearAll}>Скинути</button>
+              <button className="btn btn--primary" onClick={toggleFiltersVisibility}>
+                Показати {uaNumber(products.length)}
+              </button>
+            </div>
+          )}
         </aside>
 
         <main className="product-grid">
           <div className="products-header">
             <span className="products-count">Знайдено товарів: {uaNumber(products.length)}</span>
-            <select className="sort-by" value={sortBy} onChange={handleSortChange} aria-label="Сортування">
+            <select className="sort-by input" value={sortBy} onChange={handleSortChange} aria-label="Сортування">
               <option value="popular">Спочатку популярні</option>
               <option value="new">Спочатку нові</option>
               <option value="price_asc">Спершу дешеві</option>
