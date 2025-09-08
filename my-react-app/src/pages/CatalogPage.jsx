@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef, useLayoutEffect } from 'react';
 import { Link } from 'react-router-dom';
 import ProductCard from '../components/product/ProductCard';
 import SearchBar from '../components/search/SearchBar';
@@ -7,15 +7,12 @@ import { api } from '../api/client';
 import './CatalogPage.css';
 
 /**
- * ✅ Mobile-first improvements in this version:
- * - Sticky drawer header & footer on mobile (Apply / Reset)
- * - Visible custom checkboxes, larger touch targets
- * - Collapsible category groups with caret
- * - Category search inside the drawer
- * - Active filter chips with one-tap removal
- * - Quick price presets (<=500, 500–1500, 1500–3000)
- * - Filter toggle shows a badge with active counter
- * - Body-scroll lock while drawer is open
+ * CatalogPage – filter UX
+ *
+ * ✔ ПК и Моб: категории – показываем первые 7, затем «Більше/Згорнути» с aria-атрибутами и анимацией
+ * ✔ Моб: шапка «Фільтри» с крестиком прилипает к верху без «щели» (safe-area)
+ * ✔ Моб: плашка «Скинути/Показати» прилипает к НИЗУ без «щели» (safe-area)
+ * ✔ Корректная фокусировка при развороте/сворачивании
  */
 
 // --- Categories -----------------------------------------------------------------
@@ -87,7 +84,7 @@ const structuredCategories = [
   { id: 'brackets', name: 'Кронштейни та кріплення', parent: 'parts-fasteners' },
   { id: 'replacement-parts', name: 'Запчастини та ремонт', parent: 'parts-fasteners' },
 
-  // Транспорт (fixed parent id typo: 'auto-мото' -> 'auto-moto')
+  // Транспорт
   { id: 'auto-moto', name: 'Авто та мото', parent: null },
   { id: 'car-interior', name: 'Інтерʼєр та органайзери', parent: 'auto-moto' },
   { id: 'car-exterior', name: 'Екстерʼєр та тюнінг', parent: 'auto-moto' },
@@ -183,15 +180,22 @@ const CatalogPage = () => {
   const [openCats, setOpenCats] = useState({});
   const [isMobile, setIsMobile] = useState(false);
 
+  // Collapsible categories (desktop + mobile)
+  const [catExpanded, setCatExpanded] = useState(false);
+  const [shouldCollapse, setShouldCollapse] = useState(false);
+  const [collapsedMaxHeight, setCollapsedMaxHeight] = useState(0);
+
   const debounceTimer = useRef(null);
+
+  // Refs
+  const panelRef = useRef(null);
+  const headerRef = useRef(null);
+  const categoryListRef = useRef(null);
+  const moreBtnRef = useRef(null);
 
   // body scroll lock while drawer open (mobile)
   useEffect(() => {
-    if (isFiltersVisible) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
+    if (isFiltersVisible) document.body.style.overflow = 'hidden'; else document.body.style.overflow = '';
     return () => { document.body.style.overflow = ''; };
   }, [isFiltersVisible]);
 
@@ -274,6 +278,7 @@ const CatalogPage = () => {
     }
   }, []);
 
+  // Products fetch
   useEffect(() => {
     const controller = new AbortController();
 
@@ -303,6 +308,7 @@ const CatalogPage = () => {
     return () => controller.abort();
   }, [searchQuery, selectedCatsForQuery, minPrice, maxPrice, material, printTech, sortBy]);
 
+  // Debounced search
   const handleSearch = useCallback((value) => {
     setSearchInput(value);
     if (debounceTimer.current) clearTimeout(debounceTimer.current);
@@ -314,6 +320,7 @@ const CatalogPage = () => {
 
   useEffect(() => () => { if (debounceTimer.current) clearTimeout(debounceTimer.current); }, []);
 
+  // Category selection
   const handleCategoryChange = (categoryId) => {
     if (categoryId === 'all') {
       setSelectedCategories(prev => (prev.includes('all') ? [] : ['all']));
@@ -337,6 +344,54 @@ const CatalogPage = () => {
   const handlePrintTechChange = (e) => setPrintTech(e.target.value);
   const handleSortChange = (e) => setSortBy(e.target.value);
   const toggleFiltersVisibility = () => setIsFiltersVisible(v => !v);
+
+  // --- Sticky header (mobile), no visible gap ---
+  const stickyHeaderStyle = isMobile ? {
+    position: 'sticky',
+    top: 0,
+    paddingTop: 'env(safe-area-inset-top, 0px)',
+    zIndex: 2,
+    background: 'var(--color-surface)'
+  } : undefined;
+
+  // --- Category list collapse (both desktop & mobile) ---
+  const recomputeCollapsedHeight = useCallback(() => {
+    if (!categoryListRef.current) { setCollapsedMaxHeight(0); setShouldCollapse(false); return; }
+    if (categorySearch.trim()) { setShouldCollapse(false); setCollapsedMaxHeight(0); return; }
+
+    const blocks = categoryListRef.current.querySelectorAll(':scope > .category-block');
+    if (!blocks || blocks.length <= 7) { setShouldCollapse(false); setCollapsedMaxHeight(0); return; }
+
+    const firstRect = blocks[0].getBoundingClientRect();
+    const seventhRect = blocks[6].getBoundingClientRect();
+    const height = Math.ceil(seventhRect.bottom - firstRect.top);
+    setCollapsedMaxHeight(height);
+    setShouldCollapse(true);
+  }, [categorySearch]);
+
+  useLayoutEffect(() => { recomputeCollapsedHeight(); }, [filteredCategoryTree, recomputeCollapsedHeight]);
+  useEffect(() => {
+    const onResize = () => recomputeCollapsedHeight();
+    window.addEventListener('resize', onResize);
+    window.addEventListener('orientationchange', onResize);
+    return () => { window.removeEventListener('resize', onResize); window.removeEventListener('orientationchange', onResize); };
+  }, [recomputeCollapsedHeight]);
+
+  const onToggleMore = useCallback(() => {
+    setCatExpanded(prev => {
+      const next = !prev;
+      if (next) {
+        setTimeout(() => {
+          const eighth = categoryListRef.current?.querySelectorAll(':scope > .category-block')[7];
+          const label = eighth?.querySelector('label.category-item');
+          if (label) label.focus();
+        }, 0);
+      } else {
+        setTimeout(() => { moreBtnRef.current?.focus(); }, 0);
+      }
+      return next;
+    });
+  }, []);
 
   const ProductCardWithHighlight = React.memo(function ProductCardWithHighlight({ product, query }) {
     const highlightedName = useMemo(() => highlightMatch(product.name, query), [product.name, query]);
@@ -380,6 +435,11 @@ const CatalogPage = () => {
 
   useEffect(() => { document.title = 'Каталог товарів - Lite Forest'; }, []);
 
+  // List style when collapsed
+  const categoryListStyle = (shouldCollapse && !catExpanded)
+    ? { overflow: 'hidden', maxHeight: `${collapsedMaxHeight}px`, transition: 'max-height 260ms ease' }
+    : { transition: 'max-height 260ms ease' };
+
   return (
     <div className="catalog-page">
       {isFiltersVisible && <div className="filters-overlay" onClick={toggleFiltersVisibility} aria-hidden="true" />}
@@ -399,7 +459,6 @@ const CatalogPage = () => {
 
       <SearchBar onSearch={handleSearch} allProducts={products} />
 
-      {/* Active filter chips (always visible above the grid) */}
       {activeTags.length > 0 && (
         <div className="active-filters" role="region" aria-label="Активні фільтри">
           <div className="active-filters-header">
@@ -420,12 +479,15 @@ const CatalogPage = () => {
       <div className="catalog-content">
         <aside
           id="filtersDrawer"
+          ref={panelRef}
           className={`filters-panel ${isFiltersVisible ? 'visible' : ''}`}
           role={isMobile ? 'dialog' : undefined}
           aria-modal={isMobile ? true : undefined}
           aria-label="Фільтри каталогу"
+          // убираем внутренние зазоры сверху/снизу на мобиле, чтобы шапка/футер прилегали плотно
+          style={isMobile ? { paddingTop: 0, paddingBottom: 0 } : undefined}
         >
-          <div className="filters-header">
+          <div className="filters-header" ref={headerRef} style={stickyHeaderStyle}>
             <h2>Фільтри</h2>
             <button className="close-filters" onClick={toggleFiltersVisibility} aria-label="Закрити фільтри">×</button>
           </div>
@@ -443,10 +505,15 @@ const CatalogPage = () => {
               aria-label="Пошук у категоріях"
             />
 
-            <div className="category-list">
+            <div
+              id="categoryListTop"
+              className="category-list"
+              ref={categoryListRef}
+              style={categoryListStyle}
+            >
               {filteredCategoryTree.map(cat => (
                 <div key={cat.id} className="category-block">
-                  <label className={`category-item ${selectedCategories.includes(cat.id) ? 'selected' : ''}`}>
+                  <label tabIndex={0} className={`category-item ${selectedCategories.includes(cat.id) ? 'selected' : ''}`}>
                     <input
                       type="checkbox"
                       checked={selectedCategories.includes(cat.id)}
@@ -458,10 +525,10 @@ const CatalogPage = () => {
 
                   {cat.children?.length > 0 && (
                     <>
-                      <button className={`category-toggle ${isCatOpen(cat) ? 'open' : ''}`} onClick={() => toggleCat(cat.id)} aria-label={`Розгорнути ${cat.name}`}>
+                      <button className={`category-toggle ${isCatOpen(cat) ? 'open' : ''}`} onClick={() => toggleCat(cat.id)} aria-label={`Розгорнути ${cat.name}`} aria-expanded={isCatOpen(cat)} aria-controls={`children-${cat.id}`}>
                         <svg width="18" height="18" viewBox="0 0 24 24"><path fill="currentColor" d="M7 10l5 5 5-5z"/></svg>
                       </button>
-                      <div className={`category-children ${isCatOpen(cat) ? 'open' : ''}`}>
+                      <div id={`children-${cat.id}`} className={`category-children ${isCatOpen(cat) ? 'open' : ''}`}>
                         {cat.children.map(child => (
                           <label key={child.id} className={`category-item child ${selectedCategories.includes(child.id) ? 'selected' : ''}`}>
                             <input
@@ -479,6 +546,21 @@ const CatalogPage = () => {
                 </div>
               ))}
             </div>
+
+            {/* Кнопка Більше/Згорнути — и на ПК, и на мобиле */}
+            {shouldCollapse && !categorySearch.trim() && (
+              <div style={{ marginTop: 'var(--spacing-md)' }}>
+                <button
+                  ref={moreBtnRef}
+                  className="btn btn--secondary"
+                  onClick={onToggleMore}
+                  aria-controls="categoryListTop"
+                  aria-expanded={catExpanded}
+                >
+                  {catExpanded ? 'Згорнути' : 'Більше'}
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Ціна */}
@@ -543,20 +625,30 @@ const CatalogPage = () => {
             </select>
           </div>
 
-          {/* Desktop-only clear actions (mobile has sticky footer) */}
+          {/* Desktop-only clear */}
           <div className="filter-actions">
             <button className="btn btn--secondary" onClick={clearAll}>Скинути фільтри</button>
           </div>
 
-          {/* Mobile sticky footer */}
+          {/* Мобильный нижний футер — прилипает к НИЗУ без щели */}
           {isMobile && (
-            <div className="filters-footer">
+            <div
+              className="filters-footer"
+              style={{
+                position: 'sticky',
+                bottom: 0,
+                zIndex: 2,
+                background: 'var(--color-surface)',
+                padding: 'var(--spacing-lg)',
+                paddingBottom: 'calc(var(--spacing-lg) + env(safe-area-inset-bottom, 0px))',
+                borderTop: '1px solid var(--color-border-light)'
+              }}
+            >
               <button className="btn btn--secondary" onClick={clearAll}>Скинути</button>
-              <button className="btn btn--primary" onClick={toggleFiltersVisibility}>
-                Показати {uaNumber(products.length)}
-              </button>
+              <button className="btn btn--primary" onClick={toggleFiltersVisibility}>Показати {uaNumber(products.length)}</button>
             </div>
           )}
+
         </aside>
 
         <main className="product-grid">
