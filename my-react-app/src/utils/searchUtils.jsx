@@ -1,151 +1,121 @@
-// --- Кэш для хранения результатов последних запросов ---
+// utils/searchUtils.js
+// Надёжные утилиты для поиска/подсказок и подсветки.
+// Безопасны к пустым полям, учитывают SKU, дают простой скоринг и кэшируют результаты.
+
+import React from 'react'; // если у тебя новый JSX runtime — эта строка не обязательна
+
+// --- небольшой LRU-кэш на Map ---
+const MAX_CACHE = 20;
 const searchCache = new Map();
 
-/**
- * Функция debounce. Откладывает выполнение функции до тех пор,
- * пока не пройдет `delay` миллисекунд с момента последнего вызова.
- * @param {Function} func - Функция для вызова.
- * @param {number} delay - Задержка в мс.
- * @returns {Function} - Обёрнутая функция.
- */
-export const debounce = (func, delay) => {
-  let timeoutId;
+const norm = (s) =>
+  (s ?? '')
+    .toString()
+    .toLowerCase()
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, ''); // убираем диакритику
+
+// экранируем спецсимволы для RegExp
+const escapeRegExp = (s) => (s ?? '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+// --- debounce ---
+export const debounce = (fn, delay = 300) => {
+  let t;
   return (...args) => {
-    clearTimeout(timeoutId);
-    timeoutId = setTimeout(() => {
-      func.apply(this, args);
-    }, delay);
+    clearTimeout(t);
+    t = setTimeout(() => fn(...args), delay);
   };
 };
 
-/**
- * "Умный" поиск товаров с ранжированием и кэшированием.
- * В реальном проекте эта логика была бы на сервере.
- * @param {Array<Object>} allProducts - Полный список товаров.
- * @param {string} query - Поисковый запрос.
- * @returns {Array<Object>} - Отсортированный по релевантности список найденных товаров.
- */
-export const searchProducts = (allProducts, query) => {
-  const normalizedQuery = query.toLowerCase().trim();
+// --- основной локальный поиск по списку товаров ---
+export const searchProducts = (allProducts = [], query = '') => {
+  const q = norm(query).trim();
+  if (!q) return allProducts ?? [];
 
-  if (!normalizedQuery) {
-    return allProducts;
-  }
-  
-  // Проверяем кэш
-  if (searchCache.has(normalizedQuery)) {
-    return searchCache.get(normalizedQuery);
-  }
+  // кэш
+  if (searchCache.has(q)) return searchCache.get(q);
 
   const results = [];
+  for (const p of allProducts || []) {
+    const name = p?.name ?? '';
+    const sku = p?.sku ?? '';
+    const description = p?.description ?? '';
+    const tags = Array.isArray(p?.tags) ? p.tags : [];
 
-  allProducts.forEach(product => {
-    const name = product.name.toLowerCase();
-    const description = product.description.toLowerCase();
-    const tags = product.tags.map(t => t.toLowerCase());
+    const n = norm(name);
+    const s = norm(sku);
+    const d = norm(description);
+    const t = tags.map(norm);
 
-    let relevance = 0;
+    let score = -1;
 
-    // --- Логика ранжирования ---
-    // 1. Точное совпадение по названию (самый высокий приоритет)
-    if (name === normalizedQuery) {
-      relevance = 100;
-    } 
-    // 2. Запрос является началом названия
-    else if (name.startsWith(normalizedQuery)) {
-      relevance = 80;
-    }
-    // 3. Запрос содержится в названии
-    else if (name.includes(normalizedQuery)) {
-      relevance = 50;
-    }
-    // 4. Запрос содержится в тегах
-    else if (tags.some(tag => tag.includes(normalizedQuery))) {
-      relevance = 30;
-    }
-    // 5. Запрос содержится в описании (самый низкий приоритет)
-    else if (description.includes(normalizedQuery)) {
-      relevance = 10;
-    }
-    
-    // Простая симуляция "fuzzy search" - ищем по отдельным словам
-    if (relevance === 0) {
-        const queryWords = normalizedQuery.split(' ').filter(w => w.length > 2);
-        if (queryWords.length > 1) {
-            const matchCount = queryWords.reduce((count, word) => {
-                if (name.includes(word) || description.includes(word)) {
-                    return count + 1;
-                }
-                return count;
-            }, 0);
-            
-            if (matchCount === queryWords.length) {
-                relevance = 5; // Небольшой бонус, если все слова из запроса найдены
-            }
-        }
+    // скоринг (чем выше, тем релевантнее)
+    if (n === q) score = 120;                    // точное совпадение по имени
+    else if (s === q) score = 115;               // точное совпадение по SKU
+    else if (n.startsWith(q)) score = 100;       // имя начинается с запроса
+    else if (s.startsWith(q)) score = 95;        // SKU начинается с запроса
+    else if (n.includes(q)) score = 80;          // имя содержит запрос
+    else if (s.includes(q)) score = 75;          // SKU содержит запрос
+    else if (t.some(tag => tag.includes(q))) score = 60;   // теги
+    else if (d.includes(q)) score = 30;          // описание
+
+    // простая токен-логика для запросов из нескольких слов
+    if (score < 0) {
+      const words = q.split(/\s+/).filter(w => w.length > 2);
+      if (words.length > 1) {
+        const hitAll = words.every(w => n.includes(w) || s.includes(w) || d.includes(w));
+        if (hitAll) score = 25;
+      }
     }
 
-
-    if (relevance > 0) {
-      results.push({ ...product, relevance });
-    }
-  });
-
-  // Сортируем по релевантности (от большей к меньшей)
-  results.sort((a, b) => b.relevance - a.relevance);
-
-  // --- Управление кэшем ---
-  // Если кэш переполнен, удаляем самый старый элемент
-  if (searchCache.size >= 5) {
-    const oldestKey = searchCache.keys().next().value;
-    searchCache.delete(oldestKey);
+    if (score >= 0) results.push({ ...p, relevance: score });
   }
-  searchCache.set(normalizedQuery, results);
+
+  results.sort((a, b) => b.relevance - a.relevance || a.name.localeCompare(b.name, 'uk'));
+
+  // LRU управление
+  if (searchCache.size >= MAX_CACHE) {
+    const oldest = searchCache.keys().next().value;
+    searchCache.delete(oldest);
+  }
+  searchCache.set(q, results);
 
   return results;
 };
 
-
-/**
- * Получает до 5 подсказок для автодополнения.
- * @param {Array<Object>} allProducts - Полный список товаров.
- * @param {string} query - Поисковый запрос.
- * @returns {Array<Object>} - Список подсказок.
- */
-export const getSuggestions = (allProducts, query) => {
-    const normalizedQuery = query.toLowerCase().trim();
-    if (normalizedQuery.length < 2) {
-        return [];
-    }
-
-    const matchedProducts = searchProducts(allProducts, query);
-    
-    return matchedProducts
-        .slice(0, 5) // Берем топ-5 самых релевантных
-        .map(p => ({
-            id: p.id,
-            name: p.name,
-            query: normalizedQuery,
-        }));
+// --- подсказки (топ-N) ---
+export const getSuggestions = (allProducts = [], query = '', limit = 8) => {
+  const q = norm(query).trim();
+  if (q.length < 2) return [];
+  const matched = searchProducts(allProducts, query);
+  return matched.slice(0, limit).map(p => ({
+    id: p.id ?? p._id ?? p.sku ?? p.slug ?? p.name,
+    name: p.name ?? String(p.sku ?? 'Без назви'),
+    sku: p.sku ?? '',
+  }));
 };
 
-/**
- * Функция для подсветки найденного текста в строке.
- * @param {string} text - Исходный текст (например, название товара).
- * @param {string} highlight - Текст, который нужно подсветить.
- * @returns {React.ReactNode} - Текст с подсвеченными частями.
- */
+// --- подсветка найденной части строки ---
+// Возвращает React-узел: оборачивает совпадение в <mark>, безопасно экранирует паттерн.
 export const highlightMatch = (text, highlight) => {
-  const parts = text.split(new RegExp(`(${highlight})`, 'gi'));
+  const t = String(text ?? '');
+  const q = norm(highlight).trim();
+  if (!q) return t;
+
+  // находим индекс "логического" совпадения без учёта регистра/диакритики
+  const low = norm(t);
+  const idx = low.indexOf(q);
+  if (idx === -1) return t;
+
+  // сопоставляем с исходной строкой
+  const start = idx;
+  const end = idx + q.length;
+
   return (
-    <span>
-      {parts.map((part, i) =>
-        part.toLowerCase() === highlight.toLowerCase() ? (
-          <b key={i}>{part}</b>
-        ) : (
-          part
-        )
-      )}
-    </span>
+    <>
+      {t.slice(0, start)}
+      <mark>{t.slice(start, end)}</mark>
+      {t.slice(end)}
+    </>
   );
 };

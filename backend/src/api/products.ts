@@ -34,6 +34,21 @@ const requireAdmin: preHandlerHookHandler = (req, reply, done) => {
   done();
 };
 
+// вспомогательная проклейка картинок
+function glueGallery(raw: any[]) {
+  return raw.map((im: any) => {
+    const guessThumbKey =
+      im.thumb_key ??
+      im.key?.replace('/original/', '/thumb/')?.replace(/\.(jpe?g|png)$/i, '.webp');
+
+    return {
+      ...im,
+      url: im.url ?? (im.key ? toStaticUrl(im.key) : null),
+      thumb_url: im.thumb_url ?? (guessThumbKey ? toStaticUrl(guessThumbKey) : null),
+    };
+  });
+}
+
 export default async function routes(app: FastifyInstance) {
   // list with cursor pagination & search
   app.get('/api/products', async (req, reply) => {
@@ -77,17 +92,7 @@ export default async function routes(app: FastifyInstance) {
       const raw = imagesById[p.id] || [];
 
       // проклеиваем url/thumb_url из key/thumb_key при необходимости
-      const gallery = raw.map((im: any) => {
-        const guessThumbKey =
-          im.thumb_key ??
-          im.key?.replace('/original/', '/thumb/')?.replace(/\.(jpe?g|png)$/i, '.webp');
-
-        return {
-          ...im,
-          url: im.url ?? toStaticUrl(im.key),
-          thumb_url: im.thumb_url ?? toStaticUrl(guessThumbKey),
-        };
-      });
+      const gallery = glueGallery(raw);
 
       // выбираем primary, если помечен role='primary', иначе первый
       const primary = gallery.find(g => g.role === 'primary') ?? gallery[0];
@@ -120,23 +125,15 @@ export default async function routes(app: FastifyInstance) {
         { column: 'created_at', order: 'asc' }
       ]);
 
-    // подставляем url из key, если пусто
-    const gallery = raw.map((im: any) => {
-      const guessThumbKey =
-        im.thumb_key ??
-        im.key?.replace('/original/', '/thumb/')?.replace(/\.(jpe?g|png)$/i, '.webp');
-
-      return {
-        ...im,
-        url: im.url ?? toStaticUrl(im.key),
-        thumb_url: im.thumb_url ?? toStaticUrl(guessThumbKey),
-      };
-    });
+    // проклейка ссылок
+    const gallery = glueGallery(raw);
+    const primary = gallery.find(g => g.role === 'primary') ?? gallery[0];
 
     return reply.send({
       ...row,
       categories: row.categories ?? [],
       attributes: row.attributes ?? {},
+      image_url: primary?.thumb_url ?? row.image_url ?? null,
       images: gallery
     });
   });
@@ -157,10 +154,22 @@ export default async function routes(app: FastifyInstance) {
       }));
       await db('product_images').insert(values);
     }
-    const gallery = await db('product_images')
+    const raw = await db('product_images')
       .where({ product_id: row.id })
       .orderBy(['sort_order', 'created_at']);
-    return reply.code(201).send({ ...row, images: gallery });
+
+    const gallery = glueGallery(raw);
+    const primary = gallery.find(g => g.role === 'primary') ?? gallery[0];
+
+    return reply
+      .code(201)
+      .send({
+        ...row,
+        categories: row.categories ?? [],
+        attributes: row.attributes ?? {},
+        image_url: primary?.thumb_url ?? row.image_url ?? null,
+        images: gallery
+      });
   });
 
   // Добавить изображения к товару
@@ -175,7 +184,10 @@ export default async function routes(app: FastifyInstance) {
       sort_order: Number.isFinite(im.sort_order as number) ? (im.sort_order as number) : idx,
     }));
     await db('product_images').insert(values);
-    const gallery = await db('product_images').where({ product_id: id }).orderBy(['sort_order', 'created_at']);
+
+    const raw = await db('product_images').where({ product_id: id }).orderBy(['sort_order', 'created_at']);
+    const gallery = glueGallery(raw);
+
     return reply.code(201).send({ items: gallery });
   });
 
