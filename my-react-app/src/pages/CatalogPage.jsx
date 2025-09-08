@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import ProductCard from '../components/product/ProductCard';
 import SearchBar from '../components/search/SearchBar';
 import { highlightMatch } from '../utils/searchUtils';
@@ -81,7 +82,7 @@ const structuredCategories = [
   // Транспорт
   { id: 'auto-moto', name: 'Авто та мото', parent: null },
   { id: 'car-interior', name: 'Інтерʼєр та органайзери', parent: 'auto-moto' },
-  { id: 'car-exterior', name: 'Екстерʼєр та тюнінг', parent: 'auto-moto' },
+  { id: 'car-exterior', name: 'Екстерʼєр та тюнінг', parent: 'auto-mото' },
   { id: 'mounts-car', name: 'Кріплення та тримачі', parent: 'auto-moto' },
 
   // Спорт і аутдор
@@ -262,9 +263,15 @@ const CatalogPage = () => {
     if (isLoading) return <p>Завантаження товарів...</p>;
     if (error) return <p className="error">Помилка: {error}</p>;
     if (products.length > 0) {
-      return products.map(p => (
-        <div role="listitem" key={p.id ?? p._id ?? JSON.stringify(p)}>
-          <ProductCardWithHighlight product={p} query={searchQuery} />
+      return products.map((p, idx) => (
+        <div role="listitem" key={p.id ?? p._id ?? p.sku ?? p.slug ?? idx}>
+          <Link
+            to={`/products/${p.id ?? p._id}`}
+            className="product-card-link"
+            aria-label={`Відкрити ${p.name}`}
+          >
+            <ProductCardWithHighlight product={p} query={searchQuery} />
+          </Link>
         </div>
       ));
     }
@@ -382,7 +389,13 @@ const CatalogPage = () => {
               ? renderContent()
               : products.map((p, idx) => (
                   <div role="listitem" key={p.id ?? p._id ?? p.sku ?? p.slug ?? idx}>
-                    <ProductCardWithHighlight product={p} query={searchQuery} />
+                    <Link
+                      to={`/products/${p.id ?? p._id}`}
+                      className="product-card-link"
+                      aria-label={`Відкрити ${p.name}`}
+                    >
+                      <ProductCardWithHighlight product={p} query={searchQuery} />
+                    </Link>
                   </div>
                 ))
             }

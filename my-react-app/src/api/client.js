@@ -8,10 +8,21 @@ export const api = {
     if (limit) u.searchParams.set('limit', String(limit));
     if (cursor) u.searchParams.set('cursor', cursor);
 
-    console.log('[api] GET', u.toString()); // 👈 покажет куда реально идёт запрос
+    console.log('[api] GET', u.toString()); // 👈 покаже куди реально йде запит
 
     const r = await fetch(u, { headers: { Accept: 'application/json' } });
 
+    if (!r.ok) {
+      const txt = await r.text().catch(() => '<no body>');
+      throw new Error(`HTTP ${r.status} ${r.statusText} for ${u}: ${txt}`);
+    }
+    return r.json();
+  },
+
+  async getProduct(id) {
+    const u = new URL(`${API_BASE}/api/products/${encodeURIComponent(id)}`);
+    console.log('[api] GET', u.toString());
+    const r = await fetch(u, { headers: { Accept: 'application/json' } });
     if (!r.ok) {
       const txt = await r.text().catch(() => '<no body>');
       throw new Error(`HTTP ${r.status} ${r.statusText} for ${u}: ${txt}`);

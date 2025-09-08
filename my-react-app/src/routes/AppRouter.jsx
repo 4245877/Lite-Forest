@@ -10,6 +10,7 @@ import CartPage from '../pages/CartPage';
 import ContactPage from '../pages/ContactPage';
 import AdminProducts from '../pages/AdminProducts';
 import LegalPages from '../pages/LegalPages';
+import ProductDetailPage from '../pages/ProductDetailPage'; // ⬅️ додано
 
 const AppRouter = () => {
   return (
@@ -21,6 +22,9 @@ const AppRouter = () => {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/cart" element={<CartPage />} />
       <Route path="/contacts" element={<ContactPage />} />
+
+      {/* Сторінка товару */}
+      <Route path="/products/:id" element={<ProductDetailPage />} />
 
       {/* Єдина сторінка з якорями */}
       <Route path="/legal" element={<LegalPages />} />
