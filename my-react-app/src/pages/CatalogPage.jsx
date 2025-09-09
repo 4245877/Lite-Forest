@@ -87,7 +87,7 @@ const structuredCategories = [
   // Транспорт
   { id: 'auto-moto', name: 'Авто та мото', parent: null },
   { id: 'car-interior', name: 'Інтерʼєр та органайзери', parent: 'auto-moto' },
-  { id: 'car-exterior', name: 'Екстерʼєр та тюнінг', parent: 'auto-мото' },
+  { id: 'car-exterior', name: 'Екстерʼєр та тюнінг', parent: 'auto-moto' },
   { id: 'mounts-car', name: 'Кріплення та тримачі', parent: 'auto-moto' },
 
   // Спорт і аутдор
@@ -336,15 +336,36 @@ const CatalogPage = () => {
     return !!(openCats[cat.id] || (cat.children && cat.children.some(ch => selectedCategories.includes(ch.id))));
   }, [openCats, selectedCategories]);
 
-  const toggleCat = (id) => {
-    setOpenCats(prev => {
-      const nextIsOpen = !prev[id];
-      // Если открываем под-категорию при активном "Більше",
-      // автоматически разворачиваем список, чтобы ничего не обрезалось.
-      if (nextIsOpen && shouldCollapse && !catExpanded) {
-        setCatExpanded(true);
+  // Локально подстраиваем высоту «первых 7», чтобы было видно контент открытой категории
+  const adjustCollapsedHeightFor = useCallback((catId, willOpen) => {
+    if (!(shouldCollapse && !catExpanded) || !categoryListRef.current) return;
+
+    const blocks = categoryListRef.current.querySelectorAll(':scope > .category-block');
+    if (!blocks || blocks.length < 7) return;
+
+    const firstRect = blocks[0].getBoundingClientRect();
+    const seventhRect = blocks[6].getBoundingClientRect();
+    // Базовая высота «первых 7»
+    let height = Math.ceil(seventhRect.bottom - firstRect.top);
+
+    // Если кликнули по одной из первых 7 — добавим/уберём высоту её детей
+    const idx = Array.from(blocks).findIndex(b => b.querySelector(`#children-${catId}`));
+    if (idx !== -1 && idx <= 6) {
+      const child = categoryListRef.current.querySelector(`#children-${catId}`);
+      if (child) {
+        const delta = child.scrollHeight; // полная высота подкатегорий (не зависит от анимации)
+        height = willOpen ? height + delta : Math.max(height - delta, 0);
       }
-      return { ...prev, [id]: nextIsOpen };
+    }
+    setCollapsedMaxHeight(height);
+  }, [shouldCollapse, catExpanded]);
+
+  const toggleCat = (id) => {
+    // Открываем/закрываем только кликнутую категорию + корректируем высоту контейнера
+    setOpenCats(prev => {
+      const willOpen = !prev[id];
+      adjustCollapsedHeightFor(id, willOpen);
+      return { ...prev, [id]: willOpen };
     });
   };
 
@@ -373,6 +394,20 @@ const CatalogPage = () => {
   }, [categorySearch]);
 
   useLayoutEffect(() => { recomputeCollapsedHeight(); }, [filteredCategoryTree, recomputeCollapsedHeight]);
+
+  // На всякий случай пересчёт после DOM-изменений (устойчиво к анимациям max-height)
+  useEffect(() => {
+    if (!(shouldCollapse && !catExpanded)) return;
+    let raf1, raf2;
+    raf1 = requestAnimationFrame(() => {
+      raf2 = requestAnimationFrame(() => recomputeCollapsedHeight());
+    });
+    return () => {
+      if (raf1) cancelAnimationFrame(raf1);
+      if (raf2) cancelAnimationFrame(raf2);
+    };
+  }, [openCats, shouldCollapse, catExpanded, recomputeCollapsedHeight]);
+
   useEffect(() => {
     const onResize = () => recomputeCollapsedHeight();
     window.addEventListener('resize', onResize);
@@ -611,7 +646,7 @@ const CatalogPage = () => {
             </select>
           </div>
 
-          {/* Desktop-only clear */}
+  {/* Desktop-only clear */}
           <div className="filter-actions">
             <button className="btn btn--secondary" onClick={clearAll}>Скинути фільтри</button>
           </div>
