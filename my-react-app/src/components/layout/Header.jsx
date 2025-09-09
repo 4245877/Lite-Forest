@@ -80,17 +80,18 @@ const Header = () => {
           <button className="action-btn search-btn" aria-label="Поиск">
             <svg
               className="icon-search"
+              width="20"
+              height="20"
               viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
               aria-hidden="true"
               focusable="false"
               role="img"
             >
-              <circle cx="11" cy="11" r="8" />
-              <path d="M21 21L16.65 16.65" />
+              <circle cx="11" cy="11" r="8" fill="none" stroke="currentColor" strokeWidth="2" />
+              <path d="M21 21L16.65 16.65" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </button>
+
 
           <Link to="/cart" className="action-btn cart-btn" aria-label="Корзина">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">

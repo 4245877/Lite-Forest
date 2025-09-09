@@ -2,13 +2,38 @@ import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { debounce, getSuggestions, highlightMatch } from '../../utils/searchUtils';
 import styles from './SearchBar.module.css';
 
-// Иконки (можно использовать библиотеку типа react-icons, но для простоты вставим SVG)
+// Иконки без фиксированных width/height — размеры контролируются CSS
 const SearchIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2.25"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+    focusable="false"
+  >
+    <circle cx="11" cy="11" r="8"></circle>
+    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+  </svg>
 );
 
 const ClearIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2.25"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+    focusable="false"
+  >
+    <circle cx="12" cy="12" r="10"></circle>
+    <line x1="15" y1="9" x2="9" y2="15"></line>
+    <line x1="9" y1="9" x2="15" y2="15"></line>
+  </svg>
 );
 
 const SearchBar = ({ onSearch, allProducts }) => {
@@ -31,33 +56,33 @@ const SearchBar = ({ onSearch, allProducts }) => {
     }, 300),
     [allProducts]
   );
-  
-  // Эффект для скрытия подсказок при клике вне компонента
+
+  // Скрыть подсказки при клике вне компонента
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (searchContainerRef.current && !searchContainerRef.current.contains(event.target)) {
         setSuggestions([]);
       }
     };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   const handleChange = (e) => {
     const newQuery = e.target.value;
     setQuery(newQuery);
-    setIsLoading(true); // Показываем загрузку сразу
+    setIsLoading(true);
     debouncedGetSuggestions(newQuery);
   };
-  
+
   const handleSearch = (searchQuery) => {
     setQuery(searchQuery);
-    setSuggestions([]); // Скрываем подсказки
-    onSearch(searchQuery); // Вызываем основную функцию поиска
+    setSuggestions([]);
+    onSearch(searchQuery);
   };
 
   const handleClear = () => {
-    handleSearch(''); // Очищаем и выполняем "пустой" поиск
+    handleSearch('');
   };
 
   const handleKeyDown = (e) => {
@@ -65,10 +90,10 @@ const SearchBar = ({ onSearch, allProducts }) => {
 
     if (e.key === 'ArrowDown') {
       e.preventDefault();
-      setActiveIndex(prev => (prev < suggestions.length - 1 ? prev + 1 : 0));
+      setActiveIndex((prev) => (prev < suggestions.length - 1 ? prev + 1 : 0));
     } else if (e.key === 'ArrowUp') {
       e.preventDefault();
-      setActiveIndex(prev => (prev > 0 ? prev - 1 : suggestions.length - 1));
+      setActiveIndex((prev) => (prev > 0 ? prev - 1 : suggestions.length - 1));
     } else if (e.key === 'Enter') {
       if (activeIndex !== -1) {
         handleSearch(suggestions[activeIndex].name);
@@ -81,16 +106,17 @@ const SearchBar = ({ onSearch, allProducts }) => {
   };
 
   return (
-    <div 
-        className={styles.searchContainer} 
-        ref={searchContainerRef}
-        role="combobox"
-        aria-expanded={suggestions.length > 0}
-        aria-haspopup="listbox"
+    <div
+      className={styles.searchContainer}
+      ref={searchContainerRef}
+      role="combobox"
+      aria-expanded={suggestions.length > 0}
+      aria-haspopup="listbox"
     >
       <div className={styles.searchIcon}>
         <SearchIcon />
       </div>
+
       <input
         type="text"
         className={styles.searchInput}
@@ -102,7 +128,9 @@ const SearchBar = ({ onSearch, allProducts }) => {
         aria-controls="suggestions-list"
         aria-activedescendant={activeIndex > -1 ? `suggestion-${activeIndex}` : undefined}
       />
+
       {isLoading && <div className={styles.loader}></div>}
+
       {query && !isLoading && (
         <button className={styles.clearButton} onClick={handleClear} aria-label="Очистить поиск">
           <ClearIcon />
@@ -126,7 +154,6 @@ const SearchBar = ({ onSearch, allProducts }) => {
           ))}
         </ul>
       )}
-
     </div>
   );
 };

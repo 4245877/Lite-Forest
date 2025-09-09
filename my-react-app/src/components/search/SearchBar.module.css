@@ -2,13 +2,14 @@
 .searchContainer {
   position: relative;
   width: 100%;
-  max-width: 500px; /* или любая другая ширина */
+  max-width: 500px;
   margin-bottom: 24px;
 }
 
 .searchInput {
   width: 100%;
-  padding: 12px 20px 12px 45px; /* отступ для иконки */
+  /* больше левый отступ под увеличенную иконку */
+  padding: 12px 20px 12px 56px;
   font-size: 16px;
   border: 1px solid #e2e8f0;
   border-radius: 8px;
@@ -32,8 +33,37 @@
   top: 50%;
   left: 15px;
   transform: translateY(-50%);
-  color: #a0aec0;
+  color: #718096; /* currentColor для SVG */
   pointer-events: none; /* чтобы не мешала клику на инпут */
+}
+
+/* Размер ИМЕННО SVG лупы контролируем тут */
+.searchIcon svg {
+  display: block;
+  width: 28px;   /* ↑ было 20px */
+  height: 28px;  /* ↑ было 20px */
+}
+
+/* Крупнее на десктопах */
+@media (min-width: 1024px) {
+  .searchIcon svg {
+    width: 30px;
+    height: 30px;
+  }
+  .searchInput {
+    padding-left: 60px;
+  }
+}
+
+/* На очень узких экранах чуть компактнее */
+@media (max-width: 480px) {
+  .searchIcon svg {
+    width: 24px;
+    height: 24px;
+  }
+  .searchInput {
+    padding-left: 52px;
+  }
 }
 
 /* Кнопка очистки */
@@ -56,23 +86,30 @@
   color: #2d3748;
 }
 
+/* Размер крестика */
+.clearButton svg {
+  display: block;
+  width: 20px;
+  height: 20px;
+}
+
 /* Спиннер загрузки */
 .loader {
-    position: absolute;
-    top: 50%;
-    right: 15px;
-    transform: translateY(-50%);
-    width: 18px;
-    height: 18px;
-    border: 2px solid #f3f3f3;
-    border-top: 2px solid #38a169;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
+  position: absolute;
+  top: 50%;
+  right: 15px;
+  transform: translateY(-50%);
+  width: 18px;
+  height: 18px;
+  border: 2px solid #f3f3f3;
+  border-top: 2px solid #38a169;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
 }
 
 @keyframes spin {
-    0% { transform: translateY(-50%) rotate(0deg); }
-    100% { transform: translateY(-50%) rotate(360deg); }
+  0% { transform: translateY(-50%) rotate(0deg); }
+  100% { transform: translateY(-50%) rotate(360deg); }
 }
 
 /* Список подсказок */
@@ -81,7 +118,7 @@
   top: 100%;
   left: 0;
   right: 0;
-  background: white;
+  background: #ffffff;
   border: 1px solid #e2e8f0;
   border-top: none;
   border-radius: 0 0 8px 8px;
@@ -102,8 +139,8 @@
 }
 
 .suggestionItem b {
-    font-weight: 700;
-    color: #2f5233;
+  font-weight: 700;
+  color: #2f5233;
 }
 
 /* Активная/выбранная подсказка */

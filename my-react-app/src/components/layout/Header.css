@@ -146,7 +146,7 @@
   background: var(--color-surface);
   border: 1px solid rgba(82, 183, 136, 0.2);
   border-radius: 12px;
-  color: var(--color-text-primary);
+  color: var(--color-text-primary, #1f2937); /* фолбэк цвета для currentColor */
   cursor: pointer;
   text-decoration: none;
   transition: var(--transition-normal);
@@ -167,6 +167,14 @@
 }
 /* На случай если в SVG есть вложенные элементы со своим стилем */
 .action-btn svg * { stroke: currentColor; }
+
+/* Явные размеры именно для лупы */
+.search-btn .icon-search {
+  display: block;
+  width: 20px;
+  height: 20px;
+  opacity: 1;
+}
 
 .action-btn:hover {
   background: var(--color-accent);
