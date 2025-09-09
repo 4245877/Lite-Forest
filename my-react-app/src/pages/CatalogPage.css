@@ -391,6 +391,8 @@
 
 /* Новая кнопка раскрытия (используется вместо .category-toggle) */
 .category-header { display: flex; align-items: center; gap: 8px; }
+/* Название тянется, кнопка уходит вправо */
+.category-header .category-item { flex: 1; }
 .category-disclosure {
   width: 32px; height: 32px;
   display: inline-flex;
@@ -401,6 +403,7 @@
   color: var(--color-text-secondary);
   cursor: pointer;
   flex-shrink: 0;
+  margin-left: auto; /* кнопка справа */
   transition:
     background-color var(--transition-fast),
     border-color var(--transition-fast),
@@ -417,11 +420,13 @@
   outline: 3px solid var(--color-focus);
   outline-offset: 2px;
 }
-.category-disclosure svg { width: 18px; height: 18px; transition: transform 220ms ease; }
-.category-disclosure.open svg,
-.category-disclosure[aria-expanded="true"] svg { transform: rotate(90deg); }
+/* Текстовые стрелки вместо svg, без поворотов */
+.category-disclosure .disclosure-icon {
+  font-size: 18px;
+  line-height: 1;
+}
 
-/* Старую кнопку-стрелку выключаем */
+/* Старую кнопку-стрелку выключаем (если где-то осталась) */
 .category-toggle { display: none !important; }
 
 /* Фильтр по цене */

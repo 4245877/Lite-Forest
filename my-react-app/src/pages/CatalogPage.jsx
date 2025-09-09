@@ -87,7 +87,7 @@ const structuredCategories = [
   // Транспорт
   { id: 'auto-moto', name: 'Авто та мото', parent: null },
   { id: 'car-interior', name: 'Інтерʼєр та органайзери', parent: 'auto-moto' },
-  { id: 'car-exterior', name: 'Екстерʼєр та тюнінг', parent: 'auto-mото' },
+  { id: 'car-exterior', name: 'Екстерʼєр та тюнінг', parent: 'auto-мото' },
   { id: 'mounts-car', name: 'Кріплення та тримачі', parent: 'auto-moto' },
 
   // Спорт і аутдор
@@ -336,7 +336,17 @@ const CatalogPage = () => {
     return !!(openCats[cat.id] || (cat.children && cat.children.some(ch => selectedCategories.includes(ch.id))));
   }, [openCats, selectedCategories]);
 
-  const toggleCat = (id) => setOpenCats(prev => ({ ...prev, [id]: !prev[id] }));
+  const toggleCat = (id) => {
+    setOpenCats(prev => {
+      const nextIsOpen = !prev[id];
+      // Если открываем под-категорию при активном "Більше",
+      // автоматически разворачиваем список, чтобы ничего не обрезалось.
+      if (nextIsOpen && shouldCollapse && !catExpanded) {
+        setCatExpanded(true);
+      }
+      return { ...prev, [id]: nextIsOpen };
+    });
+  };
 
   const handleMinPriceChange = (e) => setMinPrice(e.target.value);
   const handleMaxPriceChange = (e) => setMaxPrice(e.target.value);
@@ -499,21 +509,6 @@ const CatalogPage = () => {
               {filteredCategoryTree.map(cat => (
                 <div key={cat.id} className="category-block">
                   <div className="category-header">
-                    {cat.children?.length > 0 && (
-                      <button
-                        className={`category-disclosure ${isCatOpen(cat) ? 'open' : ''}`}
-                        onClick={() => toggleCat(cat.id)}
-                        aria-label={`${isCatOpen(cat) ? 'Згорнути' : 'Розгорнути'} ${cat.name}`}
-                        aria-expanded={isCatOpen(cat)}
-                        aria-controls={`children-${cat.id}`}
-                      >
-                        {/* chevron-right, rotates 90° when open */}
-                        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
-                          <path fill="currentColor" d="M9 6l6 6-6 6"/>
-                        </svg>
-                      </button>
-                    )}
-
                     <label tabIndex={0} className={`category-item ${selectedCategories.includes(cat.id) ? 'selected' : ''}`}>
                       <input
                         type="checkbox"
@@ -523,6 +518,20 @@ const CatalogPage = () => {
                       <span className="custom-checkbox" aria-hidden />
                       <span>{cat.name}</span>
                     </label>
+
+                    {cat.children?.length > 0 && (
+                      <button
+                        className={`category-disclosure ${isCatOpen(cat) ? 'open' : ''}`}
+                        onClick={() => toggleCat(cat.id)}
+                        aria-label={`${isCatOpen(cat) ? 'Згорнути' : 'Розгорнути'} ${cat.name}`}
+                        aria-expanded={isCatOpen(cat)}
+                        aria-controls={`children-${cat.id}`}
+                      >
+                        <span className="disclosure-icon" aria-hidden="true">
+                          {isCatOpen(cat) ? '↓' : '→'}
+                        </span>
+                      </button>
+                    )}
                   </div>
 
                   {cat.children?.length > 0 && (
@@ -571,8 +580,8 @@ const CatalogPage = () => {
               </div>
               <div className="price-presets" aria-label="Швидкі діапазони цін">
                 <button onClick={() => { setMinPrice(''); setMaxPrice('500'); }}>до ₴500</button>
-                <button onClick={() => { setMinPrice('500'); setMaxPrice('1500'); }}>₴500–₴1 500</button>
-                <button onClick={() => { setMinPrice('1500'); setMaxPrice('3000'); }}>₴1 500–₴3 000</button>
+                <button onClick={() => { setMinPrice('500'); setMaxPrice('1500'); }}>₴500–₴1 500</button>
+                <button onClick={() => { setMinPrice('1500'); setMaxPrice('3000'); }}>₴1 500–₴3 000</button>
               </div>
             </div>
           </div>
