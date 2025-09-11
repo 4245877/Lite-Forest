@@ -36,6 +36,15 @@ const EnvSchema = z.object({
   ADMIN_TOKEN: z.string().optional(),
 
   METRICS_ENABLED: z.coerce.boolean().default(true),
+
+  // --- JWT / auth cookies ---
+  JWT_SECRET: z.string(),
+  ACCESS_TOKEN_TTL: z.string().default('15m'),
+  REFRESH_TOKEN_TTL: z.string().default('30d'),
+  COOKIE_NAME_ACCESS: z.string().default('lf_at'),
+  COOKIE_NAME_REFRESH: z.string().default('lf_rt'),
+  COOKIE_DOMAIN: z.string().optional(),
+  COOKIE_SECURE: z.coerce.boolean().default(false),
 });
 
 
