@@ -3,12 +3,10 @@ import fs from 'node:fs';
 import dotenv from 'dotenv';
 import { z } from 'zod';
 
-
 // Load .env from repo root (../.env) if present, else from CWD
 const rootEnv = path.resolve(process.cwd(), '../.env');
 if (fs.existsSync(rootEnv)) dotenv.config({ path: rootEnv });
 else dotenv.config();
-
 
 const EnvSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
@@ -16,6 +14,21 @@ const EnvSchema = z.object({
   PORT: z.coerce.number().default(3000),
   CORS_ORIGIN: z.string().default('*'),
   CDN_BASE_URL: z.string().optional(),
+
+  // --- Public / OAuth ---
+  // Публичный базовый URL БЭКЕНДА (ровно этот домен/порт нужно указать у провайдеров как Redirect URI)
+  PUBLIC_BASE_URL: z.string().url().optional(),
+
+  // Разрешённые origins, куда можно редиректить попап после входа (через запятую)
+  OAUTH_ALLOWED_ORIGINS: z.string().optional(),
+
+  // Google OAuth
+  GOOGLE_CLIENT_ID: z.string().optional(),
+  GOOGLE_CLIENT_SECRET: z.string().optional(),
+
+  // Facebook OAuth
+  FACEBOOK_CLIENT_ID: z.string().optional(),
+  FACEBOOK_CLIENT_SECRET: z.string().optional(),
 
   DATABASE_URL: z.string().optional(),
   DB_HOST: z.string().default('127.0.0.1'),
@@ -46,6 +59,5 @@ const EnvSchema = z.object({
   COOKIE_DOMAIN: z.string().optional(),
   COOKIE_SECURE: z.coerce.boolean().default(false),
 });
-
 
 export const env = EnvSchema.parse(process.env);
