@@ -7,7 +7,6 @@ import fastifyStatic from '@fastify/static';
 
 import fs from 'node:fs';
 import { env } from './core/env.js';
-import { logger } from './core/logger.js';
 
 // security / auth plugins
 import fastifyCookie from '@fastify/cookie';
@@ -25,9 +24,14 @@ import metrics from './monitoring/metrics.js';
 import ready from './monitoring/ready.js';
 import auth from './api/auth.js';
 
-
 export function buildApp() {
-  const app = Fastify({ logger });
+  const app = Fastify({
+    logger: {
+      level: env.NODE_ENV === 'production' ? 'info' : 'debug',
+      // для красивого вывода в dev можно раскомментировать и установить pino-pretty:
+      // transport: env.NODE_ENV !== 'production' ? { target: 'pino-pretty', options: { colorize: true, translateTime: 'HH:MM:ss.l' } } : undefined,
+    },
+  });
 
   // security headers
   app.register(fastifyHelmet);

@@ -3,7 +3,16 @@ import { z } from 'zod';
 import { db } from '../db/knex.js';
 import { decodeCursor, encodeCursor } from '../utils/cursor.js';
 import { env } from '../core/env.js';
-import { toStaticUrl } from '../utils/static.js';
+
+
+
+
+function toStaticUrl(key?: string | null) {
+  if (!key) return null;
+  return env.CDN_BASE_URL
+    ? `${env.CDN_BASE_URL.replace(/\/+$/,'')}/${key}`
+    : `/uploads/${key}`;
+}
 
 const ImageInput = z.object({
   url: z.string().url(),
