@@ -1,23 +1,19 @@
-// src/App.jsx
+// src/main.jsx
 import React from 'react';
-import Header from './components/layout/Header';
-import Footer from './components/layout/Footer';
-import AppRouter from './routes/AppRouter';
-import './App.css';
+import ReactDOM from 'react-dom/client';
+import { BrowserRouter } from 'react-router-dom';
 
-function App() {
-  return (
-    <div className="App">
-      <Header />
-      
-      { }
-      <main className="app-main container"> 
-        <AppRouter />
-      </main>
-      
-      <Footer />
-    </div>
-  );
-}
+import App from './App';
+import { AuthProvider } from './auth';
 
-export default App;
+import './index.css'; // оставьте/удалите по необходимости
+
+ReactDOM.createRoot(document.getElementById('root')).render(
+  <React.StrictMode>
+    <BrowserRouter>
+      <AuthProvider>
+        <App />
+      </AuthProvider>
+    </BrowserRouter>
+  </React.StrictMode>
+);

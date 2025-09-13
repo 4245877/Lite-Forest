@@ -1,5 +1,7 @@
 // src/pages/LoginPage.jsx
 import React, { useState, useRef } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { useAuth } from '../auth';
 import styles from './LoginPage.module.css';
 import { FaEye, FaEyeSlash, FaGoogle, FaFacebook } from 'react-icons/fa';
 
@@ -22,8 +24,8 @@ function useOAuthPopup() {
   const timerRef = useRef(null);
 
   const finalize = () => {
-    // Куки вже мають бути встановлені бекендом; оновлюємо застосунок:
-    window.location.assign('/');
+    // Після успіху ведемо користувача в кабінет
+    window.location.replace('/profile');
   };
 
   const openPopup = (url, { onBlocked, onStart, onFinish } = {}) => {
@@ -115,7 +117,7 @@ const SocialAuth = ({ setInlineError }) => {
     setOauthLoading(provider);
 
     const origin = window.location.origin; // наприклад, https://app.example.com
-    // Куди повертатись після логіну на бекенді: назад у застосунок. Попап закриємо автоматично.
+    // Повернення після логіну на бекенді: назад у застосунок. Попап закриємо автоматично.
     const redirectTo = encodeURIComponent(`${origin}/`);
     // Параметри підказки для Google — щоб гарантовано показати вибір акаунта і базові скоупи.
     const authParams =
@@ -175,6 +177,11 @@ const LoginForm = ({ onToggleForm }) => {
   const [inlineError, setInlineError] = useState(''); // для помилок попапа
   const [loading, setLoading] = useState(false);
 
+  const { signin } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const from = location.state?.from?.pathname || '/profile';
+
   const isFormValid = email.includes('@') && password.length > 0;
 
   const handleSubmit = async (e) => {
@@ -186,17 +193,9 @@ const LoginForm = ({ onToggleForm }) => {
     setInlineError('');
 
     try {
-      const res = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include', // ВАЖЛИВО: для HttpOnly cookie
-        body: JSON.stringify({ email, password }),
-      });
-
-      if (!res.ok) throw new Error(await readError(res));
-
-      alert('Успішний вхід!');
-      // window.location.assign('/'); // якщо хочеш одразу на головну
+      await signin(email, password);
+      // Успішно — ведемо користувача в кабінет або на сторінку, куди він намагався потрапити
+      navigate(from, { replace: true });
     } catch (e) {
       setError(e.message || 'Помилка входу');
     } finally {
@@ -328,7 +327,7 @@ const RegisterForm = ({ onToggleForm }) => {
       setTimeout(() => {
         onToggleForm?.({ preventDefault: () => {} });
       }, 600);
-      // або: window.location.assign('/');
+      // або: window.location.assign('/login');
     } catch (err) {
       setServerError(err.message || 'Помилка реєстрації');
     } finally {
