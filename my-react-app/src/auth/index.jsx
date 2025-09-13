@@ -1,3 +1,4 @@
+// src/auth/index.jsx
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 
@@ -10,7 +11,7 @@ export const AuthProvider = ({ children }) => {
 
   const refresh = useCallback(async () => {
     try {
-      const res = await fetch('/api/auth/me', { credentials: 'include' });
+      const res = await fetch('/api/me', { credentials: 'include' });
       if (res.ok) {
         const u = await res.json();
         setUser(u || null);
@@ -34,15 +35,18 @@ export const AuthProvider = ({ children }) => {
       body: JSON.stringify({ email, password }),
     });
     if (!res.ok) {
-      const { message } = await res.json().catch(()=>({}));
+      const { message } = await res.json().catch(() => ({}));
       throw new Error(message || res.statusText || 'Помилка входу');
     }
     await refresh();
   };
 
   const signout = async () => {
-    try { await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' }); }
-    finally { setUser(null); }
+    try {
+      await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+    } finally {
+      setUser(null);
+    }
   };
 
   return (
@@ -55,7 +59,7 @@ export const AuthProvider = ({ children }) => {
 export const RequireAuth = () => {
   const { user, loading } = useAuth();
   const location = useLocation();
-  if (loading) return null; // або спінер
+  if (loading) return null; // можно заменить на спиннер
   if (!user) return <Navigate to="/login" state={{ from: location }} replace />;
   return <Outlet />;
 };

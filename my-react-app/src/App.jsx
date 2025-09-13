@@ -1,19 +1,10 @@
-// src/main.jsx
+// src/App.jsx
+// Простой и корректный App компонент — без BrowserRouter (он уже в main.jsx)
+// ВАЖНО: не импортируем App из './App' внутри этого файла и оставляем экспорт по умолчанию.
+
 import React from 'react';
-import ReactDOM from 'react-dom/client';
-import { BrowserRouter } from 'react-router-dom';
+import AppRouter from './routes/AppRouter.jsx';
 
-import App from './App';
-import { AuthProvider } from './auth';
-
-import './index.css'; // оставьте/удалите по необходимости
-
-ReactDOM.createRoot(document.getElementById('root')).render(
-  <React.StrictMode>
-    <BrowserRouter>
-      <AuthProvider>
-        <App />
-      </AuthProvider>
-    </BrowserRouter>
-  </React.StrictMode>
-);
+export default function App() {
+  return <AppRouter />;
+}
