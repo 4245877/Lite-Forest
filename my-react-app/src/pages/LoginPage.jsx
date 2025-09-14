@@ -277,6 +277,10 @@ const RegisterForm = ({ onToggleForm }) => {
   const [name, setName] = useState(''); // опціонально
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [code, setCode] = useState('');
+  const [codeSent, setCodeSent] = useState(false);
+  const [cooldown, setCooldown] = useState(0);
+  const [sendingCode, setSendingCode] = useState(false);
 
   const [showPwd1, setShowPwd1] = useState(false);
   const [showPwd2, setShowPwd2] = useState(false);
@@ -296,7 +300,35 @@ const RegisterForm = ({ onToggleForm }) => {
     return Object.keys(e).length === 0;
   };
 
-  const isFormValid = email && password && confirmPassword && Object.keys(errors).length === 0;
+  const isFormValid =
+    email && password && confirmPassword &&
+    /^\d{6}$/.test(code) &&
+    Object.keys(errors).length === 0;
+
+  async function sendSignupCode() {
+    if (!email || !email.includes('@')) {
+      setErrors((e)=>({ ...e, email: 'Введіть правильний email.' }));
+      return;
+    }
+    setSendingCode(true);
+    setServerError('');
+    try {
+      await fetch('/api/auth/send-code', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ email, purpose: 'signup' }),
+      });
+      setCodeSent(true);
+      setCooldown(60);
+      const t = setInterval(() => setCooldown(s => (s > 0 ? s - 1 : 0)), 1000);
+      setTimeout(() => clearInterval(t), 61_000);
+    } catch (e) {
+      setServerError('Не вдалося надіслати код');
+    } finally {
+      setSendingCode(false);
+    }
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -315,6 +347,7 @@ const RegisterForm = ({ onToggleForm }) => {
           email,
           password,
           name: name?.trim() || email.split('@')[0], // якщо ім'я пусте — поставимо нік з email
+          code, // <<< додали код
         }),
       });
 
@@ -355,8 +388,38 @@ const RegisterForm = ({ onToggleForm }) => {
           aria-label="Поле для вводу email для реєстрації"
           required
         />
+        <div style={{marginTop: 6}}>
+          <button
+            type="button"
+            className={styles.secondaryButton}
+            onClick={sendSignupCode}
+            disabled={sendingCode || cooldown > 0}
+          >
+            {sendingCode ? 'Надсилаємо…' : cooldown ? `Повторити через ${cooldown} c` : 'Надіслати код'}
+          </button>
+          {codeSent && <span style={{marginLeft:8, fontSize:12}}>Код відправлено на пошту</span>}
+        </div>
         {errors.email && <p className={styles.errorText}>{errors.email}</p>}
       </div>
+
+      {codeSent && (
+        <div className={styles.inputGroup}>
+          <label htmlFor="reg-code" className={styles.inputLabel}>Код з email</label>
+          <input
+            id="reg-code"
+            type="text"
+            inputMode="numeric"
+            pattern="\d{6}"
+            maxLength={6}
+            className={styles.input}
+            value={code}
+            onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
+            aria-label="6-значний код підтвердження"
+            required
+          />
+          {!/^\d{6}$/.test(code) && <p className={styles.errorText}>Введіть 6 цифр</p>}
+        </div>
+      )}
 
       <div className={styles.inputGroup}>
         <label htmlFor="reg-name" className={styles.inputLabel}>Ім’я (необов’язково)</label>

@@ -58,6 +58,18 @@ const EnvSchema = z.object({
   COOKIE_NAME_REFRESH: z.string().default('lf_rt'),
   COOKIE_DOMAIN: z.string().optional(),
   COOKIE_SECURE: z.coerce.boolean().default(false),
+
+  // --- Email / Resend ---
+  // Resend API key (можно оставить пустым в локальной разработке)
+  RESEND_API_KEY: z.string().optional(),
+  // От кого отправлять письма
+  MAIL_FROM: z.string().default('Lite Forest <no-reply@lite-forest.org>'),
+  // Время жизни кода подтверждения в минутах
+  CODE_TTL_MIN: z.coerce.number().default(15),
+  // Отключить трекинг Resend (true/false)
+  RESEND_DISABLE_TRACKING: z.coerce.boolean().default(false),
 });
 
 export const env = EnvSchema.parse(process.env);
+
+export type Env = z.infer<typeof EnvSchema>;
