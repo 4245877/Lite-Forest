@@ -1,11 +1,14 @@
 import Redis from 'ioredis';
 import { env } from './env.js';
 
-const url = (env.REDIS_URL ?? '').trim();
+if (!env.REDIS_URL || !env.REDIS_URL.trim()) {
+  throw new Error('REDIS_URL is not set. Example: redis://127.0.0.1:6379/0');
+}
 
-// Если url пустой — Redis отключён (jobs/imports вернут 501 и не будут подключаться)
-export const redis = url
-  ? new Redis(url, { maxRetriesPerRequest: null, enableReadyCheck: false })
-  : undefined;
+export const redis = new Redis(env.REDIS_URL.trim(), {
+  maxRetriesPerRequest: null,
+  enableReadyCheck: false,
+});
 
-export type RedisClient = typeof redis;
+redis.on('connect', () => console.log('[redis] connected:', env.REDIS_URL));
+redis.on('error', (e) => console.error('[redis] error:', e));
