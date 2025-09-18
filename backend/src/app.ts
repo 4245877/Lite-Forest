@@ -23,6 +23,7 @@ import imports from './api/imports.js';
 import metrics from './monitoring/metrics.js';
 import ready from './monitoring/ready.js';
 import auth from './api/auth.js';
+import orders from './api/orders.js';
 
 export function buildApp() {
   const app = Fastify({
@@ -76,6 +77,7 @@ export function buildApp() {
 
   // регистрация auth после подключения cookie/jwt
   app.register(auth); // ⬅️ зарегистрировали auth-роутер
+  app.register(orders);
 
   return app;
 }
