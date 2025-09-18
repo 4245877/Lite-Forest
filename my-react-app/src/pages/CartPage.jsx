@@ -48,7 +48,7 @@ export default function CartPage() {
       setAppliedPromo({ code });
       setPromoOpen(false);
     } else {
-      alert('Промокод не найден');
+      alert('Промокод не знайдено');
     }
   }
 
@@ -84,9 +84,9 @@ export default function CartPage() {
       {/* Top motivator */}
       <div className={styles.motivator}>
         <div className={styles.titleRow}>
-          <h1 className={styles.title}>Ваша Корзина</h1>
+          <h1 className={styles.title}>Ваш кошик</h1>
           <div className={styles.reserveNote}>
-            Товары зарезервированы для вас на <strong>{reserveTimeFormatted}</strong>
+            Товари зарезервовані для вас <strong>{reserveTimeFormatted}</strong>
           </div>
         </div>
 
@@ -103,9 +103,9 @@ export default function CartPage() {
             </div>
             <div className={styles.progressText}>
               {subtotal >= FREE_SHIPPING_THRESHOLD ? (
-                <span>🎉 Поздравляем! Ваш заказ будет доставлен бесплатно!</span>
+                <span>🎉 Вітаємо! Ваше замовлення буде доставлено безкоштовно!</span>
               ) : (
-                <span>Добавьте товаров ещё на <strong>{amountToFree} грн</strong> для БЕСПЛАТНОЙ доставки!</span>
+                <span>Додати товарів ще на <strong>{amountToFree} грн</strong> для БЕЗКОШТОВНОЇ ДОСТАВКИ!</span>
               )}
             </div>
           </div>
@@ -119,8 +119,8 @@ export default function CartPage() {
 
           {cart.length === 0 ? (
             <div className={styles.emptyState}>
-              <p>Ваша корзина пуста.</p>
-              <Link to="/catalog" className={styles.linkBtn}>Вернуться в каталог</Link>
+              <p>Ваш кошик порожній.</p>
+              <Link to="/catalog" className={styles.linkBtn}>Повернутись до каталогу</Link>
             </div>
           ) : (
             <ul className={styles.cartList}>
@@ -150,7 +150,7 @@ export default function CartPage() {
 
           {/* Upsell / recommendations (демо) */}
           <section className={styles.recoSection} aria-label="Рекомендации">
-            <h3>С этим часто покупают</h3>
+            <h3>З цим часто купують</h3>
             <div className={styles.recoRow}>
               {recommended.map((r) => (
                 <div key={r.id} className={styles.recoCard}>
@@ -159,7 +159,7 @@ export default function CartPage() {
                     <div className={styles.recoTitle}>{r.name}</div>
                     <div className={styles.recoPrice}>{r.price} грн</div>
                     {/* для демо — добавим прямую ссылку в каталог */}
-                    <Link to="/catalog" className={styles.addBtn}>Посмотреть</Link>
+                    <Link to="/catalog" className={styles.addBtn}>Подивитись</Link>
                   </div>
                 </div>
               ))}
@@ -169,9 +169,9 @@ export default function CartPage() {
 
         <aside className={styles.right}>
           <div className={styles.summaryCard}>
-            <h3>Сумма заказа</h3>
+            <h3>Сума замовлення</h3>
             <div className={styles.row}>
-              <span>Товары ({cart.reduce((s, it) => s + it.qty, 0)} шт.)</span>
+              <span>Товари ({cart.reduce((s, it) => s + it.qty, 0)} шт.)</span>
               <span>{subtotal} грн</span>
             </div>
             <div className={styles.row}>
@@ -193,7 +193,7 @@ export default function CartPage() {
 
             <div className={styles.promoLinkWrap}>
               {!promoOpen ? (
-                <button className={styles.promoLink} onClick={() => setPromoOpen(true)}>У меня есть промокод</button>
+                <button className={styles.promoLink} onClick={() => setPromoOpen(true)}>У мене є промокод</button>
               ) : (
                 <form onSubmit={applyPromo} className={styles.promoForm}>
                   <input
@@ -202,7 +202,7 @@ export default function CartPage() {
                     placeholder="Введите промокод"
                     aria-label="Промокод"
                   />
-                  <button type="submit" className={styles.applyBtn}>Применить</button>
+                  <button type="submit" className={styles.applyBtn}>Застосувати</button>
                 </form>
               )}
             </div>
@@ -222,8 +222,8 @@ export default function CartPage() {
                   <svg width="36" height="24" viewBox="0 0 24 24"><circle cx="12" cy="8" r="2" stroke="#999" fill="none"/></svg>
                 </div>
                 <div className={styles.trustText}>
-                  <strong>Безопасная сделка</strong><br/>
-                  <a href="/delivery" className={styles.trustLink}>Условия доставки и возврата</a>
+                  <strong>Безпечна угода</strong><br/>
+                  <a href="/delivery" className={styles.trustLink}>Умови доставки та повернення</a>
                 </div>
               </div>
             </div>
