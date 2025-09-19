@@ -212,7 +212,7 @@ export default function CartPage() {
               disabled={cart.length === 0}
               onClick={handleCheckout}
             >
-              Перейти к оформлению
+              Перейти до оформлення
             </button>
 
             <div className={styles.trustBlock}>
