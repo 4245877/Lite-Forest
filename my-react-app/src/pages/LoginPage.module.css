@@ -83,6 +83,7 @@
   color: var(--color-text-secondary);
 }
 
+/* Немного выравниваем поля по визуальному весу */
 .input {
   width: 100%;
   height: 50px;
@@ -108,23 +109,48 @@
   box-shadow: 0 0 0 3px var(--color-focus);
 }
 
-/* --- Иконка "показать/скрыть пароль" --- */
+/* Обёртка вокруг input + глаз — правильная система отсчёта для absolute */
+.fieldControl {
+  position: relative;
+}
+
+/* У input с иконкой увеличиваем правый внутренний отступ,
+   чтобы текст не налезал на кнопку */
+.inputWithToggle {
+  padding-right: 56px; /* 44px таргет + ~12px зазор */
+}
+
+/* Иконка "показать/скрыть пароль" — корректное вертикальное центрирование
+   и стилистика ближе к теме */
 .passwordToggle {
   position: absolute;
   top: 50%;
   right: 8px;
   transform: translateY(-50%);
   cursor: pointer;
-  color: var(--color-text-muted);
-  font-size: 1.2rem;
+  color: var(--color-text-secondary);
+  font-size: 1.1rem;
+  line-height: 1;
 
-  /* увеличиваем тап-таргет на мобилках */
+  /* комфортный тап-таргет */
   width: 44px;
   height: 44px;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 8px;
+  border-radius: 10px;
+
+  /* базовая стилистика */
+  background: transparent;
+  border: none;
+}
+
+.passwordToggle:hover {
+  background: rgba(47, 82, 51, 0.06); /* лёгкий зелёный оттенок из палитры */
+}
+
+.passwordToggle:active {
+  background: rgba(47, 82, 51, 0.1);
 }
 
 .passwordToggle:focus-visible {
@@ -258,7 +284,6 @@
   .submitButton, .input, .logo { transition: none; }
 }
 
-
 /* --- Социальный вход (Google / Facebook) --- */
 .socialButtons {
   display: grid;
@@ -316,25 +341,30 @@
   box-shadow: 0 0 0 3px var(--color-focus), var(--shadow-md);
 }
 
-/* Вариации под провайдеров */
+/* Вариации под провайдеров — делаем нейтральнее, чтобы не спорили с зелёной палитрой */
 .googleBtn {
-  background: #fff;                /* на светлом фоне */
+  background: #fff;
   color: var(--color-text-primary);
   border-color: var(--color-border);
 }
 
 .facebookBtn {
-  background: #1877f2;             /* фирменный FB */
-  color: #fff;
+  background: #fff;               /* вместо сплошного синего */
+  color: #1877f2;
   border-color: #1877f2;
 }
 
-/* Разделитель "или" */
+.facebookBtn:hover:not(:disabled) {
+  background: rgba(24, 119, 242, 0.06);
+}
+
+/* Разделитель "или" — спокойнее под стиль сайта */
 .orDivider {
   display: flex;
   align-items: center;
   gap: 10px;
   color: var(--color-text-secondary);
+  opacity: .9;
   font-size: 0.9rem;
   margin: 6px 0 16px;
 }

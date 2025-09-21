@@ -225,26 +225,32 @@ const LoginForm = ({ onToggleForm }) => {
         />
       </div>
 
+      {/* ВО ВХОДЕ: оборачиваем input+кнопку в собственный контейнер */}
       <div className={styles.inputGroup}>
         <label htmlFor="login-password" className={styles.inputLabel}>Пароль</label>
-        <input
-          id="login-password"
-          type={showPassword ? 'text' : 'password'}
-          className={styles.input}
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          autoComplete="current-password"
-          aria-label="Поле для введення пароля"
-          required
-        />
-        <button
-          type="button"
-          className={styles.passwordToggle}
-          onClick={() => setShowPassword(!showPassword)}
-          aria-label={showPassword ? 'Приховати пароль' : 'Показати пароль'}
-        >
-          {showPassword ? <FaEyeSlash /> : <FaEye />}
-        </button>
+
+        <div className={styles.fieldControl}>
+          <input
+            id="login-password"
+            type={showPassword ? 'text' : 'password'}
+            className={`${styles.input} ${styles.inputWithToggle}`}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            autoComplete="current-password"
+            aria-label="Поле для введення пароля"
+            required
+          />
+          <button
+            type="button"
+            className={styles.passwordToggle}
+            onClick={() => setShowPassword(!showPassword)}
+            aria-label={showPassword ? 'Приховати пароль' : 'Показати пароль'}
+            aria-pressed={showPassword}
+            title={showPassword ? 'Приховати пароль' : 'Показати пароль'}
+          >
+            {showPassword ? <FaEyeSlash /> : <FaEye />}
+          </button>
+        </div>
       </div>
 
       <div className={styles.linkGroup}>
@@ -437,51 +443,62 @@ const RegisterForm = ({ onToggleForm }) => {
         {errors.name && <p className={styles.errorText}>{errors.name}</p>}
       </div>
 
+      {/* РЕЄСТРАЦІЯ: оборачиваем оба поля паролей */}
+      {/* Пароль */}
       <div className={styles.inputGroup}>
         <label htmlFor="reg-password" className={styles.inputLabel}>Пароль</label>
-        <input
-          id="reg-password"
-          type={showPwd1 ? 'text' : 'password'}
-          className={styles.input}
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          onBlur={validateForm}
-          autoComplete="new-password"
-          aria-label="Поле для вводу пароля для реєстрації"
-          required
-        />
-        <button
-          type="button"
-          className={styles.passwordToggle}
-          onClick={() => setShowPwd1(!showPwd1)}
-          aria-label={showPwd1 ? 'Приховати пароль' : 'Показати пароль'}
-        >
-          {showPwd1 ? <FaEyeSlash /> : <FaEye />}
-        </button>
+        <div className={styles.fieldControl}>
+          <input
+            id="reg-password"
+            type={showPwd1 ? 'text' : 'password'}
+            className={`${styles.input} ${styles.inputWithToggle}`}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            onBlur={validateForm}
+            autoComplete="new-password"
+            aria-label="Поле для вводу пароля для реєстрації"
+            required
+          />
+          <button
+            type="button"
+            className={styles.passwordToggle}
+            onClick={() => setShowPwd1(!showPwd1)}
+            aria-label={showPwd1 ? 'Приховати пароль' : 'Показати пароль'}
+            aria-pressed={showPwd1}
+            title={showPwd1 ? 'Приховати пароль' : 'Показати пароль'}
+          >
+            {showPwd1 ? <FaEyeSlash /> : <FaEye />}
+          </button>
+        </div>
         {errors.password && <p className={styles.errorText}>{errors.password}</p>}
       </div>
-      
+
+      {/* Підтвердження пароля */}
       <div className={styles.inputGroup}>
         <label htmlFor="reg-confirm-password" className={styles.inputLabel}>Підтвердьте пароль</label>
-        <input
-          id="reg-confirm-password"
-          type={showPwd2 ? 'text' : 'password'}
-          className={styles.input}
-          value={confirmPassword}
-          onChange={(e) => setConfirmPassword(e.target.value)}
-          onBlur={validateForm}
-          autoComplete="new-password"
-          aria-label="Поле для підтвердження пароля"
-          required
-        />
-        <button
-          type="button"
-          className={styles.passwordToggle}
-          onClick={() => setShowPwd2(!showPwd2)}
-          aria-label={showPwd2 ? 'Приховати пароль' : 'Показати пароль'}
-        >
-          {showPwd2 ? <FaEyeSlash /> : <FaEye />}
-        </button>
+        <div className={styles.fieldControl}>
+          <input
+            id="reg-confirm-password"
+            type={showPwd2 ? 'text' : 'password'}
+            className={`${styles.input} ${styles.inputWithToggle}`}
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            onBlur={validateForm}
+            autoComplete="new-password"
+            aria-label="Поле для підтвердження пароля"
+            required
+          />
+          <button
+            type="button"
+            className={styles.passwordToggle}
+            onClick={() => setShowPwd2(!showPwd2)}
+            aria-label={showPwd2 ? 'Приховати пароль' : 'Показати пароль'}
+            aria-pressed={showPwd2}
+            title={showPwd2 ? 'Приховати пароль' : 'Показати пароль'}
+          >
+            {showPwd2 ? <FaEyeSlash /> : <FaEye />}
+          </button>
+        </div>
         {errors.confirmPassword && <p className={styles.errorText}>{errors.confirmPassword}</p>}
       </div>
 
