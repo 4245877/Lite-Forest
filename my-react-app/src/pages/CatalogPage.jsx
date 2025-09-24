@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef, useLayoutEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import ProductCard from '../components/product/ProductCard';
 import SearchBar from '../components/search/SearchBar';
 import { highlightMatch } from '../utils/searchUtils';
@@ -7,12 +7,16 @@ import { api } from '../api/client';
 import './CatalogPage.css';
 
 /**
- * CatalogPage – filter UX
+ * CatalogPage – filter UX (+ аніме фігурки)
  *
- * ✔ ПК и Моб: категории – показываем первые 7, затем «Більше/Згорнути» с aria-атрибутами и анимацией
- * ✔ Моб: шапка «Фільтри» с крестиком прилипает к верху без «щели» (safe-area)
- * ✔ Моб: плашка «Скинути/Показати» прилипает к НИЗУ без «щели» (safe-area)
- * ✔ Новое: более наглядная стрелка-розкривач для підкатегорій (chevron ▶→▼) внутри строки категории
+ * ✔ Категорії: перші 7, потім «Більше/Згорнути» з aria-атрибутами та анімацією
+ * ✔ Моб: шапка «Фільтри» та нижній футер «Скинути/Показати» з safe-area
+ * ✔ Розкривач підкатегорій (▶/▼) з aria-controls/expanded
+ * ✔ Пін важливих топ-груп угорі (all, novelties, miniatures, props-cosplay, toys)
+ * ✔ Нове: категорія «Аніме фігурки» + пошук категорій з синонімами (aliases)
+ * ✔ Нове: фасети для колекціонерів — «Франшиза», «Масштаб», «Фініш (painted/kit/STL)»
+ * ✔ Нове: збереження стану відкритих категорій/expand у localStorage
+ * ✔ Нове: глибокі посилання на фільтри через URLSearchParams (deeplink/шаринг)
  */
 
 // --- Categories -----------------------------------------------------------------
@@ -48,6 +52,9 @@ const structuredCategories = [
   { id: 'min-people', name: 'Люди та фігурки', parent: 'miniatures' },
   { id: 'min-wargame', name: 'Варґеймінг: терен і аксесуари', parent: 'miniatures' },
   { id: 'min-vehicles', name: 'Техніка та машинерія', parent: 'miniatures' },
+
+  // ➕ НОВОЕ: Аніме фігурки (колекційний сегмент)
+  { id: 'anime-figures', name: 'Аніме фігурки', parent: 'miniatures', aliases: ['аниме', 'anime', 'манга', 'манґа'] },
 
   // Пропси та косплей
   { id: 'props-cosplay', name: 'Пропси та косплей', parent: null },
@@ -139,13 +146,16 @@ const buildCategoryTree = (cats) => {
     if (item.parent && map[item.parent]) map[item.parent].children.push(item);
     else tree.push(item);
   });
+
+  // Пін важливих топ-рівнів угорі
+  const PINNED = ['all', 'novelties', 'miniatures', 'props-cosplay', 'toys'];
   tree.sort((a, b) => {
-    if (a.id === 'all') return -1;
-    if (b.id === 'all') return 1;
-    if (a.id === 'novelties') return -1;
-    if (b.id === 'novelties') return 1;
+    const ai = PINNED.indexOf(a.id);
+    const bi = PINNED.indexOf(b.id);
+    if (ai !== -1 || bi !== -1) return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi);
     return a.name.localeCompare(b.name, 'uk');
   });
+
   return tree;
 };
 
@@ -160,32 +170,47 @@ const normalizeProducts = (data) => {
 
 const uaNumber = (n) => new Intl.NumberFormat('uk-UA').format(n);
 
+// --- helpers для URL-параметрів -------------------------------------------------
+const encodeList = (arr) => (arr && arr.length ? arr.join(',') : '');
+const decodeList = (str) => (str ? str.split(',').map(s => s.trim()).filter(Boolean) : []);
+
 const CatalogPage = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
+
   const [products, setProducts] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const [selectedCategories, setSelectedCategories] = useState([]);
-  const [minPrice, setMinPrice] = useState('');
-  const [maxPrice, setMaxPrice] = useState('');
-  const [material, setMaterial] = useState('');
-  const [printTech, setPrintTech] = useState('');
+  const [selectedCategories, setSelectedCategories] = useState(() => decodeList(searchParams.get('cats') || ''));
+  const [minPrice, setMinPrice] = useState(searchParams.get('min') || '');
+  const [maxPrice, setMaxPrice] = useState(searchParams.get('max') || '');
+  const [material, setMaterial] = useState(searchParams.get('mat') || '');
+  const [printTech, setPrintTech] = useState(searchParams.get('tech') || '');
+  const [sortBy, setSortBy] = useState(searchParams.get('sort') || 'popular');
 
-  const [sortBy, setSortBy] = useState('popular');
+  const [franchise, setFranchise] = useState(searchParams.get('franchise') || '');
+  const [scale, setScale] = useState(searchParams.get('scale') || '');
+  const [finish, setFinish] = useState(searchParams.get('finish') || '');
+
   const [isFiltersVisible, setIsFiltersVisible] = useState(false);
 
-  const [searchInput, setSearchInput] = useState('');
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchInput, setSearchInput] = useState(searchParams.get('q') || '');
+  const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '');
   const [categorySearch, setCategorySearch] = useState('');
-  const [openCats, setOpenCats] = useState({});
+  const [openCats, setOpenCats] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('lf.openCats') || '{}'); } catch { return {}; }
+  });
   const [isMobile, setIsMobile] = useState(false);
 
   // Collapsible categories (desktop + mobile)
-  const [catExpanded, setCatExpanded] = useState(false);
+  const [catExpanded, setCatExpanded] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('lf.catExpanded') || 'false'); } catch { return false; }
+  });
   const [shouldCollapse, setShouldCollapse] = useState(false);
   const [collapsedMaxHeight, setCollapsedMaxHeight] = useState(0);
 
   const debounceTimer = useRef(null);
+  const didInitFromURL = useRef(true); // уже ініціалізували стани з URL у useState вище
 
   // Refs
   const panelRef = useRef(null);
@@ -220,7 +245,9 @@ const CatalogPage = () => {
     if (!q) return categoryTree;
 
     const filterNode = (node) => {
-      const matchesSelf = node.name.toLowerCase().includes(q);
+      const matchesSelf =
+        node.name.toLowerCase().includes(q) ||
+        (node.aliases?.some(a => a.toLowerCase().includes(q)));
       const children = (node.children || []).map(filterNode).filter(Boolean);
       if (matchesSelf || children.length) return { ...node, children };
       return null;
@@ -235,9 +262,12 @@ const CatalogPage = () => {
     if (maxPrice) count++;
     if (material) count++;
     if (printTech) count++;
+    if (franchise) count++;
+    if (scale) count++;
+    if (finish) count++;
     if (searchQuery) count++;
     return count;
-  }, [selectedCatsForQuery.length, minPrice, maxPrice, material, printTech, searchQuery]);
+  }, [selectedCatsForQuery.length, minPrice, maxPrice, material, printTech, franchise, scale, finish, searchQuery]);
 
   const activeTags = useMemo(() => {
     const tags = [];
@@ -249,9 +279,17 @@ const CatalogPage = () => {
     if (maxPrice) tags.push({ type: 'maxPrice', label: `до ₴${uaNumber(Number(maxPrice))}` });
     if (material) tags.push({ type: 'material', label: `Матеріал: ${material}` });
     if (printTech) tags.push({ type: 'printTech', label: `Технологія: ${printTech}` });
+    if (franchise) tags.push({ type: 'franchise', label: `Франшиза: ${franchise}` });
+    if (scale) tags.push({ type: 'scale', label: `Масштаб: ${scale}` });
+    if (finish) tags.push({
+      type: 'finish',
+      label: finish === 'painted' ? 'Готові/пофарбовані' :
+             finish === 'kit' ? 'Набір для фарбування' :
+             finish === 'stl' ? 'STL-файл' : `Фініш: ${finish}`
+    });
     if (searchQuery) tags.push({ type: 'search', label: `Пошук: "${searchQuery}"` });
     return tags;
-  }, [selectedCatsForQuery, minPrice, maxPrice, material, printTech, searchQuery]);
+  }, [selectedCatsForQuery, minPrice, maxPrice, material, printTech, franchise, scale, finish, searchQuery]);
 
   const clearAll = useCallback(() => {
     setSelectedCategories([]);
@@ -259,6 +297,9 @@ const CatalogPage = () => {
     setMaxPrice('');
     setMaterial('');
     setPrintTech('');
+    setFranchise('');
+    setScale('');
+    setFinish('');
     setSearchInput('');
     setSearchQuery('');
     setCategorySearch('');
@@ -266,17 +307,47 @@ const CatalogPage = () => {
 
   const removeTag = useCallback((tag) => {
     switch (tag.type) {
-      case 'category':
-        setSelectedCategories(prev => prev.filter(c => c !== tag.id));
-        break;
+      case 'category': setSelectedCategories(prev => prev.filter(c => c !== tag.id)); break;
       case 'minPrice': setMinPrice(''); break;
       case 'maxPrice': setMaxPrice(''); break;
       case 'material': setMaterial(''); break;
       case 'printTech': setPrintTech(''); break;
+      case 'franchise': setFranchise(''); break;
+      case 'scale': setScale(''); break;
+      case 'finish': setFinish(''); break;
       case 'search': setSearchInput(''); setSearchQuery(''); break;
       default: break;
     }
   }, []);
+
+  // --- Синхронізація з URL (deeplink) ------------------------------------------
+  useEffect(() => {
+    const nextParams = new URLSearchParams();
+
+    if (searchQuery) nextParams.set('q', searchQuery);
+    if (selectedCategories.length) nextParams.set('cats', encodeList(selectedCategories));
+    if (minPrice) nextParams.set('min', minPrice);
+    if (maxPrice) nextParams.set('max', maxPrice);
+    if (material) nextParams.set('mat', material);
+    if (printTech) nextParams.set('tech', printTech);
+    if (franchise) nextParams.set('franchise', franchise);
+    if (scale) nextParams.set('scale', scale);
+    if (finish) nextParams.set('finish', finish);
+    if (sortBy && sortBy !== 'popular') nextParams.set('sort', sortBy);
+
+    const current = searchParams.toString();
+    const next = nextParams.toString();
+    if (current !== next) setSearchParams(nextParams, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchQuery, selectedCategories, minPrice, maxPrice, material, printTech, franchise, scale, finish, sortBy]);
+
+  // Збереження розкритих категорій / expanded у localStorage
+  useEffect(() => {
+    try { localStorage.setItem('lf.openCats', JSON.stringify(openCats)); } catch {}
+  }, [openCats]);
+  useEffect(() => {
+    try { localStorage.setItem('lf.catExpanded', JSON.stringify(catExpanded)); } catch {}
+  }, [catExpanded]);
 
   // Products fetch
   useEffect(() => {
@@ -293,6 +364,10 @@ const CatalogPage = () => {
           material,
           printTech,
           sortBy,
+          // Нові фасети
+          franchise,
+          scale,
+          finish,
         });
         setProducts(normalizeProducts(data));
       } catch (err) {
@@ -306,7 +381,7 @@ const CatalogPage = () => {
 
     fetchProducts();
     return () => controller.abort();
-  }, [searchQuery, selectedCatsForQuery, minPrice, maxPrice, material, printTech, sortBy]);
+  }, [searchQuery, selectedCatsForQuery, minPrice, maxPrice, material, printTech, sortBy, franchise, scale, finish]);
 
   // Debounced search
   const handleSearch = useCallback((value) => {
@@ -336,7 +411,7 @@ const CatalogPage = () => {
     return !!(openCats[cat.id] || (cat.children && cat.children.some(ch => selectedCategories.includes(ch.id))));
   }, [openCats, selectedCategories]);
 
-  // Локально подстраиваем высоту «первых 7», чтобы было видно контент открытой категории
+  // Підганяємо висоту «перших 7», щоб бачити дітей відкритої категорії
   const adjustCollapsedHeightFor = useCallback((catId, willOpen) => {
     if (!(shouldCollapse && !catExpanded) || !categoryListRef.current) return;
 
@@ -345,15 +420,13 @@ const CatalogPage = () => {
 
     const firstRect = blocks[0].getBoundingClientRect();
     const seventhRect = blocks[6].getBoundingClientRect();
-    // Базовая высота «первых 7»
     let height = Math.ceil(seventhRect.bottom - firstRect.top);
 
-    // Если кликнули по одной из первых 7 — добавим/уберём высоту её детей
     const idx = Array.from(blocks).findIndex(b => b.querySelector(`#children-${catId}`));
     if (idx !== -1 && idx <= 6) {
       const child = categoryListRef.current.querySelector(`#children-${catId}`);
       if (child) {
-        const delta = child.scrollHeight; // полная высота подкатегорий (не зависит от анимации)
+        const delta = child.scrollHeight;
         height = willOpen ? height + delta : Math.max(height - delta, 0);
       }
     }
@@ -361,7 +434,6 @@ const CatalogPage = () => {
   }, [shouldCollapse, catExpanded]);
 
   const toggleCat = (id) => {
-    // Открываем/закрываем только кликнутую категорию + корректируем высоту контейнера
     setOpenCats(prev => {
       const willOpen = !prev[id];
       adjustCollapsedHeightFor(id, willOpen);
@@ -395,7 +467,7 @@ const CatalogPage = () => {
 
   useLayoutEffect(() => { recomputeCollapsedHeight(); }, [filteredCategoryTree, recomputeCollapsedHeight]);
 
-  // На всякий случай пересчёт после DOM-изменений (устойчиво к анимациям max-height)
+  // Перерахунок після DOM-ізмен (стабільно з анімацією max-height)
   useEffect(() => {
     if (!(shouldCollapse && !catExpanded)) return;
     let raf1, raf2;
@@ -563,7 +635,7 @@ const CatalogPage = () => {
                         aria-controls={`children-${cat.id}`}
                       >
                         <span className="disclosure-icon" aria-hidden="true">
-                          {isCatOpen(cat) ? '↓' : '→'}
+                          {isCatOpen(cat) ? '▼' : '▶'}
                         </span>
                       </button>
                     )}
@@ -588,7 +660,7 @@ const CatalogPage = () => {
               ))}
             </div>
 
-            {/* Кнопка Більше/Згорнути — и на ПК, и на мобиле */}
+            {/* Кнопка Більше/Згорнути — і на ПК, і на мобілі */}
             {shouldCollapse && !categorySearch.trim() && (
               <div style={{ marginTop: 'var(--spacing-md)' }}>
                 <button
@@ -646,12 +718,49 @@ const CatalogPage = () => {
             </select>
           </div>
 
-  {/* Desktop-only clear */}
+          {/* ➕ Нові фасети для фігурок */}
+          <div className="filter-group">
+            <h3>Франшиза</h3>
+            <input
+              className="input"
+              type="search"
+              placeholder="Напр., One Piece, Naruto, Genshin…"
+              value={franchise}
+              onChange={(e) => setFranchise(e.target.value)}
+              aria-label="Фільтр за франшизою"
+            />
+          </div>
+
+          <div className="filter-group">
+            <h3>Масштаб</h3>
+            <select value={scale} onChange={(e) => setScale(e.target.value)} aria-label="Фільтр за масштабом">
+              <option value="">— будь-який —</option>
+              <option value="1/6">1/6</option>
+              <option value="1/7">1/7</option>
+              <option value="1/8">1/8</option>
+              <option value="1/10">1/10</option>
+              <option value="1/12">1/12</option>
+              <option value="1/35">1/35</option>
+              <option value="SD">SD/Chibi</option>
+            </select>
+          </div>
+
+          <div className="filter-group">
+            <h3>Фініш</h3>
+            <select value={finish} onChange={(e) => setFinish(e.target.value)} aria-label="Фільтр за фінішем">
+              <option value="">— будь-який —</option>
+              <option value="painted">Готові/пофарбовані</option>
+              <option value="kit">Набір для фарбування</option>
+              <option value="stl">STL-файл</option>
+            </select>
+          </div>
+
+          {/* Desktop-only clear */}
           <div className="filter-actions">
             <button className="btn btn--secondary" onClick={clearAll}>Скинути фільтри</button>
           </div>
 
-          {/* Мобильный нижний футер — прилипает к НИЗУ без щели */}
+          {/* Мобільний нижній футер — прилип до НИЗУ без щілини */}
           {isMobile && (
             <div className="filters-footer">
               <button className="btn btn--secondary" onClick={clearAll}>Скинути</button>
