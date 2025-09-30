@@ -1,113 +1,176 @@
-/* Основной контейнер для поиска */
+/* Контейнер */
 .searchContainer {
   position: relative;
   width: 100%;
-  max-width: 500px; /* или любая другая ширина */
+  max-width: 560px;
   margin-bottom: 24px;
 }
 
+/* Скрытое для визуального интерфейса, но доступно для screen readers */
+.visuallyHidden {
+  position: absolute !important;
+  height: 1px; width: 1px;
+  overflow: hidden; clip: rect(1px, 1px, 1px, 1px);
+  white-space: nowrap; border: 0; padding: 0; margin: -1px;
+}
+
+/* Инпут */
 .searchInput {
   width: 100%;
-  padding: 12px 20px 12px 45px; /* отступ для иконки */
+  padding: 12px 44px 12px 44px; /* симметрия иконок */
   font-size: 16px;
   border: 1px solid #e2e8f0;
-  border-radius: 8px;
+  border-radius: 12px;
   color: #2d3748;
-  transition: all 0.2s ease-in-out;
+  transition: box-shadow .2s ease, border-color .2s ease, background-color .2s ease;
   outline: none;
+  background-color: #fff;
 }
 
 .searchInput::placeholder {
-  color: #a0aec0;
+  color: #94a3b8;
 }
 
 .searchInput:focus {
   border-color: #38a169;
-  box-shadow: 0 0 0 3px rgba(56, 161, 105, 0.2);
+  box-shadow: 0 0 0 4px rgba(56, 161, 105, 0.14);
 }
 
-/* Иконка поиска слева */
+/* Иконка слева */
 .searchIcon {
   position: absolute;
   top: 50%;
-  left: 15px;
+  left: 12px;
   transform: translateY(-50%);
   color: #a0aec0;
-  pointer-events: none; /* чтобы не мешала клику на инпут */
+  pointer-events: none;
+  width: 20px; height: 20px;
+  display: flex; align-items: center; justify-content: center;
 }
 
-/* Кнопка очистки */
-.clearButton {
+/* Кнопка очистки / спиннер справа */
+.clearButton, .loader {
   position: absolute;
   top: 50%;
-  right: 15px;
+  right: 12px;
   transform: translateY(-50%);
+}
+
+.clearButton {
   background: none;
   border: none;
   cursor: pointer;
-  padding: 4px;
+  padding: 6px;
   color: #718096;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 8px;
 }
 
 .clearButton:hover {
+  background-color: #f1f5f9;
   color: #2d3748;
 }
 
-/* Спиннер загрузки */
+/* Спиннер */
 .loader {
-    position: absolute;
-    top: 50%;
-    right: 15px;
-    transform: translateY(-50%);
-    width: 18px;
-    height: 18px;
-    border: 2px solid #f3f3f3;
-    border-top: 2px solid #38a169;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
+  width: 18px; height: 18px;
+  border: 2px solid #f3f3f3;
+  border-top: 2px solid #38a169;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
 }
+@keyframes spin { to { transform: translateY(-50%) rotate(360deg); } }
 
-@keyframes spin {
-    0% { transform: translateY(-50%) rotate(0deg); }
-    100% { transform: translateY(-50%) rotate(360deg); }
-}
-
-/* Список подсказок */
-.suggestionsList {
+/* Поповер (контейнер списка) с мягкой анимацией */
+.popover {
   position: absolute;
-  top: 100%;
-  left: 0;
-  right: 0;
-  background: white;
+  top: calc(100% + 6px);
+  left: 0; right: 0;
+  background: #fff;
   border: 1px solid #e2e8f0;
-  border-top: none;
-  border-radius: 0 0 8px 8px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  list-style: none;
-  padding: 8px 0;
-  margin: 0;
+  border-radius: 12px;
+  box-shadow:
+    0 10px 15px -3px rgba(0,0,0,.1),
+    0 4px 6px -2px rgba(0,0,0,.05);
   z-index: 10;
-  max-height: 300px;
-  overflow-y: auto;
+  overflow: hidden;
+  animation: pop .12s ease-out;
+}
+@keyframes pop {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
-/* Отдельная подсказка */
+/* Верхняя плашка — счетчик результатов */
+.headerRow {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 12px;
+  border-bottom: 1px solid #f1f5f9;
+  background: #fafafa;
+}
+.headerText {
+  font-size: 12px;
+  color: #64748b;
+}
+
+/* Список */
+.suggestionsList {
+  list-style: none;
+  margin: 0;
+  padding: 8px 0;
+  max-height: 320px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Общий элемент */
 .suggestionItem {
-  padding: 10px 20px;
+  display: grid;
+  grid-template-columns: 28px 1fr;
+  grid-gap: 10px;
+  align-items: center;
+  padding: 10px 12px;
   cursor: pointer;
   font-size: 15px;
 }
 
-.suggestionItem b {
-    font-weight: 700;
-    color: #2f5233;
+.suggestionItem:hover,
+.suggestionItem.active {
+  background-color: #f7fafc;
 }
 
-/* Активная/выбранная подсказка */
-.suggestionItem.active,
-.suggestionItem:hover {
-  background-color: #f7fafc;
+.itemText { display: grid; grid-gap: 4px; }
+.itemTitle { color: #1f2937; }
+.itemMeta { color: #64748b; font-size: 13px; }
+
+/* Ведущая иконка (для недавних/показать все) */
+.leadingIcon {
+  width: 20px; height: 20px;
+  color: #94a3b8;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+
+/* Миниатюра товара */
+.thumb {
+  width: 28px; height: 28px;
+  border-radius: 6px;
+  object-fit: cover;
+  background: #f1f5f9;
+  border: 1px solid #e5e7eb;
+}
+
+/* “Недавние” визуально мягче */
+.recentItem .itemTitle { color: #334155; }
+
+/* Пункт “Показать все результаты” */
+.showAll {
+  border-top: 1px dashed #e5e7eb;
+  font-weight: 600;
+  color: #2f5233;
+}
+
+/* Жирное выделение из highlightMatch */
+.suggestionItem b {
+  font-weight: 700;
+  color: #2f5233;
 }

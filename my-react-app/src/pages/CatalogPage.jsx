@@ -565,7 +565,7 @@ const CatalogPage = () => {
         </button>
       </header>
 
-      <SearchBar onSearch={handleSearch} allProducts={products} />
+      {/* Панель каталога перенесена в тулбар всередині main.product-grid */}
 
       {activeTags.length > 0 && (
         <div className="active-filters" role="region" aria-label="Активні фільтри">
@@ -771,15 +771,35 @@ const CatalogPage = () => {
         </aside>
 
         <main className="product-grid">
-          <div className="products-header">
-            <span className="products-count">Знайдено товарів: {uaNumber(products.length)}</span>
-            <select className="sort-by input" value={sortBy} onChange={handleSortChange} aria-label="Сортування">
-              <option value="popular">Спочатку популярні</option>
-              <option value="new">Спочатку нові</option>
-              <option value="price_asc">Спершу дешеві</option>
-              <option value="price_desc">Спочатку дорогі</option>
-            </select>
+          {/* Липкая панель: Поиск + Фильтры + Сортировка + Счётчик */}
+          <div className="catalog-toolbar" role="region" aria-label="Панель каталога">
+            <div className="toolbar-left">
+              <SearchBar onSearch={handleSearch} allProducts={products} />
+            </div>
+            <div className="toolbar-right">
+              <button
+                className="btn btn--secondary toolbar-filters-btn"
+                onClick={toggleFiltersVisibility}
+                aria-expanded={isFiltersVisible}
+                aria-controls="filtersDrawer"
+              >
+                <span aria-hidden>⚙️</span>
+                Фільтри{activeFiltersCount > 0 && (
+                  <span className="badge" aria-label={`Активні фільтри: ${activeFiltersCount}`}>{activeFiltersCount}</span>
+                )}
+              </button>
+              <select className="sort-by input" value={sortBy} onChange={handleSortChange} aria-label="Сортування">
+                <option value="popular">Спочатку популярні</option>
+                <option value="new">Спочатку нові</option>
+                <option value="price_asc">Спершу дешеві</option>
+                <option value="price_desc">Спочатку дорогі</option>
+              </select>
+              <span className="products-count inline">{`Знайдено: ${uaNumber(products.length)}`}</span>
+            </div>
           </div>
+
+          {/* Доп. заголовок/описание можно оставить или убрать — по желанию */}
+          <div className="products-header" aria-hidden="true"></div>
 
           <div className="products-list-grid" role="list">
             {isLoading || error || products.length === 0

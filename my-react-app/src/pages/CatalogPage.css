@@ -515,6 +515,78 @@
   margin-bottom: var(--spacing-4xl);
 }
 
+/* Липкая панель каталога (поиск + фильтры + сортировка) */
+.catalog-toolbar {
+  position: sticky;
+  top: calc(var(--spacing-xl)); /* зазор под глобальный хедер сайта; подправьте при необходимости */
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-xl);
+  padding: var(--spacing-xl);
+  margin-bottom: var(--spacing-xl);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 6px 24px rgba(0,0,0,0.06);
+  backdrop-filter: saturate(180%) blur(6px);
+}
+
+.catalog-toolbar .toolbar-left,
+.catalog-toolbar .toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-lg);
+}
+
+.catalog-toolbar .toolbar-left {
+  flex: 1 1 auto;
+  min-width: 320px;
+}
+
+.catalog-toolbar .toolbar-right {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+.products-count.inline {
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+/* На планшетах — переносим сортировку под кнопку фильтров */
+@media (max-width: 1024px) {
+  .catalog-toolbar {
+    flex-wrap: wrap;
+    gap: var(--spacing-lg);
+  }
+  .catalog-toolbar .toolbar-left {
+    order: 1; flex-basis: 100%;
+  }
+  .catalog-toolbar .toolbar-right {
+    order: 2; flex-basis: 100%; justify-content: flex-start; gap: var(--spacing-md);
+  }
+}
+
+/* На мобилке — тулбар в колонку, поиск на всю ширину, кнопки крупнее */
+@media (max-width: 768px) {
+  .catalog-toolbar {
+    position: sticky;
+    top: 0; /* прилипает прям к верхнему краю экрана */
+    padding: var(--spacing-lg);
+    border-radius: var(--radius-md);
+    margin-bottom: var(--spacing-lg);
+  }
+  .catalog-toolbar .toolbar-right {
+    gap: var(--spacing-sm);
+  }
+  .toolbar-filters-btn {
+    padding: 10px var(--spacing-lg);
+  }
+  .products-count.inline { display: none; } /* экономим место; счётчик виден в списке */
+}
+
 /* Состояния */
 .loading-container,
 .error-container,
