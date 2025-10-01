@@ -1,23 +1,25 @@
+// src/components/layout/Header.jsx
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import './Header.css';
+import HeaderSearch from '../search/HeaderSearch';
 
 const Header = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const firstNavLinkRef = useRef(null);
 
   const toggleMobileMenu = () => setIsMobileMenuOpen(prev => !prev);
+  const toggleSearch = () => setIsSearchOpen(prev => !prev);
+  const closeSearch = () => setIsSearchOpen(false);
 
-  // Блокировка прокрутки и фокус при открытии
+  // Блокировка прокрутки, если открыто меню или поиск
   useEffect(() => {
-    if (isMobileMenuOpen) {
-      document.body.classList.add('no-scroll');
-      setTimeout(() => firstNavLinkRef.current?.focus(), 120);
-    } else {
-      document.body.classList.remove('no-scroll');
-    }
+    const needLock = isMobileMenuOpen || isSearchOpen;
+    document.body.classList.toggle('no-scroll', needLock);
+    if (isMobileMenuOpen) setTimeout(() => firstNavLinkRef.current?.focus(), 120);
     return () => document.body.classList.remove('no-scroll');
-  }, [isMobileMenuOpen]);
+  }, [isMobileMenuOpen, isSearchOpen]);
 
   // Закрыть мобильное меню при переходе на десктоп
   useEffect(() => {
@@ -31,12 +33,17 @@ const Header = () => {
     };
   }, []);
 
-  // Закрыть меню по Escape
+  // Закрыть меню/поиск по Escape
   useEffect(() => {
-    const onKeyDown = e => { if (e.key === 'Escape' && isMobileMenuOpen) setIsMobileMenuOpen(false); };
+    const onKeyDown = e => {
+      if (e.key === 'Escape') {
+        if (isMobileMenuOpen) setIsMobileMenuOpen(false);
+        if (isSearchOpen) setIsSearchOpen(false);
+      }
+    };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [isMobileMenuOpen]);
+  }, [isMobileMenuOpen, isSearchOpen]);
 
   const handleNavLinkClick = () => { if (isMobileMenuOpen) setIsMobileMenuOpen(false); };
 
@@ -77,7 +84,11 @@ const Header = () => {
 
         {/* Действия */}
         <div className="header-actions">
-          <button className="action-btn search-btn" aria-label="Поиск">
+          <button
+            className={`action-btn search-btn ${isSearchOpen ? 'active' : ''}`}
+            aria-label="Поиск"
+            onClick={toggleSearch}
+          >
             <svg
               className="icon-search"
               viewBox="0 0 24 24"
@@ -114,10 +125,23 @@ const Header = () => {
             aria-expanded={isMobileMenuOpen}
             aria-controls="main-nav"
           >
-            <span></span>
-            <span></span>
-            <span></span>
+            <span></span><span></span><span></span>
           </button>
+        </div>
+      </div>
+
+      {/* Поиск: десктоп — центрированный блок; мобилка — панель под шапкой */}
+      <div
+        className={`header-search-wrap ${isSearchOpen ? 'open' : ''}`}
+        role="dialog"
+        aria-modal={isSearchOpen || undefined}
+        aria-label="Пошук"
+      >
+        <div className="search-overlay" onClick={closeSearch} aria-hidden="true"></div>
+        <div className="header-search-panel">
+          <div className="header-search-card">
+            {isSearchOpen && <HeaderSearch onClose={closeSearch} />}
+          </div>
         </div>
       </div>
 

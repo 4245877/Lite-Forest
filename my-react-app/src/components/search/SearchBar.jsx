@@ -35,7 +35,7 @@ const ShowAllIcon = () => (
   </svg>
 );
 
-const SearchBar = ({ onSearch, allProducts }) => {
+const SearchBar = ({ onSearch, allProducts, autoFocus = false, placeholder = "Поиск товаров…" }) => {
   const [query, setQuery] = useState('');
   const [suggestions, setSuggestions] = useState([]);
   const [activeIndex, setActiveIndex] = useState(-1);
@@ -258,9 +258,10 @@ const SearchBar = ({ onSearch, allProducts }) => {
         ref={inputRef}
         type="text"
         className={styles.searchInput}
-        placeholder="Поиск товаров…"
+        placeholder={placeholder}
         value={query}
         onChange={handleChange}
+        autoFocus={autoFocus}
         aria-autocomplete="list"
         aria-activedescendant={activeIndex > -1 ? (hasTypedEnough ? `suggestion-${activeIndex}` : `recent-${activeIndex}`) : undefined}
         onFocus={() => setIsOpen(true)}

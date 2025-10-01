@@ -487,6 +487,28 @@ const CatalogPage = () => {
     return () => { window.removeEventListener('resize', onResize); window.removeEventListener('orientationchange', onResize); };
   }, [recomputeCollapsedHeight]);
 
+  // --- Применение поиска из хедера (событие) ---
+  useEffect(() => {
+    const onApplySearch = (e) => {
+      const v = String(e.detail ?? '');
+      // моментально обновляем оба состояния (без debounce)
+      setSearchInput(v);
+      setSearchQuery(v);
+    };
+    window.addEventListener('lf:applySearch', onApplySearch);
+    return () => window.removeEventListener('lf:applySearch', onApplySearch);
+  }, []);
+
+  // Если URL ?q=... поменялся извне (history/back) — подтянем его в состояние
+  useEffect(() => {
+    const urlQ = searchParams.get('q') || '';
+    if (urlQ !== searchInput) {
+      setSearchInput(urlQ);
+      setSearchQuery(urlQ);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
+
   const onToggleMore = useCallback(() => {
     setCatExpanded(prev => {
       const next = !prev;
