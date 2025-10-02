@@ -222,8 +222,11 @@ export default function CartPage() {
                   <svg width="36" height="24" viewBox="0 0 24 24"><circle cx="12" cy="8" r="2" stroke="#999" fill="none"/></svg>
                 </div>
                 <div className={styles.trustText}>
-                  <strong>Безпечна угода</strong><br/>
-                  <a href="/delivery" className={styles.trustLink}>Умови доставки та повернення</a>
+                  {/* 🔗 ось новий лінк */}
+                  <Link to="/legal#safe-deal" className={styles.trustLink}>
+                    <strong>Безпечна угода</strong>
+                  </Link><br/>
+                  <Link to="/legal#shipping-returns" className={styles.trustLink}>Умови доставки та повернення</Link>
                 </div>
               </div>
             </div>
