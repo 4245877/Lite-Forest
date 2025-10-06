@@ -1,0 +1,39 @@
+currency: UAH
+
+energy:
+  kwh_rate: 6.00               # грн за кВт⋅ч
+  printer_power_w: 250         # средняя мощность печати (Вт)
+
+labor:
+  hourly_rate: 120.0           # грн/час (твоя ставка)
+  prepare_min: 5               # дефолт на подготовку, если не указан в CSV
+  postprocess_min_default: 0   # дефолт пост-обработка, если не указана
+
+machine:
+  hourly_rate: 40.0            # амортизация + обслуживание (грн/час)
+
+materials:
+  # Цена за кг/л для разных материалов (можешь расширять)
+  PLA_kg: 500.0
+  PETG_kg: 600.0
+  TPU_kg: 900.0
+  RESIN_L: 1400.0
+
+overhead:
+  percent_of_cost: 0.10        # доля накладных от себестоимости (10%)
+
+profit:
+  target_margin_pct: 0.25      # целевая прибыль (=25% от себестоимости)
+
+fees:
+  acquiring_pct: 0.02          # эквайринг
+  marketplace_pct: 0.00        # комиссия МП (если продаёшь там)
+  single_tax_pct: 0.05         # ЕН (или твой режим)
+  war_tax_pct: 0.015           # ВС
+  vat_pct: 0.00                # НДС (если включаешь в цену — сюда)
+  include_vat_in_price: false
+
+rounding:
+  # правила округления к психологической цене
+  strategy: nearest_9          # none | up_1 | up_5 | nearest_9
+  min_price: 50                # минимальная цена к продаже

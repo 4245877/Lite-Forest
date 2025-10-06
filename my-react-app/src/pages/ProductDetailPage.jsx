@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { api } from '../api/client';
 import './ProductDetailPage.css';
+import { assetUrl } from '../utils/assetUrl';
 
 // ——— Error Boundary to avoid blank page on runtime errors ———
 class ErrorBoundary extends React.Component {
@@ -69,10 +70,63 @@ function ProductDetailPageInner() {
     api.getProduct(id)
       .then((p) => {
         if (!alive) return;
-        setProduct(p);
-        const imgs = Array.isArray(p.images) ? p.images.filter(Boolean) : [];
+
+        const normalize = (u) => assetUrl(u);
+        const pick = (...vals) => vals.find(v => v != null && String(v).trim() !== '');
+
+        const imageUrlAbs = assetUrl(p.image_url);
+
+        // ——— кандидатные базовые директории
+        const baseFromMain = (() => {
+          try {
+            const u = new URL(imageUrlAbs, window.location.origin);
+            return `${u.origin}${u.pathname.replace(/\/[^/]*$/, '/')}`; // папка главного фото
+          } catch {
+            return '';
+          }
+        })();
+        const sku = p.slug || p.sku || '';
+        const baseFromSkuImages  = sku ? assetUrl(`/uploads/products/${sku}/images/`)  : '';
+        const baseFromSkuGallery = sku ? assetUrl(`/uploads/products/${sku}/gallery/`) : '';
+        const bases = [baseFromMain, baseFromSkuImages, baseFromSkuGallery].filter(Boolean);
+
+        // ——— склейка имени файла с первоуспешной базой (без сетевого пробы — просто первый кандидат)
+        const joinBase = (raw) => {
+          if (!raw) return '';
+          const s = String(raw).trim();
+          if (/^([a-z][a-z0-9+.\-]*:|\/\/|\/)/i.test(s)) return assetUrl(s); // уже абсолютный/корневой
+          const b = bases[0] || '';
+          return assetUrl(`${String(b).replace(/\/+$/,'')}/${s.replace(/^\/+/, '')}`);
+        };
+
+        const imgs = Array.isArray(p.images)
+          ? p.images.filter(Boolean).map(im => {
+              const rawMain  = im.url ?? im.href ?? im.path ?? im.src ?? im.image_url ?? im.key ?? im.filename ?? im.name;
+              const rawThumb = im.thumb_url ?? im.thumb ?? im.preview ?? im.small ?? im.thumbnail;
+              return { ...im, url: joinBase(rawMain), thumb_url: joinBase(rawThumb) };
+            })
+          : [];
+
+        const files = Array.isArray(p.files)
+          ? p.files.map(f => {
+              const raw = pick(f.url, f.path, f.src, f.filename, f.name);
+              return { ...f, url: joinBase(raw) };
+            })
+          : [];
+
+        const videos = Array.isArray(p.videos)
+          ? p.videos.map(v => {
+              const raw = pick(v.url, v.path, v.src);
+              return { ...v, url: joinBase(raw) };
+            })
+          : (p.video_url ? [{ url: normalize(p.video_url) }] : []);
+
+        const image_url = imageUrlAbs;
+
+        setProduct({ ...p, images: imgs, files, videos, image_url });
+
         const primary = imgs.find(g => g && g.role === 'primary') ?? imgs[0] ?? null;
-        setMainImage(primary?.url ?? p.image_url ?? null);
+        setMainImage(primary?.url ?? image_url ?? null);
 
         // seed option selection from variants
         const firstVariant = Array.isArray(p.variants) && p.variants.length ? p.variants[0] : null;
@@ -89,7 +143,8 @@ function ProductDetailPageInner() {
 
   // ——— derived data (NO hooks to avoid hook-order issues) ———
   const gallery = Array.isArray(product?.images) ? product.images.filter(Boolean) : [];
-  const videos = Array.isArray(product?.videos) ? product.videos : (product?.video_url ? [{ url: product.video_url }] : []);
+  // Переименовано, чтобы не перекрывать videos из нормализации
+  const videosView = Array.isArray(product?.videos) ? product.videos : (product?.video_url ? [{ url: product.video_url }] : []);
   const models3d = Array.isArray(product?.files) ? product.files.filter(f => ['model3d', '3d', 'gltf', 'glb'].includes(String(f.role).toLowerCase())) : [];
   const has3d = models3d.length > 0 && models3d.some(m => /(gltf|glb)$/i.test(m.url || ''));
 
@@ -147,12 +202,14 @@ function ProductDetailPageInner() {
   const leadDays = activeVariant?.lead_time_days ?? product?.lead_time_days;
   const availability = (Number(stock) > 0) ? 'in-stock' : (leadDays ? 'made-to-order' : 'out-of-stock');
 
-  // choose cover
-  const cover = mainImage
+  // choose cover (always through assetUrl with fallback)
+  const cover = assetUrl(
+    mainImage
     ?? gallery[0]?.url
     ?? gallery[0]?.thumb_url
     ?? product?.image_url
-    ?? 'https://placehold.co/800x800?text=Фото+недоступне';
+    ?? '/placeholder-product.png'
+  );
 
   if (isLoading) return <div className="container"><p>Завантаження товару…</p></div>;
   if (err) return (
@@ -222,7 +279,7 @@ function ProductDetailPageInner() {
     '@type': 'Product',
     name: product.name ?? product.sku,
     sku: product.sku,
-    image: gallery.map(g => g?.url).filter(Boolean).slice(0, 10),
+    image: gallery.map(g => assetUrl(g?.url)).filter(Boolean).slice(0, 10),
     description: product.short_description || product.description,
     brand: product.brand ? { '@type': 'Brand', name: product.brand } : undefined,
     aggregateRating: rating ? { '@type': 'AggregateRating', ratingValue: String(rating), reviewCount: String(ratingCount || 1) } : undefined,
@@ -253,31 +310,41 @@ function ProductDetailPageInner() {
         <div className="pd-media">
           <div className="pd-media-tabs" role="tablist" aria-label="Медіа">
             <button className={activeMediaTab === 'photos' ? 'active' : ''} onClick={() => setActiveMediaTab('photos')}>Фото</button>
-            {!!videos.length && <button className={activeMediaTab === 'video' ? 'active' : ''} onClick={() => setActiveMediaTab('video')}>Відео</button>}
+            {!!videosView.length && <button className={activeMediaTab === 'video' ? 'active' : ''} onClick={() => setActiveMediaTab('video')}>Відео</button>}
             {!!has3d && <button className={activeMediaTab === '3d' ? 'active' : ''} onClick={() => setActiveMediaTab('3d')}>3D</button>}
           </div>
 
           {activeMediaTab === 'photos' && (
             <>
               <div className="pd-cover">
-                <img src={cover} alt={gallery.find(g=>g?.url===cover)?.alt || product.name || product.sku} loading="eager" />
+                <img
+                  src={cover}
+                  alt={gallery.find(g=>g?.url===cover)?.alt || product.name || product.sku}
+                  loading="eager"
+                  onError={(e) => { e.currentTarget.src = '/placeholder-product.png'; }}
+                />
               </div>
 
               {gallery.length > 1 && (
                 <div className="pd-thumbs" role="list">
                   {gallery.map((im) => {
-                    const t = im?.thumb_url ?? im?.url;
+                    const t = assetUrl(im?.thumb_url ?? im?.url);
                     if (!t) return null;
-                    const isActive = (mainImage ?? cover) === (im.url ?? im.thumb_url);
+                    const isActive = assetUrl(mainImage ?? cover) === assetUrl(im.url ?? im.thumb_url);
                     return (
                       <button
                         key={im.id ?? t}
                         className={`pd-thumb ${isActive ? 'active' : ''}`}
-                        onClick={() => setMainImage(im.url ?? im.thumb_url)}
+                        onClick={() => setMainImage(assetUrl(im.url ?? im.thumb_url))}
                         aria-label="Показати фото"
                         title={im.alt || 'Фото'}
                       >
-                        <img src={t} alt={im.alt ?? 'Фото'} loading="lazy" />
+                        <img
+                          src={t}
+                          alt={im.alt ?? 'Фото'}
+                          loading="lazy"
+                          onError={(e) => { e.currentTarget.src = '/placeholder-product.png'; }}
+                        />
                       </button>
                     );
                   })}
@@ -290,18 +357,18 @@ function ProductDetailPageInner() {
             </>
           )}
 
-          {activeMediaTab === 'video' && !!videos.length && (
+          {activeMediaTab === 'video' && !!videosView.length && (
             <div className="pd-video">
-              {videos[0].url?.includes('youtube.com') || videos[0].url?.includes('youtu.be') ? (
+              {videosView[0].url?.includes('youtube.com') || videosView[0].url?.includes('youtu.be') ? (
                 <iframe
-                  src={videos[0].url.replace('watch?v=', 'embed/')}
-                  title={videos[0].title || 'Відео'}
+                  src={videosView[0].url.replace('watch?v=', 'embed/')}
+                  title={videosView[0].title || 'Відео'}
                   loading="lazy"
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                   allowFullScreen
                 />
               ) : (
-                <video src={videos[0].url} controls playsInline />
+                <video src={assetUrl(videosView[0].url)} controls playsInline />
               )}
             </div>
           )}
@@ -314,7 +381,7 @@ function ProductDetailPageInner() {
                 return (
                   // @ts-ignore web component
                   <model-viewer
-                    src={model.url}
+                    src={assetUrl(model.url)}
                     ar
                     camera-controls
                     auto-rotate
@@ -429,7 +496,7 @@ function ProductDetailPageInner() {
             {/* Матеріал (філамент) */}
             <div className="pd-variant">
               <div className="label">Матеріал (філамент):</div>
-              <div className="choices" role="radiogroup" aria-label="Матеріал (філамент)">
+              <div className="choices" role="radiогroup" aria-label="Матеріал (філамент)">
                 {materialOptions.map((m) => (
                   <label key={m} className={`choice ${activeFilament === m ? 'active' : ''}`}>
                     <input
@@ -446,7 +513,7 @@ function ProductDetailPageInner() {
             </div>
 
             {digitalFile && (
-              <a className="btn-ghost" href={digitalFile.url} download>
+              <a className="btn-ghost" href={assetUrl(digitalFile.url)} download>
                 Завантажити цифровий файл{digitalFile.license ? ` • ${digitalFile.license}` : ''}
               </a>
             )}

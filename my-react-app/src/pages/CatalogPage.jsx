@@ -10,7 +10,7 @@ import './CatalogPage.css';
  * CatalogPage – filter UX (+ аніме фігурки)
  *
  * ✔ Категорії: перші 7, потім «Більше/Згорнути» з aria-атрибутами та анімацією
- * ✔ Моб: шапка «Фільтри» та нижній футер «Скинути/Показати» з safe-area
+ * ✔ Моб: тулбар «Пошук + Фільтри + Сортування»; футер «Скинути/Показати» з safe-area
  * ✔ Розкривач підкатегорій (▶/▼) з aria-controls/expanded
  * ✔ Пін важливих топ-груп угорі (all, novelties, miniatures, props-cosplay, toys)
  * ✔ Нове: категорія «Аніме фігурки» + пошук категорій з синонімами (aliases)
@@ -53,7 +53,7 @@ const structuredCategories = [
   { id: 'min-wargame', name: 'Варґеймінг: терен і аксесуари', parent: 'miniatures' },
   { id: 'min-vehicles', name: 'Техніка та машинерія', parent: 'miniatures' },
 
-  // ➕ НОВОЕ: Аніме фігурки (колекційний сегмент)
+  // ➕ НОВЕ: Аніме фігурки (колекційний сегмент)
   { id: 'anime-figures', name: 'Аніме фігурки', parent: 'miniatures', aliases: ['аниме', 'anime', 'манга', 'манґа'] },
 
   // Пропси та косплей
@@ -147,7 +147,6 @@ const buildCategoryTree = (cats) => {
     else tree.push(item);
   });
 
-  // Пін важливих топ-рівнів угорі
   const PINNED = ['all', 'novelties', 'miniatures', 'props-cosplay', 'toys'];
   tree.sort((a, b) => {
     const ai = PINNED.indexOf(a.id);
@@ -210,7 +209,6 @@ const CatalogPage = () => {
   const [collapsedMaxHeight, setCollapsedMaxHeight] = useState(0);
 
   const debounceTimer = useRef(null);
-  const didInitFromURL = useRef(true); // уже ініціалізували стани з URL у useState вище
 
   // Refs
   const panelRef = useRef(null);
@@ -349,6 +347,23 @@ const CatalogPage = () => {
     try { localStorage.setItem('lf.catExpanded', JSON.stringify(catExpanded)); } catch {}
   }, [catExpanded]);
 
+  // Нормалізатор продуктів з різних бекенд-форматів у єдиний вигляд для UI
+  const adaptProduct = (p) => ({
+    ...p,
+    id: p.id ?? p._id ?? p.product_id ?? p.sku,            // підстраховка ключа
+    name: p.name ?? p.name_uk ?? p.title ?? '',            // ім'я з i18n/alt полів
+    price: (typeof p.price === 'number')
+      ? p.price
+      : Number(p.price ?? p.price_min_printed ?? p.base_price ?? 0),
+    // головне: підхопити картинку з main_image_url -> image_url
+    image_url: p.image_url
+      ?? p.main_image_url
+      ?? p.image?.url
+      ?? (Array.isArray(p.images) ? (p.images[0]?.thumb_url ?? p.images[0]?.url) : null)
+      ?? (Array.isArray(p.media) ? p.media.find(m => m.media_type === 'image')?.url : null)
+      ?? null,
+  });
+
   // Products fetch
   useEffect(() => {
     const controller = new AbortController();
@@ -369,7 +384,7 @@ const CatalogPage = () => {
           scale,
           finish,
         });
-        setProducts(normalizeProducts(data));
+        setProducts(normalizeProducts(data).map(adaptProduct));
       } catch (err) {
         if (err.name === 'AbortError') return;
         setError(err.message || 'Помилка завантаження');
@@ -491,7 +506,6 @@ const CatalogPage = () => {
   useEffect(() => {
     const onApplySearch = (e) => {
       const v = String(e.detail ?? '');
-      // моментально обновляем оба состояния (без debounce)
       setSearchInput(v);
       setSearchQuery(v);
     };
@@ -499,7 +513,7 @@ const CatalogPage = () => {
     return () => window.removeEventListener('lf:applySearch', onApplySearch);
   }, []);
 
-  // Если URL ?q=... поменялся извне (history/back) — подтянем его в состояние
+  // Если URL ?q=... изменился извне (history/back)
   useEffect(() => {
     const urlQ = searchParams.get('q') || '';
     if (urlQ !== searchInput) {
@@ -526,10 +540,14 @@ const CatalogPage = () => {
   }, []);
 
   const ProductCardWithHighlight = React.memo(function ProductCardWithHighlight({ product, query }) {
-    const highlightedName = useMemo(() => highlightMatch(product.name, query), [product.name, query]);
+    const highlightedName = useMemo(
+      () => highlightMatch(product.name ?? product.name_uk ?? product.title ?? '', query),
+      [product.name, product.name_uk, product.title, query]
+    );
 
     const image =
       product.image_url
+      ?? product.main_image_url
       ?? product.image
       ?? product.media?.find(m => m.media_type === 'image')?.url
       ?? 'https://placehold.co/300x300';
@@ -576,18 +594,8 @@ const CatalogPage = () => {
 
       <header className="catalog-header">
         <h1>Каталог</h1>
-        <button
-          className="btn btn--secondary mobile-filters-toggle"
-          onClick={toggleFiltersVisibility}
-          aria-expanded={isFiltersVisible}
-          aria-controls="filtersDrawer"
-        >
-          <span className="filter-icon" aria-hidden>⚙️</span>
-          Фільтри{activeFiltersCount > 0 && <span className="badge" aria-label={`Активні фільтри: ${activeFiltersCount}`}>{activeFiltersCount}</span>}
-        </button>
+        {/* Убрана дубль-кнопка мобильных фильтров из шапки для чистоты UI */}
       </header>
-
-      {/* Панель каталога перенесена в тулбар всередині main.product-grid */}
 
       {activeTags.length > 0 && (
         <div className="active-filters" role="region" aria-label="Активні фільтри">
@@ -782,7 +790,7 @@ const CatalogPage = () => {
             <button className="btn btn--secondary" onClick={clearAll}>Скинути фільтри</button>
           </div>
 
-          {/* Мобільний нижній футер — прилип до НИЗУ без щілини */}
+          {/* Мобільний нижній футер */}
           {isMobile && (
             <div className="filters-footer">
               <button className="btn btn--secondary" onClick={clearAll}>Скинути</button>
@@ -793,7 +801,7 @@ const CatalogPage = () => {
         </aside>
 
         <main className="product-grid">
-          {/* Липкая панель: Поиск + Фильтры + Сортировка + Счётчик */}
+          {/* Липкая панель: Поиск + Фильтры (моб) + Сортировка + Счётчик */}
           <div className="catalog-toolbar" role="region" aria-label="Панель каталога">
             <div className="toolbar-left">
               <SearchBar onSearch={handleSearch} allProducts={products} />
@@ -816,11 +824,10 @@ const CatalogPage = () => {
                 <option value="price_asc">Спершу дешеві</option>
                 <option value="price_desc">Спочатку дорогі</option>
               </select>
-              <span className="products-count inline">{`Знайдено: ${uaNumber(products.length)}`}</span>
+              <span className="products-count inline" aria-live="polite">{`Знайдено: ${uaNumber(products.length)}`}</span>
             </div>
           </div>
 
-          {/* Доп. заголовок/описание можно оставить или убрать — по желанию */}
           <div className="products-header" aria-hidden="true"></div>
 
           <div className="products-list-grid" role="list">

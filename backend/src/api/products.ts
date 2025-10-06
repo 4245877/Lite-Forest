@@ -1,24 +1,53 @@
+// backend/src/api/products.ts
 import { FastifyInstance, preHandlerHookHandler } from 'fastify';
 import { z } from 'zod';
 import { db } from '../db/knex.js';
 import { decodeCursor, encodeCursor } from '../utils/cursor.js';
 import { env } from '../core/env.js';
 
+/**
+ * Галерея из новой схемы медиа:
+ * product_assets (role, sort_order) + assets (public_url)
+ */
+type GalleryItem = {
+  product_id: string;
+  role: 'main_image' | 'gallery' | 'model_primary' | 'model_alt' | 'manual';
+  sort_order: number;
+  url: string | null;        // берём из assets.public_url
+  mime_type: string | null;
+};
 
+async function fetchImageGalleryByProductIds(productIds: string[]): Promise<Record<string, GalleryItem[]>> {
+  if (!productIds.length) return {};
+  const rows: GalleryItem[] = await db('product_assets as pa')
+    .join('assets as a', 'a.id', 'pa.asset_id')
+    .whereIn('pa.product_id', productIds)
+    .andWhere('a.kind', 'image')
+    .select({
+      product_id: 'pa.product_id',
+      role: 'pa.role',
+      sort_order: 'pa.sort_order',
+      url: 'a.public_url',
+      mime_type: 'a.mime_type',
+    })
+    // порядок: сгруппировать по продукту, приоритет main_image, затем sort_order, затем роль
+    .orderBy('pa.product_id', 'asc')
+    .orderByRaw(`CASE WHEN pa.role = 'main_image' THEN 0 ELSE 1 END ASC`)
+    .orderBy('pa.sort_order', 'asc')
+    .orderBy('pa.role', 'asc');
 
-
-function toStaticUrl(key?: string | null) {
-  if (!key) return null;
-  return env.CDN_BASE_URL
-    ? `${env.CDN_BASE_URL.replace(/\/+$/,'')}/${key}`
-    : `/uploads/${key}`;
+  const byId: Record<string, GalleryItem[]> = {};
+  for (const r of rows) {
+    (byId[r.product_id] ||= []).push(r);
+  }
+  return byId;
 }
 
 const ImageInput = z.object({
   url: z.string().url(),
   thumbUrl: z.string().url().optional(),
   alt: z.string().optional(),
-  sort_order: z.number().int().nonnegative().optional()
+  sort_order: z.number().int().nonnegative().optional(),
 });
 
 const ProductCreate = z.object({
@@ -28,10 +57,10 @@ const ProductCreate = z.object({
   price: z.coerce.number().nonnegative(),
   currency: z.string().default('UAH'),
   stock: z.coerce.number().int().nonnegative().default(0),
-  image_url: z.string().url().optional(),     // оставим на совместимость
+  image_url: z.string().url().optional(), // совместимость с FE
   categories: z.array(z.string()).default([]).optional(),
   attributes: z.record(z.any()).default({}).optional(),
-  images: z.array(ImageInput).default([]).optional()
+  images: z.array(ImageInput).default([]).optional(), // не используем для assets-схемы; оставлено для совместимости
 });
 
 const ProductPatch = ProductCreate.partial();
@@ -43,26 +72,15 @@ const requireAdmin: preHandlerHookHandler = (req, reply, done) => {
   done();
 };
 
-// вспомогательная проклейка картинок
-function glueGallery(raw: any[]) {
-  return raw.map((im: any) => {
-    const guessThumbKey =
-      im.thumb_key ??
-      im.key?.replace('/original/', '/thumb/')?.replace(/\.(jpe?g|png)$/i, '.webp');
-
-    return {
-      ...im,
-      url: im.url ?? (im.key ? toStaticUrl(im.key) : null),
-      thumb_url: im.thumb_url ?? (guessThumbKey ? toStaticUrl(guessThumbKey) : null),
-    };
-  });
-}
-
 export default async function routes(app: FastifyInstance) {
-  // list with cursor pagination & search + FILTERS
+  /**
+   * GET /api/products
+   * Список с фильтрами, курсорной пагинацией и возвратом image_url.
+   * Источник: таблица products (image_url уже поддерживается триггерами).
+   */
   app.get('/api/products', async (req, reply) => {
     const q = (req.query as any).q as string | undefined;
-    const limit = Number((req.query as any).limit ?? 20);
+    const limit = Math.max(1, Math.min(200, Number((req.query as any).limit ?? 20)));
     const cursor = decodeCursor<{ id: string }>((req.query as any).cursor);
 
     const categoriesParam = (req.query as any).categories as string | undefined; // "decor,lighting"
@@ -74,25 +92,40 @@ export default async function routes(app: FastifyInstance) {
     const printTech = (req.query as any).printTech as string | undefined; // attributes->>'printTech'
     const sort = ((req.query as any).sort as string | undefined) || 'popular';
 
-    let query = db('products').select('*');
+    // ВАЖНО: выбираем явные поля и image_url
+    let query = db('products').select(
+      'id',
+      'sku',
+      'name',
+      'description',
+      'price',
+      'currency',
+      'stock',
+      'image_url',          // <-- ОБОВʼЯЗКОВО
+      'categories',
+      'attributes',
+      'created_at',
+      'updated_at'
+    );
 
-    // поиск
+    // Поиск
     if (q) {
       query = query.where((b) => {
         b.whereILike('name', `%${q}%`).orWhereILike('sku', `%${q}%`);
       });
     }
 
-    // фильтр по категориям (jsonb-массив строк; условие: есть любая из выбранных)
+    // Фильтр по категориям (jsonb массив/множество строк): "есть любая из выбранных"
     if (cats.length) {
       query = query.where((b) => {
         for (const c of cats) {
+          // jsonb-проверка: массив содержит значение/ключ
           b.orWhereRaw('categories ? ?', [c]);
         }
       });
     }
 
-    // фильтр по цене
+    // Фильтр по цене
     if (minPrice !== undefined && minPrice !== '') {
       query = query.andWhere('price', '>=', Number(minPrice));
     }
@@ -100,7 +133,7 @@ export default async function routes(app: FastifyInstance) {
       query = query.andWhere('price', '<=', Number(maxPrice));
     }
 
-    // фильтр по material/printTech (в jsonb attributes)
+    // Фильтр по материалу/технологии печати (в jsonb attributes)
     if (material) {
       query = query.andWhereRaw("LOWER(COALESCE(attributes->>'material','')) = LOWER(?)", [material]);
     }
@@ -108,7 +141,7 @@ export default async function routes(app: FastifyInstance) {
       query = query.andWhereRaw("LOWER(COALESCE(attributes->>'printTech','')) = LOWER(?)", [printTech]);
     }
 
-    // сортировка
+    // Сортировка
     if (sort === 'price_asc') {
       query = query.orderBy('price', 'asc').orderBy('id', 'desc');
     } else if (sort === 'price_desc') {
@@ -116,58 +149,44 @@ export default async function routes(app: FastifyInstance) {
     } else if (sort === 'new') {
       query = query.orderBy('created_at', 'desc').orderBy('id', 'desc');
     } else {
-      // popular (пока равносильно "новые сначала")
+      // popular ~ "новые сначала"
       query = query.orderBy('created_at', 'desc').orderBy('id', 'desc');
     }
 
-    // пагинация по cursor (замечание: корректна для сортировки по created_at/id)
+    // Курсорная пагинация (простая по id)
     query = query.limit(limit + 1);
     if (cursor && (sort === 'popular' || sort === 'new')) {
-      // keyset по id (можно расширить по created_at)
       query = query.where('id', '<', cursor.id);
     }
 
     const rows = await query;
 
-    // подтягиваем галереи
+    // Галерея из assets/product_assets
     const ids = rows.slice(0, limit).map((r: any) => r.id);
-    let imagesById: Record<string, any[]> = {};
-    if (ids.length) {
-      const imgs = await db('product_images')
-        .select('*')
-        .whereIn('product_id', ids)
-        .orderBy([
-          { column: 'product_id', order: 'asc' },
-          { column: 'sort_order', order: 'asc' },
-          { column: 'created_at', order: 'asc' }
-        ]);
-      for (const im of imgs) {
-        (imagesById[im.product_id] ||= []).push(im);
-      }
-    }
+    const galleries = await fetchImageGalleryByProductIds(ids);
 
     const hasMore = rows.length > limit;
     const items = rows.slice(0, limit).map((p: any) => {
-      const raw = imagesById[p.id] || [];
-      const gallery = raw.map((im: any) => {
-        const guessThumbKey =
-          im.thumb_key ??
-          im.key?.replace('/original/', '/thumb/')?.replace(/\.(jpe?g|png)$/i, '.webp');
-
-        return {
-          ...im,
-          url: im.url ?? toStaticUrl(im.key),
-          thumb_url: im.thumb_url ?? toStaticUrl(guessThumbKey),
-        };
-      });
-      const primary = gallery.find(g => g.role === 'primary') ?? gallery[0];
+      const gal = galleries[p.id] || [];
+      // приоритет: явно сохранённый в products.image_url → main_image из галереи → первая картинка
+      const primary =
+        gal.find(g => g.role === 'main_image' && g.url) ??
+        gal.find(g => g.url) ??
+        null;
 
       return {
         ...p,
         categories: p.categories ?? [],
         attributes: p.attributes ?? {},
-        image_url: primary?.thumb_url ?? p.image_url ?? null,
-        images: gallery
+        image_url: p.image_url ?? primary?.url ?? null,
+        images: gal.map(g => ({
+          url: g.url,
+          // thumbnail можно прокинуть позже; пока отдадим тот же url
+          thumb_url: g.url,
+          role: g.role,
+          sort_order: g.sort_order,
+          mime_type: g.mime_type,
+        })),
       };
     });
 
@@ -175,102 +194,88 @@ export default async function routes(app: FastifyInstance) {
     return reply.send({ items, nextCursor });
   });
 
-  // get by id
+  /**
+   * GET /api/products/:id
+   * Возвращает один товар с галереей из assets/product_assets и корректным image_url.
+   */
   app.get('/api/products/:id', async (req, reply) => {
     const { id } = req.params as any;
-    const row = await db('products').where({ id }).first();
+
+    // Явный список полей, включая image_url
+    const row = await db('products')
+      .select('id','sku','name','description','price','currency','stock','image_url','categories','attributes','created_at','updated_at')
+      .where({ id })
+      .first();
+
     if (!row) return reply.code(404).send({ message: 'Not found' });
 
-    const raw = await db('product_images')
-      .where({ product_id: id })
-      .orderBy([
-        { column: 'sort_order', order: 'asc' },
-        { column: 'created_at', order: 'asc' }
-      ]);
+    const galleries = await fetchImageGalleryByProductIds([id]);
+    const gal = galleries[id] || [];
 
-    // проклейка ссылок
-    const gallery = glueGallery(raw);
-    const primary = gallery.find(g => g.role === 'primary') ?? gallery[0];
+    const primary =
+      gal.find(g => g.role === 'main_image' && g.url) ??
+      gal.find(g => g.url) ??
+      null;
 
     return reply.send({
       ...row,
       categories: row.categories ?? [],
       attributes: row.attributes ?? {},
-      image_url: primary?.thumb_url ?? row.image_url ?? null,
-      images: gallery
+      image_url: row.image_url ?? primary?.url ?? null,
+      images: gal.map(g => ({
+        url: g.url,
+        thumb_url: g.url,
+        role: g.role,
+        sort_order: g.sort_order,
+        mime_type: g.mime_type,
+      })),
     });
   });
 
-  // create
+  /**
+   * POST /api/products
+   * Базовое создание товара. Параметр images оставлен для совместимости,
+   * но под новую схему медиа (assets/product_assets) он не используется.
+   * Импорт изображений делаем через твой ingester.
+   */
   app.post('/api/products', { preHandler: requireAdmin }, async (req, reply) => {
     const body = ProductCreate.parse(req.body);
-    const { images = [], ...product } = body;
+    const { images: _unusedImages = [], ...product } = body;
+
     const [row] = await db('products').insert(product).returning('*');
-    if (images.length) {
-      const values = images.map((im: any, idx: number) => ({
-        product_id: row.id,
-        url: im.url,
-        thumb_url: im.thumbUrl ?? null,
-        alt: im.alt ?? null,
-        sort_order: Number.isFinite(im.sort_order as number) ? (im.sort_order as number) : idx,
-      }));
-      await db('product_images').insert(values);
-    }
-    const raw = await db('product_images')
-      .where({ product_id: row.id })
-      .orderBy(['sort_order', 'created_at']);
 
-    const gallery = glueGallery(raw);
-    const primary = gallery.find(g => g.role === 'primary') ?? gallery[0];
-
-    return reply
-      .code(201)
-      .send({
-        ...row,
-        categories: row.categories ?? [],
-        attributes: row.attributes ?? {},
-        image_url: primary?.thumb_url ?? row.image_url ?? null,
-        images: gallery
-      });
+    // Галерею не создаём здесь; ею занимается ingester/медиа-воркер
+    return reply.code(201).send({
+      ...row,
+      categories: row.categories ?? [],
+      attributes: row.attributes ?? {},
+      image_url: row.image_url ?? null,
+      images: [],
+    });
   });
 
-  // Добавить изображения к товару
-  app.post('/api/products/:id/images', async (req, reply) => {
-    const { id } = req.params as any;
-    const imgs = z.array(ImageInput).parse(req.body);
-    const values = imgs.map((im, idx) => ({
-      product_id: id,
-      url: im.url,
-      thumb_url: im.thumbUrl ?? null,
-      alt: im.alt ?? null,
-      sort_order: Number.isFinite(im.sort_order as number) ? (im.sort_order as number) : idx,
-    }));
-    await db('product_images').insert(values);
-
-    const raw = await db('product_images').where({ product_id: id }).orderBy(['sort_order', 'created_at']);
-    const gallery = glueGallery(raw);
-
-    return reply.code(201).send({ items: gallery });
-  });
-
-  // Удалить одно изображение
-  app.delete('/api/products/:id/images/:imageId', async (req, reply) => {
-    const { id, imageId } = req.params as any;
-    const res = await db('product_images').where({ id: imageId, product_id: id }).del();
-    if (!res) return reply.code(404).send({ message: 'Not found' });
-    return reply.code(204).send();
-  });
-
-  // update
+  /**
+   * PATCH /api/products/:id
+   */
   app.patch('/api/products/:id', { preHandler: requireAdmin }, async (req, reply) => {
     const { id } = req.params as any;
     const patch = ProductPatch.parse(req.body);
-    const [row] = await db('products').where({ id }).update({ ...patch, updated_at: db.fn.now() }).returning('*');
+    const [row] = await db('products')
+      .where({ id })
+      .update({ ...patch, updated_at: db.fn.now() })
+      .returning('*');
     if (!row) return reply.code(404).send({ message: 'Not found' });
-    return reply.send(row);
+
+    return reply.send({
+      ...row,
+      categories: row.categories ?? [],
+      attributes: row.attributes ?? {},
+    });
   });
 
-  // delete
+  /**
+   * DELETE /api/products/:id
+   */
   app.delete('/api/products/:id', { preHandler: requireAdmin }, async (req, reply) => {
     const { id } = req.params as any;
     const res = await db('products').where({ id }).del();

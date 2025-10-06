@@ -1,0 +1,3 @@
+sku,name,description,price,currency,stock,image_url,model_url,categories,attributes
+NVME-2280-HINGE-BOX,"2280 NVMe SSD — шарнірний бокс...",,UAH,10,"images/130_n.jpg","models/nvmehingeV2.STL","device-cases|holders|accessories-gadgets|storage|electronics|home","{""material_type"":""PLA"",""material_g"":42,""print_time_min"":75,""postprocess_min"":5,""packaging_cost"":10,""shipping_included"":false,""tags"":[""nvme"",""ssd""]}"
+FIG-RAPHTALIA-MSLA-PAINTED,"Raphtalia — фігурка...",,UAH,2,"images/screenshot-2025-09-08-135228.webp","models/raphtalia.stl","anime-figures|min-people|characters","{""material_type"":""RESIN"",""material_ml"":120,""print_time_min"":360,""postprocess_min"":60,""packaging_cost"":35,""shipping_included"":false,""target_margin_pct"":0.30}"

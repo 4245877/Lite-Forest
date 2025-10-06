@@ -40,10 +40,12 @@ export function CartProvider({ children }) {
 
     const image =
       product.image_url
+      ?? product.main_image_url
       ?? product.image
       ?? product.images?.[0]?.thumb_url
       ?? product.images?.[0]?.url
       ?? 'https://placehold.co/300x300';
+
 
     setItems(prev => {
       const i = prev.findIndex(x => x.id === id);

@@ -30,12 +30,19 @@ export function buildApp() {
     logger: {
       level: env.NODE_ENV === 'production' ? 'info' : 'debug',
       // для красивого вывода в dev можно раскомментировать и установить pino-pretty:
-      // transport: env.NODE_ENV !== 'production' ? { target: 'pino-pretty', options: { colorize: true, translateTime: 'HH:MM:ss.l' } } : undefined,
+      // transport: env.NODE_ENV !== 'production'
+      //   ? { target: 'pino-pretty', options: { colorize: true, translateTime: 'HH:MM:ss.l' } }
+      //   : undefined,
     },
   });
 
   // security headers
-  app.register(fastifyHelmet);
+  app.register(fastifyHelmet, {
+    // <-- КЛЮЧЕВОЕ: разрешаем подгрузку ресурсов с другого origin
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
+    // (не обязательно, но иногда удобно в dev с видео/3D)
+    // crossOriginEmbedderPolicy: false,
+  });
 
   // cookies (optionally add secret to sign cookies)
   app.register(fastifyCookie, {
@@ -56,15 +63,27 @@ export function buildApp() {
   });
 
   // базовые плагины
-  app.register(cors, { origin: env.CORS_ORIGIN === '*' ? true : env.CORS_ORIGIN.split(',') });
+  app.register(cors, {
+    origin: env.CORS_ORIGIN === '*' ? true : env.CORS_ORIGIN.split(','),
+  });
   app.register(formbody);
   app.register(multipart);
 
   // гарантируем существование каталога для статики загрузок
-  try { fs.mkdirSync(env.UPLOADS_DIR, { recursive: true }); } catch {}
+  try {
+    fs.mkdirSync(env.UPLOADS_DIR, { recursive: true });
+  } catch {}
 
   // статика
-  app.register(fastifyStatic, { root: env.UPLOADS_DIR, prefix: '/uploads/' });
+  app.register(fastifyStatic, {
+    root: env.UPLOADS_DIR,
+    prefix: '/uploads/',
+    setHeaders(res /*, path, stat */) {
+      res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+      res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin'); // для <img>/<video>/<model-viewer>
+      res.setHeader('Access-Control-Allow-Origin', '*');             // на всякий случай
+    },
+  });
 
   // роуты
   app.register(health);
