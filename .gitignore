@@ -34,6 +34,7 @@ backend/dist/
 backend/node_modules/
 my-react-app/dist/
 my-react-app/node_modules/
+services/
 
 # Environment files (secrets)
 .env
