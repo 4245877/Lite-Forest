@@ -4,8 +4,7 @@ import path from 'node:path';
 // Типы для js-yaml могут отсутствовать у вас локально — подавим предупреждение TS.
 // Убедитесь, что пакет установлен: `npm i js-yaml` (и по желанию `-D @types/js-yaml`).
 // @ts-ignore
-import * as yaml from 'js-yaml';   // затем yaml.load(...)
-
+import * as yaml from 'js-yaml'; // затем yaml.load(...)
 
 export type PricingConfig = {
   currency: string;
@@ -80,6 +79,16 @@ export type PricingBreakdown = {
   method: 'manual' | 'cost_plus';
 };
 
+/**
+ * Простой результат «стоимость+маржа», пригодный для прямого сохранения в products.price.
+ * Всегда возвращает число и валюту.
+ */
+export type CostPlusResult = {
+  final: number;             // всегда число
+  currency: string;          // всегда задана
+  breakdown?: Record<string, unknown>;
+};
+
 function roundPrice(v: number, strategy: PricingConfig['rounding']['strategy']): number {
   if (strategy === 'none') return Math.round(v * 100) / 100;
   if (strategy === 'up_1') return Math.ceil(v);
@@ -98,7 +107,33 @@ export function loadPricingConfig(configPath: string): PricingConfig {
   return cfg;
 }
 
-export function computeCostPlus(cfg: PricingConfig, p: ProductInput): PricingBreakdown {
+/** TypeGuard для простого режима */
+function isSimpleInput(x: unknown): x is { baseCost: number; marginPct?: number; currency?: string } {
+  return !!x && typeof (x as any).baseCost === 'number';
+}
+
+/**
+ * Перегрузки:
+ * 1) Простой режим: computeCostPlus({ baseCost, marginPct?, currency? }) -> { final, currency }
+ * 2) Детальный режим: computeCostPlus(cfg, product) -> PricingBreakdown
+ */
+export function computeCostPlus(input: { baseCost: number; marginPct?: number; currency?: string }): CostPlusResult;
+export function computeCostPlus(cfg: PricingConfig, p: ProductInput): PricingBreakdown;
+export function computeCostPlus(a: any, b?: any): any {
+  // --- Простой режим: из baseCost
+  if (b === undefined && isSimpleInput(a)) {
+    const margin = typeof a.marginPct === 'number' ? a.marginPct : 0.4;
+    const currency = a.currency ?? 'UAH';
+    // Округляем до 2 знаков
+    const price = Math.round(a.baseCost * (1 + margin) * 100) / 100;
+    const result: CostPlusResult = { final: price, currency };
+    return result;
+  }
+
+  // --- Детальный режим: cfg + product
+  const cfg: PricingConfig = a as PricingConfig;
+  const p: ProductInput = b as ProductInput;
+
   const currency = p.currency || cfg.currency || 'UAH';
 
   // --- Материал ---
@@ -186,7 +221,7 @@ export function computeCostPlus(cfg: PricingConfig, p: ProductInput): PricingBre
   const price_final_raw = roundPrice(price_before_round, cfg.rounding.strategy);
   const price_final = Math.max(price_final_raw, cfg.rounding.min_price || 0);
 
-  return {
+  const breakdown: PricingBreakdown = {
     currency,
     material_cost,
     energy_cost,
@@ -211,4 +246,6 @@ export function computeCostPlus(cfg: PricingConfig, p: ProductInput): PricingBre
     price_final,
     method: 'cost_plus',
   };
+
+  return breakdown;
 }

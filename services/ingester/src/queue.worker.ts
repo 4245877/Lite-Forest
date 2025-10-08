@@ -1,154 +1,81 @@
 // services/ingester/src/queue.worker.ts
-import { Worker, JobsOptions } from "bullmq";
-import { connection, mediaQueue } from "./queue.js";
-import type { ImportCsvJob, ImportUrlJob, MediaJob } from "./queue.js";
+import { Worker } from 'bullmq';
+import { connection, QUEUE_IMPORT, QUEUE_MEDIA, type ImportCsvJob } from './queue.js';
+import { env } from './env.js';
+import { readCsvToStaging, mergeStagingBatch } from './workers/importers.js';
+import processMediaJob from './workers/media.js'; // ← фикс: default-импорт
 
-// Импортируем модуль как namespace, т.к. enqueueMediaForBatch может отсутствовать в экспортах.
-// Так мы избежим ошибки TS2305 и всё равно сможем корректно вызвать функцию, если она есть.
-import * as importers from "./workers/importers.js";
-const {
-  readCsvToStaging,
-  mergeFromStaging,
-  createOrUpdateFromUrl,
-} = importers as {
-  readCsvToStaging: (csvPath: string, batchId: string) => Promise<void>;
-  mergeFromStaging: (batchId: string) => Promise<void>;
-  createOrUpdateFromUrl: (
-    data: ImportUrlJob
-  ) => Promise<{ productId: string; imageUrl?: string; modelUrl?: string; sku?: string }>;
-};
-
-// Попытаемся получить enqueueMediaForBatch, если он экспортируется модулем.
-// Если нет — залогируем предупреждение и продолжим работу (после мерджа CSV задача будет пропущена).
-const enqueueMediaForBatch =
-  (importers as any).enqueueMediaForBatch as
-    | ((batchId: string) => Promise<void>)
-    | undefined;
-
-import { fetchAndAttachAsset } from "./workers/media.js";
-import knex from "./db.js";
-import { env } from "./env.js";
-
-// сразу после импортов (перед new Worker(...)):
-console.log(`[ingester] Import worker started`);
-console.log(`[ingester] Redis: ${env.redisUrl}`);
-console.log(
-  `[ingester] DB: ${env.databaseUrl?.replace(/:\/\/.*@/, "://***:***@")}`
-);
-
-process.on("unhandledRejection", (e) => {
-  console.error("[ingester] UnhandledRejection:", e);
-});
-process.on("uncaughtException", (e) => {
-  console.error("[ingester] UncaughtException:", e);
-});
-
-const defaultOpts: JobsOptions = { removeOnComplete: true, removeOnFail: false };
-
-// type guard, чтобы TS знал какой это payload
-function isUrlJob(data: ImportCsvJob | ImportUrlJob): data is ImportUrlJob {
-  return (data as any)?.sourceUrl !== undefined;
+function maskDbUrl(u?: string) {
+  if (!u) return '';
+  return u.replace(/\/\/([^:]+):([^@]+)@/, '//***:***@');
 }
 
-// ВАЖНО: дженерик — union из ДВУХ типов
-const importWorker = new Worker<ImportCsvJob | ImportUrlJob>(
-  "import",
+console.log('[ingester] Import worker started');
+console.log('[ingester] Redis:', env.redisUrl || 'redis://127.0.0.1:6379/0');
+console.log('[ingester] DB:', maskDbUrl(env.databaseUrl));
+
+// --- ДЕРЖИМ ССЫЛКИ НА ВОРКЕРЫ ---
+const importWorker = new Worker<ImportCsvJob>(
+  QUEUE_IMPORT,
   async (job) => {
-    if (job.name === "csv") {
-      const { batchId } = job.data as { batchId: string };
+    if (job.name === 'csv') {
+      const { csvPath, batchId } = job.data as { csvPath: string; batchId: string };
       console.log(`[import] csv batch ${batchId} → read to staging`);
-      await readCsvToStaging((job.data as any).csvPath, batchId);
+      await readCsvToStaging(csvPath, batchId);
 
       console.log(`[import] csv batch ${batchId} → merge`);
-      await mergeFromStaging(batchId);
+      await mergeStagingBatch(batchId);
 
-      console.log(`[import] csv batch ${batchId} → enqueue media`);
-      if (enqueueMediaForBatch) {
-        await enqueueMediaForBatch(batchId);
-        console.log(`[import] csv batch ${batchId} → enqueue media: done`);
-      } else {
-        console.warn(
-          `[import] csv batch ${batchId} → enqueue media: skipped (enqueueMediaForBatch is not exported from ./workers/importers.js)`
-        );
-      }
-
+      console.log(`[import] done ${batchId}`);
       return;
     }
-
-    if (job.name === "url") {
-      const data = job.data as ImportCsvJob | ImportUrlJob;
-      if (!isUrlJob(data)) {
-        throw new Error("Invalid payload for url job: sourceUrl is missing");
-      }
-
-      const { productId, imageUrl, modelUrl, sku } =
-        await createOrUpdateFromUrl(data);
-
-      if (imageUrl) {
-        await mediaQueue.add(
-          "media",
-          { productId, url: imageUrl, role: "main_image", sku: sku! },
-          defaultOpts
-        );
-      }
-
-      if (modelUrl) {
-        await mediaQueue.add(
-          "media",
-          { productId, url: modelUrl, role: "model_primary", sku: sku! },
-          defaultOpts
-        );
-      }
-
-      return;
-    }
-
-    throw new Error(`Unknown job name: ${job.name}`);
+    console.warn(`[import] unknown job name: ${job.name}`);
   },
-  { connection }
+  { connection, autorun: true, concurrency: 2 }
 );
 
-importWorker.on("active", (job) =>
-  console.log(`[import] active ${job.id} ${job.name}`)
-);
-importWorker.on("completed", (job) =>
-  console.log(`[import] done ${job.id} ${job.name}`)
-);
-importWorker.on("failed", (job, err) =>
-  console.error(`[import] failed ${job?.id} ${job?.name}`, err)
-);
+type MediaJobData = { sku: string; preferUrl?: string | null };
 
-const mediaWorker = new Worker<MediaJob>(
-  "media",
+const mediaWorker = new Worker<MediaJobData>(
+  QUEUE_MEDIA,
   async (job) => {
-    await fetchAndAttachAsset(job.data);
+    if (job.name === 'sync-media') {
+      return processMediaJob(job); // ← вызываем процессор из media.ts
+    }
+    console.warn(`[media] unknown job name: ${job.name}`);
   },
-  { connection }
+  { connection, autorun: true, concurrency: 2 }
 );
 
-mediaWorker.on("active", (job) =>
-  console.log(`[media] active ${job.id} ${job.name}`)
-);
-mediaWorker.on("completed", (job) =>
-  console.log(`[media] done ${job.id} ${job.name}`)
-);
-mediaWorker.on("failed", (job, err) =>
-  console.error(`[media] failed ${job?.id} ${job?.name}`, err)
-);
+// --- ПОДРОБНЫЕ СОБЫТИЯ/ЛОГИ ---
+for (const [name, w] of [['import', importWorker] as const, ['media', mediaWorker] as const]) {
+  w.on('completed', (job) => {
+    console.log(`[${name}] completed ${job.name} (id=${job.id})`);
+  });
+  w.on('failed', (job, err) => {
+    console.error(`[${name}] FAILED ${job?.name} (id=${job?.id}): ${err?.message}`);
+    if (err?.stack) console.error(err.stack);
+  });
+  w.on('error', (err) => {
+    console.error(`[${name}] worker error: ${err?.message}`);
+    if (err?.stack) console.error(err.stack);
+  });
+}
 
-async function shutdown() {
-  console.log("[ingester] Shutting down gracefully…");
+// --- АККУРАТНОЕ ЗАВЕРШЕНИЕ ПО CTRL+C ---
+async function shutdown(code = 0) {
+  console.log('[ingester] shutting down…');
   try {
-    await knex.destroy();
-  } catch (e) {
-    console.error("[ingester] knex destroy error:", e);
-  }
-  try {
+    await importWorker.close();
+    await mediaWorker.close();
     await connection.quit();
-  } catch (e) {
-    console.error("[ingester] redis quit error:", e);
+  } finally {
+    process.exit(code);
   }
 }
 
-process.on("SIGINT", shutdown);
-process.on("SIGTERM", shutdown);
+process.once('SIGINT', () => shutdown(0));
+process.once('SIGTERM', () => shutdown(0));
+
+// --- ЯКОРЬ: не даём процессу завершиться ---
+setInterval(() => {}, 1 << 30);

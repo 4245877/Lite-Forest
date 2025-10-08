@@ -6,6 +6,7 @@ import multipart from '@fastify/multipart';
 import fastifyStatic from '@fastify/static';
 
 import fs from 'node:fs';
+import path from 'node:path';
 import { env } from './core/env.js';
 
 // security / auth plugins
@@ -29,24 +30,21 @@ export function buildApp() {
   const app = Fastify({
     logger: {
       level: env.NODE_ENV === 'production' ? 'info' : 'debug',
-      // для красивого вывода в dev можно раскомментировать и установить pino-pretty:
       // transport: env.NODE_ENV !== 'production'
       //   ? { target: 'pino-pretty', options: { colorize: true, translateTime: 'HH:MM:ss.l' } }
       //   : undefined,
     },
   });
 
-  // security headers
+  // security headers (включая CORP = cross-origin)
   app.register(fastifyHelmet, {
-    // <-- КЛЮЧЕВОЕ: разрешаем подгрузку ресурсов с другого origin
     crossOriginResourcePolicy: { policy: 'cross-origin' },
-    // (не обязательно, но иногда удобно в dev с видео/3D)
-    // crossOriginEmbedderPolicy: false,
+    // crossOriginEmbedderPolicy: false, // не требуется для <img>, включай при необходимости
   });
 
   // cookies (optionally add secret to sign cookies)
   app.register(fastifyCookie, {
-    // secret: env.COOKIE_SIGNING_SECRET, // optional: подпись кук (прод)
+    // secret: env.COOKIE_SIGNING_SECRET,
   });
 
   // rate limiting
@@ -56,7 +54,7 @@ export function buildApp() {
     keyGenerator: (req: any) => req.ip,
   });
 
-  // jwt (позволяет req.jwtVerify() читать access-токен из cookie)
+  // jwt (req.jwtVerify() читает access-токен из cookie)
   app.register(fastifyJWT, {
     secret: env.JWT_SECRET,
     cookie: { cookieName: env.COOKIE_NAME_ACCESS, signed: false },
@@ -64,24 +62,33 @@ export function buildApp() {
 
   // базовые плагины
   app.register(cors, {
-    origin: env.CORS_ORIGIN === '*' ? true : env.CORS_ORIGIN.split(','),
+    origin: env.CORS_ORIGIN === '*'
+      ? true
+      : env.CORS_ORIGIN.split(',').map(s => s.trim()).filter(Boolean),
+    methods: ['GET', 'HEAD', 'OPTIONS', 'POST', 'PUT', 'PATCH', 'DELETE'],
   });
   app.register(formbody);
   app.register(multipart);
 
-  // гарантируем существование каталога для статики загрузок
+  // гарантируем каталог для статики загрузок
+  const uploadsRoot =
+    env.UPLOADS_DIR && env.UPLOADS_DIR.trim()
+      ? env.UPLOADS_DIR
+      : path.resolve(process.cwd(), './uploads');
   try {
-    fs.mkdirSync(env.UPLOADS_DIR, { recursive: true });
+    fs.mkdirSync(uploadsRoot, { recursive: true });
   } catch {}
 
-  // статика
+  // /uploads → uploadsRoot с корректными заголовками
   app.register(fastifyStatic, {
-    root: env.UPLOADS_DIR,
+    root: uploadsRoot,
     prefix: '/uploads/',
-    setHeaders(res /*, path, stat */) {
+    setHeaders(res /*, filePath, stat */) {
       res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
-      res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin'); // для <img>/<video>/<model-viewer>
-      res.setHeader('Access-Control-Allow-Origin', '*');             // на всякий случай
+      // ключевой заголовок: разрешаем кросс-ориджин подгрузку ресурсов
+      res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+      // на всякий случай (для простых <img>/<video> не обязателен, но полезен)
+      res.setHeader('Access-Control-Allow-Origin', '*');
     },
   });
 
@@ -93,9 +100,7 @@ export function buildApp() {
   app.register(products);
   app.register(jobs);
   app.register(imports);
-
-  // регистрация auth после подключения cookie/jwt
-  app.register(auth); // ⬅️ зарегистрировали auth-роутер
+  app.register(auth);
   app.register(orders);
 
   return app;

@@ -1,5 +1,5 @@
 // backend/src/api/products.ts
-import { FastifyInstance, preHandlerHookHandler } from 'fastify';
+import type { FastifyInstance, preHandlerHookHandler } from 'fastify';
 import { z } from 'zod';
 import { db } from '../db/knex.js';
 import { decodeCursor, encodeCursor } from '../utils/cursor.js';
@@ -11,9 +11,9 @@ import { env } from '../core/env.js';
  */
 type GalleryItem = {
   product_id: string;
-  role: 'main_image' | 'gallery' | 'model_primary' | 'model_alt' | 'manual';
+  role: 'main_image' | 'gallery' | 'model_primary' | 'model_alt' | 'manual' | string;
   sort_order: number;
-  url: string | null;        // берём из assets.public_url
+  url: string | null;        // из assets.public_url
   mime_type: string | null;
 };
 
@@ -30,16 +30,14 @@ async function fetchImageGalleryByProductIds(productIds: string[]): Promise<Reco
       url: 'a.public_url',
       mime_type: 'a.mime_type',
     })
-    // порядок: сгруппировать по продукту, приоритет main_image, затем sort_order, затем роль
+    // порядок: продукт → main_image → sort_order → role
     .orderBy('pa.product_id', 'asc')
-    .orderByRaw(`CASE WHEN pa.role = 'main_image' THEN 0 ELSE 1 END ASC`)
+    .orderByRaw(`CASE WHEN pa.role = 'main_image' THEN 0 ELSE 1 END`)
     .orderBy('pa.sort_order', 'asc')
     .orderBy('pa.role', 'asc');
 
   const byId: Record<string, GalleryItem[]> = {};
-  for (const r of rows) {
-    (byId[r.product_id] ||= []).push(r);
-  }
+  for (const r of rows) (byId[r.product_id] ||= []).push(r);
   return byId;
 }
 
@@ -60,7 +58,7 @@ const ProductCreate = z.object({
   image_url: z.string().url().optional(), // совместимость с FE
   categories: z.array(z.string()).default([]).optional(),
   attributes: z.record(z.any()).default({}).optional(),
-  images: z.array(ImageInput).default([]).optional(), // не используем для assets-схемы; оставлено для совместимости
+  images: z.array(ImageInput).default([]).optional(), // не используем для assets-схемы
 });
 
 const ProductPatch = ProductCreate.partial();
@@ -72,27 +70,48 @@ const requireAdmin: preHandlerHookHandler = (req, reply, done) => {
   done();
 };
 
+// helpers для универсального ключа
+function isUuidLike(s: string) {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(s);
+}
+function isIntLike(s: string) {
+  return /^\d+$/.test(s);
+}
+
 export default async function routes(app: FastifyInstance) {
   /**
    * GET /api/products
-   * Список с фильтрами, курсорной пагинацией и возвратом image_url.
-   * Источник: таблица products (image_url уже поддерживается триггерами).
+   * Список с фильтрами, курсорной пагинацией и возвратом image_url + images[] (assets-схема).
    */
   app.get('/api/products', async (req, reply) => {
     const q = (req.query as any).q as string | undefined;
     const limit = Math.max(1, Math.min(200, Number((req.query as any).limit ?? 20)));
-    const cursor = decodeCursor<{ id: string }>((req.query as any).cursor);
+    const sort = ((req.query as any).sort as string | undefined) || 'popular'; // popular|new|price_asc|price_desc
 
+    // фильтры
     const categoriesParam = (req.query as any).categories as string | undefined; // "decor,lighting"
     const cats = categoriesParam ? categoriesParam.split(',').map(s => s.trim()).filter(Boolean) : [];
-
     const minPrice = (req.query as any).minPrice;
     const maxPrice = (req.query as any).maxPrice;
     const material = (req.query as any).material as string | undefined;   // attributes->>'material'
     const printTech = (req.query as any).printTech as string | undefined; // attributes->>'printTech'
-    const sort = ((req.query as any).sort as string | undefined) || 'popular';
 
-    // ВАЖНО: выбираем явные поля и image_url
+    // курсор: зависит от сортировки
+    type CursorPopularNew = { id: string; created_at: string };
+    type CursorPrice = { id: string; price: number };
+    const rawCursor = (req.query as any).cursor as string | undefined;
+
+    const cursorPopularNew: CursorPopularNew | null =
+      rawCursor && (sort === 'popular' || sort === 'new')
+        ? (decodeCursor(rawCursor) as CursorPopularNew)
+        : null;
+
+    const cursorPrice: CursorPrice | null =
+      rawCursor && (sort === 'price_asc' || sort === 'price_desc')
+        ? (decodeCursor(rawCursor) as CursorPrice)
+        : null;
+
+    // явные поля (+ image_url)
     let query = db('products').select(
       'id',
       'sku',
@@ -101,7 +120,7 @@ export default async function routes(app: FastifyInstance) {
       'price',
       'currency',
       'stock',
-      'image_url',          // <-- ОБОВʼЯЗКОВО
+      'image_url',
       'categories',
       'attributes',
       'created_at',
@@ -115,60 +134,56 @@ export default async function routes(app: FastifyInstance) {
       });
     }
 
-    // Фильтр по категориям (jsonb массив/множество строк): "есть любая из выбранных"
+    // Категории (jsonb массив строк или сет ключей — оператор '?' покрывает оба варианта)
     if (cats.length) {
       query = query.where((b) => {
-        for (const c of cats) {
-          // jsonb-проверка: массив содержит значение/ключ
-          b.orWhereRaw('categories ? ?', [c]);
-        }
+        for (const c of cats) b.orWhereRaw('categories ? ?', [c]);
       });
     }
 
-    // Фильтр по цене
-    if (minPrice !== undefined && minPrice !== '') {
-      query = query.andWhere('price', '>=', Number(minPrice));
-    }
-    if (maxPrice !== undefined && maxPrice !== '') {
-      query = query.andWhere('price', '<=', Number(maxPrice));
-    }
+    // Цена
+    if (minPrice !== undefined && minPrice !== '') query = query.andWhere('price', '>=', Number(minPrice));
+    if (maxPrice !== undefined && maxPrice !== '') query = query.andWhere('price', '<=', Number(maxPrice));
 
-    // Фильтр по материалу/технологии печати (в jsonb attributes)
-    if (material) {
-      query = query.andWhereRaw("LOWER(COALESCE(attributes->>'material','')) = LOWER(?)", [material]);
-    }
-    if (printTech) {
-      query = query.andWhereRaw("LOWER(COALESCE(attributes->>'printTech','')) = LOWER(?)", [printTech]);
-    }
+    // Атрибуты
+    if (material) query = query.andWhereRaw("LOWER(COALESCE(attributes->>'material','')) = LOWER(?)", [material]);
+    if (printTech) query = query.andWhereRaw("LOWER(COALESCE(attributes->>'printTech','')) = LOWER(?)", [printTech]);
 
-    // Сортировка
+    // Сортировка + курсор
     if (sort === 'price_asc') {
-      query = query.orderBy('price', 'asc').orderBy('id', 'desc');
+      query = query.orderBy('price', 'asc').orderBy('id', 'asc');
+      if (cursorPrice) {
+        // для ASC следующая страница — элементы СТРОГО больше пары (price,id)
+        query = query.andWhereRaw('(price, id) > (?, ?)', [cursorPrice.price, cursorPrice.id]);
+      }
     } else if (sort === 'price_desc') {
       query = query.orderBy('price', 'desc').orderBy('id', 'desc');
-    } else if (sort === 'new') {
+      if (cursorPrice) {
+        // для DESC — СТРОГО меньше пары (price,id)
+        query = query.andWhereRaw('(price, id) < (?, ?)', [cursorPrice.price, cursorPrice.id]);
+      }
+    } else if (sort === 'new' || sort === 'popular') {
+      // popular ~ новые сначала
       query = query.orderBy('created_at', 'desc').orderBy('id', 'desc');
+      if (cursorPopularNew) {
+        // следующая страница — "старше": (created_at,id) < (cursor.created_at,cursor.id)
+        query = query.andWhereRaw('(created_at, id) < (?, ?)', [cursorPopularNew.created_at, cursorPopularNew.id]);
+      }
     } else {
-      // popular ~ "новые сначала"
       query = query.orderBy('created_at', 'desc').orderBy('id', 'desc');
     }
 
-    // Курсорная пагинация (простая по id)
     query = query.limit(limit + 1);
-    if (cursor && (sort === 'popular' || sort === 'new')) {
-      query = query.where('id', '<', cursor.id);
-    }
 
     const rows = await query;
 
-    // Галерея из assets/product_assets
-    const ids = rows.slice(0, limit).map((r: any) => r.id);
+    // Галерея (assets)
+    const slice = rows.slice(0, limit);
+    const ids = slice.map((r: any) => r.id);
     const galleries = await fetchImageGalleryByProductIds(ids);
 
-    const hasMore = rows.length > limit;
-    const items = rows.slice(0, limit).map((p: any) => {
+    const items = slice.map((p: any) => {
       const gal = galleries[p.id] || [];
-      // приоритет: явно сохранённый в products.image_url → main_image из галереи → первая картинка
       const primary =
         gal.find(g => g.role === 'main_image' && g.url) ??
         gal.find(g => g.url) ??
@@ -181,7 +196,6 @@ export default async function routes(app: FastifyInstance) {
         image_url: p.image_url ?? primary?.url ?? null,
         images: gal.map(g => ({
           url: g.url,
-          // thumbnail можно прокинуть позже; пока отдадим тот же url
           thumb_url: g.url,
           role: g.role,
           sort_order: g.sort_order,
@@ -190,53 +204,82 @@ export default async function routes(app: FastifyInstance) {
       };
     });
 
-    const nextCursor = hasMore && items.length ? encodeCursor({ id: items[items.length - 1].id }) : null;
+    // nextCursor
+    const hasMore = rows.length > limit;
+    let nextCursor: string | null = null;
+    if (hasMore && items.length) {
+      const last = items[items.length - 1] as any;
+      if (sort === 'price_asc' || sort === 'price_desc') {
+        nextCursor = encodeCursor({ id: String(last.id), price: Number(last.price) } as CursorPrice);
+      } else {
+        nextCursor = encodeCursor({
+          id: String(last.id),
+          created_at: new Date(last.created_at).toISOString(),
+        } as CursorPopularNew);
+      }
+    }
+
     return reply.send({ items, nextCursor });
   });
 
   /**
-   * GET /api/products/:id
-   * Возвращает один товар с галереей из assets/product_assets и корректным image_url.
+   * GET /api/products/by-id/:id
+   * Явный эндпоинт по id (int или uuid).
    */
-  app.get('/api/products/:id', async (req, reply) => {
-    const { id } = req.params as any;
+  app.get('/api/products/by-id/:id', async (req, reply) => {
+    const { id } = req.params as { id: string };
+    const where = isIntLike(id) ? { id: Number(id) } : { id };
+    const p = await db('products').where(where).first();
+    if (!p) return reply.code(404).send({ error: 'Not found' });
 
-    // Явный список полей, включая image_url
-    const row = await db('products')
-      .select('id','sku','name','description','price','currency','stock','image_url','categories','attributes','created_at','updated_at')
-      .where({ id })
-      .first();
-
-    if (!row) return reply.code(404).send({ message: 'Not found' });
-
-    const galleries = await fetchImageGalleryByProductIds([id]);
-    const gal = galleries[id] || [];
-
-    const primary =
-      gal.find(g => g.role === 'main_image' && g.url) ??
-      gal.find(g => g.url) ??
-      null;
+    const images = await db('product_images')
+      .select('url').where({ product_id: p.id }).orderBy('idx', 'asc');
 
     return reply.send({
-      ...row,
-      categories: row.categories ?? [],
-      attributes: row.attributes ?? {},
-      image_url: row.image_url ?? primary?.url ?? null,
-      images: gal.map(g => ({
-        url: g.url,
-        thumb_url: g.url,
-        role: g.role,
-        sort_order: g.sort_order,
-        mime_type: g.mime_type,
-      })),
+      ...p,
+      categories: p.categories ?? [],
+      attributes: p.attributes ?? {},
+      images: images.length ? images.map((i: any) => i.url) : (p.image_url ? [p.image_url] : []),
+    });
+  });
+
+  /**
+   * GET /api/products/:key
+   * Универсальный: принимает и sku, и id (int/uuid).
+   */
+  app.get('/api/products/:key', async (req, reply) => {
+    const { key } = req.params as { key: string };
+
+    // 1) sku
+    let p = await db('products').where({ sku: key }).first();
+
+    // 2) numeric id
+    if (!p && isIntLike(key)) {
+      p = await db('products').where({ id: Number(key) }).first();
+    }
+    // 3) uuid id
+    if (!p && isUuidLike(key)) {
+      p = await db('products').where({ id: key }).first();
+    }
+
+    if (!p) return reply.code(404).send({ error: 'Not found' });
+
+    const images = await db('product_images')
+      .select('url')
+      .where({ product_id: p.id })
+      .orderBy('idx', 'asc');
+
+    return reply.send({
+      ...p,
+      categories: p.categories ?? [],
+      attributes: p.attributes ?? {},
+      images: images.length ? images.map((i: any) => i.url) : (p.image_url ? [p.image_url] : []),
     });
   });
 
   /**
    * POST /api/products
-   * Базовое создание товара. Параметр images оставлен для совместимости,
-   * но под новую схему медиа (assets/product_assets) он не используется.
-   * Импорт изображений делаем через твой ingester.
+   * Создание товара. Галерею наполняет ingester/воркер.
    */
   app.post('/api/products', { preHandler: requireAdmin }, async (req, reply) => {
     const body = ProductCreate.parse(req.body);
@@ -244,7 +287,6 @@ export default async function routes(app: FastifyInstance) {
 
     const [row] = await db('products').insert(product).returning('*');
 
-    // Галерею не создаём здесь; ею занимается ingester/медиа-воркер
     return reply.code(201).send({
       ...row,
       categories: row.categories ?? [],
@@ -256,14 +298,17 @@ export default async function routes(app: FastifyInstance) {
 
   /**
    * PATCH /api/products/:id
+   * Обновление по id (int/uuid).
    */
   app.patch('/api/products/:id', { preHandler: requireAdmin }, async (req, reply) => {
-    const { id } = req.params as any;
+    const { id } = req.params as { id: string };
     const patch = ProductPatch.parse(req.body);
+    const where = isIntLike(id) ? { id: Number(id) } : { id };
     const [row] = await db('products')
-      .where({ id })
+      .where(where)
       .update({ ...patch, updated_at: db.fn.now() })
       .returning('*');
+
     if (!row) return reply.code(404).send({ message: 'Not found' });
 
     return reply.send({
@@ -275,10 +320,12 @@ export default async function routes(app: FastifyInstance) {
 
   /**
    * DELETE /api/products/:id
+   * Удаление по id (int/uuid).
    */
   app.delete('/api/products/:id', { preHandler: requireAdmin }, async (req, reply) => {
-    const { id } = req.params as any;
-    const res = await db('products').where({ id }).del();
+    const { id } = req.params as { id: string };
+    const where = isIntLike(id) ? { id: Number(id) } : { id };
+    const res = await db('products').where(where).del();
     if (!res) return reply.code(404).send({ message: 'Not found' });
     return reply.code(204).send();
   });

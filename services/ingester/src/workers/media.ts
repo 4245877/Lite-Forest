@@ -1,257 +1,293 @@
 // services/ingester/src/workers/media.ts
-import fs from "node:fs/promises";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
+import fs from 'node:fs';
+import fsp from 'node:fs/promises';
+import path from 'node:path';
+import knex from '../db.js';
+import type { Job } from 'bullmq';
 
-import got from "got";
-import { fileTypeFromBuffer } from "file-type";
-import { createHash } from "crypto";
-
-import knex from "../db.js";
-import { saveObject } from "../storage.js";
-
-// Бэкап-каталог для относительных локальных путей (если источником передают относительные пути)
-const MEDIA_BASE_DIR =
+// env: см. services/ingester/src/env.ts
+// PUBLIC_BASE_URL берём прямо из process.env (он есть в services/ingester/.env)
+const PUBLIC_BASE_URL = (process.env.PUBLIC_BASE_URL || 'http://localhost:3000').replace(/\/+$/, '');
+const MEDIA_BASE_DIR = path.resolve(
   process.env.MEDIA_BASE_DIR ||
-  process.env.UPLOADS_DIR || // поддержка «старого» имени переменной из корневого .env
-  path.resolve(process.cwd(), "media"); // т.е. services/ingester/media
+  process.env.UPLOADS_DIR ||
+  path.resolve(process.cwd(), 'media')
+);
 
-console.log("[media] MEDIA_BASE_DIR =", MEDIA_BASE_DIR);
+// Под статику бэкенда: /uploads → указывает на UPLOADS_DIR (= E:/import)
+const UPLOADS_PREFIX = '/uploads';
 
-function isHttpUrl(s: string) {
-  return /^https?:\/\//i.test(s);
-}
-function isFileUrl(s: string) {
-  return /^file:\/\//i.test(s);
-}
-// E:\... или C:\... или \\server\share\...
-function isWindowsAbsPath(s: string) {
-  return /^[a-zA-Z]:[\\/]/.test(s) || /^\\\\/.test(s);
-}
+// Валидные расширения
+const IMG_EXT = new Set(['.jpg', '.jpeg', '.png', '.webp', '.gif', '.bmp', '.avif']);
+const isImage = (p?: string | null) => !!p && IMG_EXT.has(path.extname(String(p)).toLowerCase());
 
-function normalizeLocalPath(input: string) {
-  let p = String(input).trim().replace(/^"+|"+$/g, "");
-  if (path.isAbsolute(p) || isWindowsAbsPath(p)) return p;
-  return path.resolve(MEDIA_BASE_DIR, p);
-}
-
-function extOf(name: string) {
-  const e = path.extname(name || "").toLowerCase();
-  return e.startsWith(".") ? e.slice(1) : e;
-}
-
-type AssetKind = "image" | "model" | "other";
-
-// Небольшая локальная таблица MIME по расширению (достаточно для наших задач)
-const EXT_MIME: Record<string, string> = {
-  jpg: "image/jpeg",
-  jpeg: "image/jpeg",
-  png: "image/png",
-  webp: "image/webp",
-  gif: "image/gif",
-  avif: "image/avif",
-  stl: "model/stl",
-  obj: "model/obj",
-  glb: "model/gltf-binary",
-  gltf: "model/gltf+json",
-};
-
-// Жёсткое определение типа ассета по имени и/или Content-Type
-function kindByNameOrMime(name: string, contentType?: string): AssetKind {
-  const e = extOf(name);
-  const ct = (contentType || "").toLowerCase();
-
-  const IMG_EXT = new Set(["jpg", "jpeg", "png", "webp", "gif", "avif"]);
-  const MODEL_EXT = new Set(["stl", "obj", "glb", "gltf"]);
-
-  if (IMG_EXT.has(e) || ct.startsWith("image/")) return "image";
-  if (
-    MODEL_EXT.has(e) ||
-    ct.includes("stl") ||
-    ct.includes("gltf") ||
-    ct.includes("glb") ||
-    ct.startsWith("model/")
-  )
-    return "model";
-  return "other";
-}
-
-function mimeByExt(ext?: string): string | undefined {
-  if (!ext) return undefined;
-  return EXT_MIME[ext.toLowerCase()];
-}
-
-// Унифицированный ридер: возвращает буфер + имя файла + content-type (если есть)
-async function readSource(
-  raw: string
-): Promise<{ buffer: Buffer; name: string; contentType?: string }> {
-  if (!raw || !String(raw).trim()) {
-    throw new Error("Empty media source");
-  }
-
-  const s = String(raw).trim();
-
-  // HTTP/HTTPS
-  if (isHttpUrl(s)) {
-    const res = await got(s, {
-      timeout: { request: 30_000 },
-      retry: { limit: 2 },
-      responseType: "buffer",
-    });
-    const url = new URL(s);
-    const urlName = decodeURIComponent(url.pathname.split("/").pop() || "file");
-    // got в режиме buffer даёт .rawBody и .body (как Buffer)
-    const buffer = (res as any).rawBody ?? (res.body as unknown as Buffer);
-    const contentType = res.headers["content-type"] as string | undefined;
-    return { buffer, name: urlName, contentType };
-  }
-
-  // file:// URL
-  if (isFileUrl(s)) {
-    const p = fileURLToPath(s);
-    const buffer = await fs.readFile(p);
-    return { buffer, name: path.basename(p) };
-  }
-
-  // Локальный путь (в т.ч. Windows E:\..., относительный, и т.д.)
-  const p = normalizeLocalPath(s);
+// ────────────────────────────────────────────────────────────────────────────────
+// 0) Защита от гонок на уровне схемы: создаём таблицу product_images под advisory lock
+//    и уникальный ключ (product_id, url) — чтобы не плодить дубликаты.
+export async function ensureProductImagesSchema() {
+  await knex.raw('SELECT pg_advisory_lock(711001)');
   try {
-    const buffer = await fs.readFile(p);
-    return { buffer, name: path.basename(p) };
-  } catch (e: any) {
-    e.message = `Cannot read media file: ${p}\nOriginal: ${s}\n` + e.message;
+    const hasTable = await knex.schema.hasTable('product_images');
+    if (!hasTable) {
+      await knex.schema.createTable('product_images', (t) => {
+        t.increments('id').primary();
+        t.integer('product_id').notNullable()
+          .references('id').inTable('products').onDelete('CASCADE');
+        t.text('url').notNullable();
+        t.integer('idx').notNullable().defaultTo(0);
+        t.timestamp('created_at', { useTz: true }).notNullable().defaultTo(knex.fn.now());
+        t.unique(['product_id', 'url']);
+      });
+      // Индекс на сортировку галереи
+      await knex.schema.alterTable('product_images', (t) => {
+        t.index(['product_id', 'idx'], 'ix_product_images_pid_idx');
+      });
+    }
+  } finally {
+    await knex.raw('SELECT pg_advisory_unlock(711001)');
+  }
+}
+
+// ────────────────────────────────────────────────────────────────────────────────
+// 1) Тонкий advisory-lock по SKU, чтобы не было гонок при синхронизации конкретного товара.
+//    Считаем хеш прямо в SQL (без промежуточного чтения hash из rows).
+async function withSkuLock<T>(sku: string, fn: () => Promise<T>): Promise<T> {
+  const lockExpr = "('x' || substr(md5(?),1,16))::bit(64)::bigint";
+  await knex.raw(`SELECT pg_advisory_lock(${lockExpr});`, [sku]);
+  try {
+    return await fn();
+  } finally {
+    await knex.raw(`SELECT pg_advisory_unlock(${lockExpr});`, [sku]);
+  }
+}
+
+// ────────────────────────────────────────────────────────────────────────────────
+// 2) Путь и URL-утилиты: только внутри MEDIA_BASE_DIR, иначе «не лезем к чужим фото».
+function isInsideBase(absPath: string): boolean {
+  const base = path.resolve(MEDIA_BASE_DIR) + path.sep;
+  const candidate = path.resolve(absPath);
+  return candidate.toLowerCase().startsWith(base.toLowerCase());
+}
+
+function toPublicUrlFromAbs(absPath: string): string | null {
+  if (!isInsideBase(absPath)) return null;
+  const rel = path.relative(MEDIA_BASE_DIR, absPath).split(path.sep).join('/'); // normalize to /
+  return `${PUBLIC_BASE_URL}${UPLOADS_PREFIX}/${rel}`;
+}
+
+function tryResolvePreferUrl(preferUrl?: string | null): { abs?: string, public?: string } | null {
+  if (!preferUrl) return null;
+  const s = String(preferUrl).trim();
+  if (!s) return null;
+
+  // 1) http/https оставляем как есть (не наша статика — но мы её уважаем)
+  if (/^https?:\/\//i.test(s)) {
+    return { public: s };
+  }
+
+  // 2) Абсолютный путь (Windows/Unix) — проверим, что он внутри MEDIA_BASE_DIR
+  if (path.isAbsolute(s)) {
+    const abs = path.resolve(s);
+    if (fs.existsSync(abs) && isImage(abs) && isInsideBase(abs)) {
+      const pub = toPublicUrlFromAbs(abs);
+      if (pub) return { abs, public: pub };
+    }
+    return null;
+  }
+
+  // 3) Относительный путь вроде "images/foo.jpg" или "models/x.stl"
+  const abs = path.resolve(MEDIA_BASE_DIR, s);
+  if (fs.existsSync(abs) && isImage(abs) && isInsideBase(abs)) {
+    const pub = toPublicUrlFromAbs(abs);
+    if (pub) return { abs, public: pub };
+  }
+  return null;
+}
+
+// Мягкий фолбек по basename для относительного пути из CSV
+function resolvePreferByBasename(hint?: string | null): { abs?: string, public?: string } | null {
+  if (!hint) return null;
+  const base = path.basename(String(hint));
+  if (!base) return null;
+  const abs = path.resolve(MEDIA_BASE_DIR, 'images', base);
+  if (fs.existsSync(abs) && isImage(abs) && isInsideBase(abs)) {
+    const pub = toPublicUrlFromAbs(abs);
+    if (pub) return { abs, public: pub };
+  }
+  return null;
+}
+
+// ────────────────────────────────────────────────────────────────────────────────
+// 3) Поиск кандидатов по SKU — безопасный.
+//    Стратегия:
+//    • Если есть папка images/<SKU>/ → берём все изображения оттуда (это «свои»).
+//    • Если есть preferUrl → ставим его первым и используем, даже если он один.
+//    • НЕ сканируем общую папку images/* по маскам — чтобы не подцепить чужое.
+async function findSkuImages(sku: string, preferAbs?: string | null): Promise<string[]> {
+  const imagesDir = path.resolve(MEDIA_BASE_DIR, 'images');
+  const skuDir = path.resolve(imagesDir, sku);
+
+  const found: string[] = [];
+
+  if (preferAbs && fs.existsSync(preferAbs) && isInsideBase(preferAbs) && isImage(preferAbs)) {
+    found.push(preferAbs);
+  }
+
+  // Если есть выделенная папка под SKU — берём всё оттуда
+  try {
+    const st = await fsp.stat(skuDir);
+    if (st.isDirectory()) {
+      const entries = await fsp.readdir(skuDir, { withFileTypes: true });
+      for (const ent of entries) {
+        if (!ent.isFile()) continue;
+        const abs = path.resolve(skuDir, ent.name);
+        if (isImage(abs) && fs.existsSync(abs)) {
+          found.push(abs);
+        }
+      }
+    }
+  } catch { /* no dir — ok */ }
+
+  // Убираем дубликаты и сортируем «по-человечески». preferAbs — наверх.
+  const uniq = Array.from(new Set(found.map(p => path.resolve(p))));
+  uniq.sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
+
+  if (preferAbs) {
+    const i = uniq.findIndex(p => path.resolve(p) === path.resolve(preferAbs));
+    if (i > 0) {
+      const [x] = uniq.splice(i, 1);
+      uniq.unshift(x);
+    }
+  }
+  return uniq;
+}
+
+// ────────────────────────────────────────────────────────────────────────────────
+// 4) Основная процедура синка: создаём записи в product_images, индексы,
+//    и при необходимости обновляем products.image_url, не затирая осмысленное.
+async function syncMediaForProduct(
+  productId: number,
+  sku: string,
+  prefer?: { abs?: string, public?: string } | null
+) {
+  await ensureProductImagesSchema();
+
+  const trx = await knex.transaction();
+  try {
+    const [product] = await trx('products').select('id', 'image_url').where({ id: productId }).limit(1);
+    if (!product) {
+      await trx.rollback();
+      return;
+    }
+
+    const preferAbs = prefer?.abs;
+    const candidatesAbs = await findSkuImages(sku, preferAbs);
+
+    // Конвертируем только те, что действительно лежат в нашей базе (защита от «чужих»)
+    let candidatePublicUrls = candidatesAbs
+      .map(toPublicUrlFromAbs)
+      .filter((u): u is string => !!u);
+
+    // Если prefer указывает на http/https (внешний URL), уважим его и поставим первым
+    if (prefer?.public && /^https?:\/\//i.test(prefer.public)) {
+      if (!candidatePublicUrls.includes(prefer.public)) {
+        candidatePublicUrls = [prefer.public, ...candidatePublicUrls];
+      } else {
+        // гарантируем, что он первый
+        candidatePublicUrls = [
+          prefer.public,
+          ...candidatePublicUrls.filter(u => u !== prefer.public),
+        ];
+      }
+    }
+
+    // Если список пуст — чистим старые записи полностью и выходим
+    if (candidatePublicUrls.length === 0) {
+      await trx('product_images').where({ product_id: productId }).del();
+      await trx.commit();
+      console.log(`[media] ${sku}: no images; gallery cleared`);
+      return;
+    }
+
+    // Удаляем всё, что не входит в новый «белый список» (чтобы не тянуть «чужое» из прошлого)
+    await trx('product_images')
+      .where({ product_id: productId })
+      .andWhere((qb) => qb.whereNotIn('url', candidatePublicUrls))
+      .del();
+
+    // Текущее состояние после чистки
+    const existing = await trx('product_images')
+      .select('id', 'url', 'idx')
+      .where({ product_id: productId })
+      .orderBy('idx', 'asc');
+    const existingUrls = new Set(existing.map(e => e.url));
+
+    // Вставляем недостающие
+    for (const url of candidatePublicUrls) {
+      if (!existingUrls.has(url)) {
+        await trx('product_images')
+          .insert({ product_id: productId, url, idx: 0 }) // idx обновим ниже одним проходом
+          .onConflict(['product_id', 'url'])
+          .ignore();
+      }
+    }
+
+    // Обновляем индексы в соответствии с порядком (prefer первым)
+    const finalRows = await trx('product_images').select('id', 'url').where({ product_id: productId });
+    const byUrl = new Map(finalRows.map(r => [r.url, r.id]));
+    for (let i = 0; i < candidatePublicUrls.length; i++) {
+      const url = candidatePublicUrls[i];
+      const id = byUrl.get(url);
+      if (id) {
+        await trx('product_images').where({ id }).update({ idx: i });
+      }
+    }
+
+    // Главная картинка в products.image_url:
+    // • если есть prefer.public — проставим её как главную;
+    // • иначе, если image_url пуст — ставим первую из галереи;
+    if (prefer?.public) {
+      await trx('products').where({ id: productId }).update({
+        image_url: prefer.public,
+        updated_at: new Date(),
+      });
+    } else if (!product.image_url) {
+      await trx('products').where({ id: productId }).update({
+        image_url: candidatePublicUrls[0],
+        updated_at: new Date(),
+      });
+    }
+
+    await trx.commit();
+    console.log(`[media] ${sku}: ${candidatePublicUrls.length} image(s) linked; main -> ${candidatePublicUrls[0]}`);
+  } catch (e) {
+    await trx.rollback();
+    console.error(`[media] ${sku}: error`, e);
     throw e;
   }
 }
 
-// Надёжная привязка ассета к товару: одиночные роли — delete-then-insert в транзакции,
-// множественные — ON CONFLICT (product_id, asset_id) DO NOTHING
-async function linkAssetToProduct(opts: {
-  productId: string;
-  assetId: number;
-  role: "main_image" | "model_primary" | "gallery" | "model_alt";
-  sortOrder?: number;
-}) {
-  const { productId, assetId, role, sortOrder = 0 } = opts;
+// ────────────────────────────────────────────────────────────────────────────────
+// 5) Публичный API воркера — процессор BullMQ.
+//    Джоба: { sku: string; preferUrl?: string | null }
+export async function processMediaJob(job: Job<{ sku: string; preferUrl?: string | null }>) {
+  const { sku, preferUrl } = job.data || ({} as any);
+  if (!sku) return;
 
-  await knex.transaction(async (trx) => {
-    if (role === "main_image" || role === "model_primary") {
-      await trx("product_assets").where({ product_id: productId, role }).del();
-      await trx("product_assets").insert({
-        product_id: productId,
-        asset_id: assetId,
-        role,
-        sort_order: sortOrder,
-      });
-    } else {
-      await trx("product_assets")
-        .insert({
-          product_id: productId,
-          asset_id: assetId,
-          role,
-          sort_order: sortOrder,
-        })
-        .onConflict(["product_id", "asset_id"])
-        .ignore();
+  await withSkuLock(sku, async () => {
+    // Ищем товар
+    const p = await knex('products').select('id', 'sku').where({ sku }).first();
+    if (!p) {
+      console.warn(`[media] ${sku}: product not found`);
+      return;
     }
+    // Уважаем preferUrl — он может быть http(s) или относительный (images/..)
+    const prefer =
+      tryResolvePreferUrl(preferUrl) ??
+      resolvePreferByBasename(preferUrl);
+    await syncMediaForProduct(p.id, sku, prefer);
   });
 }
 
-export async function fetchAndAttachAsset({
-  productId,
-  role,
-  url,
-  sku,
-}: {
-  productId: string;
-  role: "main_image" | "gallery" | "model_primary" | "model_alt";
-  url: string;
-  sku: string;
-}) {
-  // 1) читаем/скачиваем источник
-  const { buffer, name, contentType } = await readSource(url);
-
-  // 2) определяем тип ассета (image | model | other)
-  const kind: AssetKind = kindByNameOrMime(name, contentType);
-
-  // 3) жёсткая проверка совместимости роли и типа
-  if (role === "main_image" && kind !== "image") {
-    console.warn(`[media] skip main_image for ${sku}: not an image (${name})`);
-    return; // можно понизить до gallery, если это поведение нужно
-  }
-  if (role === "model_primary" && kind !== "model") {
-    console.warn(`[media] skip model_primary for ${sku}: not a model (${name})`);
-    return;
-  }
-  // Для всех model_* (включая model_alt) тоже не принимаем не-модели
-  if (role.startsWith("model") && role !== "model_primary" && kind !== "model") {
-    console.warn(`[media] skip ${role} for ${sku}: not a model (${name})`);
-    return;
-  }
-
-  // 4) определяем MIME для сохранения
-  const ft = await fileTypeFromBuffer(buffer); // помогает, если заголовка нет/неверный
-  const nameExt = extOf(name);
-  const mimeType =
-    (contentType && contentType.toLowerCase()) ||
-    ft?.mime ||
-    mimeByExt(nameExt) ||
-    "application/octet-stream";
-
-  // 5) выбор папки хранения по ТИПУ, а не по роли
-  const folder = kind === "image" ? "images" : kind === "model" ? "models" : "files";
-
-  // 6) формируем ключ в сторадже и осмысленное расширение
-  const ext =
-    nameExt ||
-    (ft?.ext ?? (kind === "image" ? "jpg" : kind === "model" ? "stl" : "bin"));
-  const key = `products/${sku}/${folder}/${Date.now()}.${ext}`;
-
-  // 7) фактическое сохранение (локально/S3 — через абстракцию saveObject)
-  const { storageKey /*, publicUrl*/ } = await saveObject(key, buffer, mimeType);
-
-  // storageKey ожидаемо вида: products/<slug>/<folder>/<fileName>
-  const parts = storageKey.split("/");
-  const slug = parts[1] || sku;
-  const fileNameOnly = parts[parts.length - 1];
-
-  // Публичный относительный путь под статикой — только для изображений
-  // (картинку товара и витрина читают из /uploads)
-  const publicPath =
-    kind === "image"
-      ? `/uploads/products/${slug}/${folder}/${fileNameOnly}`
-      : null;
-
-  // 8) метаданные ассета
-  const sha = createHash("sha256").update(buffer).digest();
-
-  const [asset] = await knex("assets")
-    .insert({
-      kind, // 'image' | 'model' | 'other'
-      storage_key: storageKey,
-      public_url: publicPath, // null для моделей/прочих
-      mime_type: mimeType,
-      size_bytes: buffer.length,
-      sha256: sha,
-    })
-    .returning(["id"]);
-
-  // 9) привязываем к продукту (одиночные роли — delete-then-insert)
-  await linkAssetToProduct({
-    productId,
-    assetId: asset.id,
-    role,
-    sortOrder: 0,
-  });
-
-  // 10) обновляем картинку товара только если это main_image И это реально image
-  if (role === "main_image" && kind === "image" && publicPath) {
-    await knex("products").where({ id: productId }).update({ image_url: publicPath });
-  }
-
-  console.log(
-    `[media] attached ${sku} ${role} (${kind}) -> ${storageKey}${
-      publicPath ? ` (public ${publicPath})` : ""
-    }`
-  );
-}
+// На всякий случай экспорт по умолчанию (чтобы удобно импортить в queue.worker.ts)
+export default processMediaJob;

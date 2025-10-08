@@ -99,14 +99,23 @@ function ProductDetailPageInner() {
           return assetUrl(`${String(b).replace(/\/+$/,'')}/${s.replace(/^\/+/, '')}`);
         };
 
+        // ---------- REPLACED BLOCK (images / files / videos / main) ----------
         const imgs = Array.isArray(p.images)
-          ? p.images.filter(Boolean).map(im => {
+          ? p.images.filter(Boolean).map((im) => {
+              // Поддержка string и object
+              if (typeof im === 'string') {
+                const u = assetUrl(im);
+                return { url: u, thumb_url: u, role: 'gallery' };
+              }
               const rawMain  = im.url ?? im.href ?? im.path ?? im.src ?? im.image_url ?? im.key ?? im.filename ?? im.name;
-              const rawThumb = im.thumb_url ?? im.thumb ?? im.preview ?? im.small ?? im.thumbnail;
-              return { ...im, url: joinBase(rawMain), thumb_url: joinBase(rawThumb) };
-            })
+              const rawThumb = im.thumb_url ?? im.thumb ?? im.preview ?? im.small ?? im.thumbnail ?? rawMain;
+              const main = joinBase(rawMain);
+              const thumb = joinBase(rawThumb);
+              return main ? { ...im, url: main, thumb_url: thumb || main } : null;
+            }).filter(Boolean)
           : [];
 
+        // Файлы/відео как было
         const files = Array.isArray(p.files)
           ? p.files.map(f => {
               const raw = pick(f.url, f.path, f.src, f.filename, f.name);
@@ -123,10 +132,16 @@ function ProductDetailPageInner() {
 
         const image_url = imageUrlAbs;
 
-        setProduct({ ...p, images: imgs, files, videos, image_url });
+        // Фолбек: если нет галереи, но есть главное фото — добавим его как первый элемент
+        const imagesNormalized = imgs.length ? imgs
+          : (image_url ? [{ url: image_url, thumb_url: image_url, role: 'primary' }] : []);
 
-        const primary = imgs.find(g => g && g.role === 'primary') ?? imgs[0] ?? null;
+        setProduct({ ...p, images: imagesNormalized, files, videos, image_url });
+
+        // Выставляем обложку: приоритет primary → первый из галереи → image_url
+        const primary = imagesNormalized.find(g => g && g.role === 'primary') ?? imagesNormalized[0] ?? null;
         setMainImage(primary?.url ?? image_url ?? null);
+        // ---------- END REPLACED BLOCK ----------
 
         // seed option selection from variants
         const firstVariant = Array.isArray(p.variants) && p.variants.length ? p.variants[0] : null;

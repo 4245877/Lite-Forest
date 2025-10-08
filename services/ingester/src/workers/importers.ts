@@ -4,40 +4,33 @@ import path from 'node:path';
 import { parse } from 'fast-csv';
 import knex from '../db.js';
 import { mediaQueue } from '../queue.js';
-
-// ⬇️ Прайсинг: конфиг + калькулятор себестоимости
 import { loadPricingConfig, computeCostPlus } from '../pricing.js';
 
 const PRICING_CFG = loadPricingConfig(
   path.resolve(process.cwd(), 'data/pricing.yml')
 );
 
-export async function readCsvToStaging(csvPath: string, batchId: string) {
-  const rows: any[] = [];
-  await new Promise<void>((resolve, reject) => {
-    fs.createReadStream(csvPath)
-      .pipe(parse({ headers: true, ignoreEmpty: true, trim: true }))
-      .on('error', reject)
-      .on('data', (r: any) => rows.push(r))
-      .on('end', () => resolve());
-  });
+// --- Валидные расширения ---
+const IMG_EXT = new Set(['.jpg', '.jpeg', '.png', '.webp', '.gif', '.bmp', '.avif']);
+const MODEL_EXT = new Set(['.stl', '.obj', '.3mf', '.fbx', '.glb', '.gltf']);
 
-  // Минимальный набор в staging (как было раньше)
-  const payload = rows.map((r) => ({
-    import_batch_id: batchId,
-    sku: r.sku,
-    name: r.name,
-    description: r.description,
-    price: String(r.price ?? ''),
-    currency: String(r.currency ?? ''),
-    stock: String(r.stock ?? '0'),
-    image_url: r.image_url ?? null,
-    model_url: r.model_url ?? null,
-    categories: r.categories ?? '',
-    attributes: safeJson(r.attributes),
-  }));
+const isImage = (p?: string | null) =>
+  !!p && IMG_EXT.has(path.extname(String(p)).toLowerCase());
 
-  await knex.withSchema('staging').table('products_raw').insert(payload);
+const isModel = (p?: string | null) =>
+  !!p && MODEL_EXT.has(path.extname(String(p)).toLowerCase());
+
+// Нормализация чисел из CSV
+function toNum(x: any) {
+  if (x === null || x === undefined) return undefined;
+  const s = String(x).trim();
+  if (!s) return undefined;
+  const norm = s
+    .replace(/\s+/g, '')
+    .replace(/[,]/g, '.')
+    .replace(/[^\d.+-]/g, '');
+  const n = Number(norm);
+  return Number.isFinite(n) ? n : undefined;
 }
 
 function safeJson(input: any) {
@@ -50,29 +43,81 @@ function safeJson(input: any) {
   }
 }
 
-function toNum(x: any) {
-  const n = Number(x);
-  return Number.isFinite(n) ? n : undefined;
+// === Обеспечиваем staging-таблицу (без схемы) ===
+async function ensureStagingTable() {
+  const exists = await knex.schema.hasTable('staging_products');
+  if (!exists) {
+    await knex.schema.createTable('staging_products', (t) => {
+      t.text('import_batch_id').notNullable();
+      t.text('sku');
+      t.text('name');
+      t.text('description');
+      t.text('price');
+      t.text('currency');
+      t.text('stock');
+      t.text('image_url');
+      t.text('model_url');
+      t.text('categories');
+      t.jsonb('attributes').defaultTo('{}');
+    });
+    await knex.raw('CREATE INDEX IF NOT EXISTS ix_staging_products_batch ON staging_products(import_batch_id)');
+    console.log('[import] created table staging_products');
+  }
+}
+
+export async function readCsvToStaging(csvPath: string, batchId: string) {
+  await ensureStagingTable();
+
+  const rows: any[] = [];
+  await new Promise<void>((resolve, reject) => {
+    fs.createReadStream(csvPath)
+      .pipe(parse({ headers: true, ignoreEmpty: true, trim: true }))
+      .on('error', reject)
+      .on('data', (r: any) => rows.push(r))
+      .on('end', () => resolve());
+  });
+
+  const payload = rows.map((r) => {
+    const csvImage = r.main_image ?? r.image_url ?? r.image ?? null;
+    const csvModel = r.model_url ?? r.model ?? null;
+
+    const image_url = isImage(csvImage) ? String(csvImage).trim() : null;
+    const model_url = isModel(csvModel)
+      ? String(csvModel).trim()
+      : (isModel(csvImage) ? String(csvImage).trim() : null);
+
+    return {
+      import_batch_id: batchId,
+      sku: r.sku?.trim(),
+      name: r.name?.trim(),
+      description: r.description ?? null,
+
+      price: toNum(r.price) ?? '',
+      currency: String(r.currency ?? '').toUpperCase(),
+      stock: String(r.stock ?? '0'),
+
+      image_url,
+      model_url,
+
+      categories: r.categories ?? '',
+      attributes: safeJson(r.attributes),
+    };
+  });
+
+  if (payload.length) {
+    await knex('staging_products').insert(payload);
+  }
 }
 
 /**
- * Мердж из staging + хук прайсинга.
- *
- * Логика:
- * 1) читаем строки батча из staging.products_raw;
- * 2) для каждой строки определяем метод ценообразования:
- *    - если price в CSV указан → manual;
- *    - иначе → cost_plus (по конфигу PRICING_CFG);
- * 3) апсертим в products все базовые поля + price/pricing_method/pricing(JSON);
- * 4) назначаем категории;
- * 5) обновляем материализованный вид.
+ * Корректный апсерт товара из staging с прайсингом и безопасными полями.
  */
 export async function mergeFromStaging(batchId: string) {
   type Row = {
     sku: string | null;
     name: string | null;
     description: string | null;
-    price: string | null; // как пришло в staging
+    price: string | null;
     currency: string | null;
     stock: number | string | null;
     image_url?: string | null;
@@ -81,9 +126,7 @@ export async function mergeFromStaging(batchId: string) {
     attributes?: any;
   };
 
-  const rows: Row[] = await knex
-    .withSchema('staging')
-    .table('products_raw')
+  const rows: Row[] = await knex('staging_products')
     .select(
       'sku',
       'name',
@@ -99,11 +142,11 @@ export async function mergeFromStaging(batchId: string) {
     .where('import_batch_id', batchId);
 
   if (!rows.length) {
-    console.log(`[import] batch ${batchId}: no rows found in staging`);
+    console.log(`[import] batch ${batchId}: no rows found in staging_products`);
     return;
   }
 
-  // Соберём все категории заранее для батчевого сопоставления
+  // Собираем список всех встреченных слагов категорий
   const allCatSlugs = new Set<string>();
   for (const r of rows) {
     const cats = String(r.categories ?? '')
@@ -124,97 +167,107 @@ export async function mergeFromStaging(batchId: string) {
     knownCats.map((c: any) => [c.slug, c.id])
   );
 
-  const upsertedProducts: Array<{ id: number; sku: string }> = [];
+  let upserted = 0;
 
   for (const row of rows) {
     if (!row.sku) continue;
+    const sku = row.sku.trim();
 
-    const attrs = (row.attributes && typeof row.attributes === 'object'
-      ? row.attributes
-      : {}) as Record<string, any>;
+    // Безопасные атрибуты
+    const attrs =
+      (row.attributes && typeof row.attributes === 'object'
+        ? row.attributes
+        : {}) as Record<string, any>;
 
-    // Входные параметры прайсинга:
+    // Прайсинг (manual / cost_plus)
     const input = {
-      sku: row.sku,
+      sku,
       currency: (row.currency || PRICING_CFG.currency) as string,
-
-      // manual price, если задана в CSV
       price: toNum(row.price),
-
-      // если price задана — manual, иначе cost_plus
-      price_method: ((row as any).price_method as any) || (row.price ? 'manual' : 'cost_plus'),
-
-      // Возможные поля для себестоимости и трудозатрат:
-      material_type:
-        (row as any).material_type ??
-        attrs.material_type ??
-        undefined,
-      material_g:
-        toNum((row as any).material_g) ??
-        toNum(attrs.material_g),
-      material_ml:
-        toNum((row as any).material_ml) ??
-        toNum(attrs.material_ml),
-      print_time_min:
-        toNum((row as any).print_time_min) ??
-        toNum(attrs.print_time_min),
-      postprocess_min:
-        toNum((row as any).postprocess_min) ??
-        toNum(attrs.postprocess_min),
-      packaging_cost:
-        toNum((row as any).packaging_cost) ??
-        toNum(attrs.packaging_cost),
+      price_method:
+        ((row as any).price_method as any) || (row.price ? 'manual' : 'cost_plus'),
+      material_type: (row as any).material_type ?? attrs.material_type ?? undefined,
+      material_g: toNum((row as any).material_g) ?? toNum(attrs.material_g),
+      material_ml: toNum((row as any).material_ml) ?? toNum(attrs.material_ml),
+      print_time_min: toNum((row as any).print_time_min) ?? toNum(attrs.print_time_min),
+      postprocess_min: toNum((row as any).postprocess_min) ?? toNum(attrs.postprocess_min),
+      packaging_cost: toNum((row as any).packaging_cost) ?? toNum(attrs.packaging_cost),
       shipping_included:
         String((row as any).shipping_included ?? attrs.shipping_included ?? '')
           .toLowerCase()
           .trim() === 'true',
       target_margin_pct:
-        toNum((row as any).target_margin_pct) ??
-        toNum(attrs.target_margin_pct),
+        toNum((row as any).target_margin_pct) ?? toNum(attrs.target_margin_pct),
     };
 
-    let price = input.price;
-    let pricing_method: 'manual' | 'cost_plus' =
+    let price: number | undefined = input.price;
+    const pricing_method: 'manual' | 'cost_plus' =
       (input.price_method as any) || 'manual';
     let pricing: any = {};
 
     if (pricing_method === 'cost_plus') {
-      const calc = computeCostPlus(PRICING_CFG, input);
+      const calc = computeCostPlus(PRICING_CFG, input as any);
       price = calc.price_final;
       pricing = calc;
     }
 
-    // Апсерт товара
+    // Гарантированные NOT NULL поля
+    const name = (row.name?.trim() || sku);
+    const currency = String(input.currency || PRICING_CFG.currency || 'UAH').toUpperCase();
+    const stock = Number(row.stock ?? 0) || 0;
+
+    // Картинка из staging — только если валидный формат
+    const cleanImageUrl = isImage(row.image_url) ? String(row.image_url).trim() : null;
+
+    // --- Гарантия цены > 0 ---
+    const isPos = (v: any) => Number.isFinite(v) && Number(v) > 0;
+    const MIN_PRICE = Number((PRICING_CFG as any)?.rounding?.min_price ?? 1);
+    const priceInsert = isPos(price) ? Number(price) : MIN_PRICE;
+    const priceMerge  = isPos(price) ? Number(price) : knex.raw('products.price');
+
+    // Полный INSERT (чтобы пройти NOT NULL). На MERGE аккуратно не перетираем пустым.
+    const now = new Date();
+    const insertPayload: Record<string, any> = {
+      sku,
+      name,
+      description: row.description ?? null,
+      price: priceInsert,            // <-- гарантирован минимум
+      currency,
+      stock,
+      attributes: attrs,
+      pricing_method,
+      pricing,
+      image_url: cleanImageUrl,
+      created_at: now,
+      updated_at: now,
+    };
+
+    const mergePayload: Record<string, any> = {
+      name: row.name?.trim() || knex.raw('products.name'),
+      description:
+        row.description != null ? row.description : knex.raw('products.description'),
+
+      price: priceMerge,             // <-- не затираем валидную старую цену
+      currency,
+      stock,
+
+      attributes: knex.raw('products.attributes || ?', [attrs]),
+      pricing_method,
+      pricing,
+
+      image_url: cleanImageUrl ?? knex.raw('products.image_url'),
+      updated_at: now,
+    };
+
     const [prod] = await knex('products')
-      .insert({
-        sku: input.sku,
-        name: row.name?.trim() || input.sku,
-        description: row.description || null,
-        price: price ?? 0,
-        currency: String(input.currency || PRICING_CFG.currency).toUpperCase(),
-        stock: Number(row.stock ?? 0) || 0,
-        attributes: row.attributes || {},
-        pricing_method,
-        pricing: JSON.stringify(pricing),
-      })
+      .insert(insertPayload)
       .onConflict('sku')
-      .merge({
-        name: row.name?.trim() || knex.raw('products.name'),
-        description: row.description ?? knex.raw('products.description'),
-        price: price ?? knex.raw('products.price'),
-        currency:
-          String(input.currency || PRICING_CFG.currency).toUpperCase() ||
-          knex.raw('products.currency'),
-        stock: Number(row.stock ?? 0) || 0,
-        attributes: knex.raw('products.attributes || ?', [row.attributes || {}]),
-        pricing_method,
-        pricing: JSON.stringify(pricing),
-      })
+      .merge(mergePayload)
       .returning(['id', 'sku']);
 
-    upsertedProducts.push(prod);
+    upserted++;
 
-    // Привязка категорий
+    // Привязка к категориям
     const catSlugs = String(row.categories ?? '')
       .split('|')
       .map((s) => s.trim().toLowerCase())
@@ -224,10 +277,7 @@ export async function mergeFromStaging(batchId: string) {
       const links = catSlugs
         .map((slug) => catBySlug.get(slug))
         .filter(Boolean)
-        .map((category_id) => ({
-          product_id: prod.id,
-          category_id,
-        }));
+        .map((category_id) => ({ product_id: prod.id, category_id }));
 
       if (links.length) {
         await knex('product_categories')
@@ -236,158 +286,45 @@ export async function mergeFromStaging(batchId: string) {
           .ignore();
       }
     }
+
+    // Постановка задачи синка медиа — закрепляем "предпочтительное" фото из CSV
+    await mediaQueue.add(
+      'sync-media',
+      {
+        sku: input.sku,
+        // если в CSV пришёл валидный путь к фото — закрепляем его как главный
+        preferUrl: isImage(row.image_url) ? String(row.image_url).trim() : null,
+      } as any, // тип джобы может не знать про preferUrl
+      { removeOnComplete: true, attempts: 3, backoff: { type: 'exponential', delay: 750 } }
+    );
   }
 
-  // Поддержка совместимости: обновим материализованный вид, как и раньше
-  await knex.raw('REFRESH MATERIALIZED VIEW CONCURRENTLY catalog_items;');
+  // Обновление MView — мягко
+  try {
+    await knex.raw('REFRESH MATERIALIZED VIEW CONCURRENTLY catalog_items;');
+  } catch {}
 
-  console.log(
-    `[import] batch ${batchId}: upserted ${upsertedProducts.length} products with pricing`
-  );
+  console.log(`[import] batch ${batchId}: upserted ${upserted} products`);
 }
 
-export async function createOrUpdateFromUrl(data: {
-  sourceUrl: string;
-  sku?: string;
-  price?: number;
-  currency?: string;
-  stock?: number;
-  categories?: string[];
-  imageUrl?: string;
-  modelUrl?: string;
-  attributes?: any;
-}) {
-  const sku =
-    data.sku ?? 'SKU-' + Math.random().toString(36).slice(2, 8).toUpperCase();
-
-  const [product] = await knex('products')
-    .insert({
-      sku,
-      name: sku,
-      description: data.sourceUrl,
-      price: data.price ?? 0,
-      currency: (data.currency ?? 'UAH').toUpperCase(),
-      stock: data.stock ?? 0,
-      attributes: { ...data.attributes, source_url: data.sourceUrl },
-    })
-    .onConflict('sku')
-    .merge()
-    .returning(['id', 'sku']);
-
-  if (data.categories?.length) {
-    const cats: Array<{ id: number; slug: string }> = await knex('categories')
-      .select('id', 'slug')
-      .whereIn('slug', data.categories);
-    const links = cats.map((c: { id: number; slug: string }) => ({
-      product_id: product.id,
-      category_id: c.id,
-    }));
-    if (links.length) {
-      await knex('product_categories')
-        .insert(links)
-        .onConflict(['product_id', 'category_id'])
-        .ignore();
-    }
-  }
-
-  return {
-    productId: product.id,
-    sku: product.sku,
-    imageUrl: data.imageUrl,
-    modelUrl: data.modelUrl,
-  };
-}
+// Старое имя — на совместимость
+export const mergeStagingBatch = mergeFromStaging;
 
 /**
- * Поставить медиа-задачи в очередь для всех товаров из CSV-пакета.
- * Добавляет main_image, model_primary и gallery (если есть) на основе staging.products_raw.attributes.gallery_files.
+ * Допоміжне: масова постановка sync-media по batch.
  */
-
-// --- Фильтр валидности источника медиа + безопасная постановка задач ---
-function looksLikeSrc(x: any) {
-  if (typeof x !== 'string') return false;
-  const s = x.trim();
-  if (!s) return false;
-  // http(s), file://, абсолютные пути Windows/UNC, или относительный файл с расширением (без '|')
-  return (
-    /^https?:\/\//i.test(s) ||
-    /^file:\/\//i.test(s) ||
-    /^[a-zA-Z]:[\\/]/.test(s) || // Windows absolute
-    /^\\\\/.test(s) || // UNC
-    (!s.includes('|') && /[\/\\]/.test(s) && /\.\w{2,}$/.test(s))
-  );
-}
-
-async function addIfValid(
-  prod: { id: string; sku: string },
-  raw: any,
-  role: 'main_image' | 'model_primary' | 'gallery'
-) {
-  if (!looksLikeSrc(raw)) {
-    if (raw && String(raw).trim()) {
-      console.warn(`[media] skip invalid ${role} for ${prod.sku}: ${raw}`);
-    }
-    return;
-  }
-  await mediaQueue.add(
-    'media',
-    { productId: prod.id, sku: prod.sku, role, url: String(raw).trim() },
-    { removeOnComplete: true }
-  );
-}
-// ----------------------------------------------------------------------
-
 export async function enqueueMediaForBatch(batchId: string) {
-  type Row = {
-    sku?: string | null;
-    image_url?: string | null;
-    model_url?: string | null;
-    attributes?: any;
-  };
-
-  const rows: Row[] = await knex
-    .withSchema('staging')
-    .table('products_raw')
-    .select('sku', 'image_url', 'model_url', 'attributes')
+  const rows: Array<{ sku?: string | null }> = await knex('staging_products')
+    .select('sku')
     .where('import_batch_id', batchId);
 
   const skus = rows.map((r) => r.sku).filter(Boolean) as string[];
-
-  if (skus.length === 0) {
-    console.log(`[import] batch ${batchId}: no SKUs found for media enqueue`);
-    return;
+  for (const sku of skus) {
+    await mediaQueue.add(
+      'sync-media',
+      { sku },
+      { removeOnComplete: true, attempts: 3, backoff: { type: 'exponential', delay: 750 } }
+    );
   }
-
-  const prods: Array<{ id: string; sku: string }> = await knex('products')
-    .select('id', 'sku')
-    .whereIn('sku', skus);
-
-  const bySku = new Map(prods.map((p) => [p.sku, p]));
-
-  for (const r of rows) {
-    const prod = r.sku ? bySku.get(r.sku) : null;
-    if (!prod) continue;
-
-    // main_image
-    await addIfValid(prod, r.image_url, 'main_image');
-
-    // model_primary
-    await addIfValid(prod, r.model_url, 'model_primary');
-
-    // gallery (attributes.gallery_files)
-    const gallery =
-      r.attributes &&
-      typeof r.attributes === 'object' &&
-      Array.isArray((r.attributes as any).gallery_files)
-        ? (r.attributes as any).gallery_files
-        : [];
-
-    for (const g of gallery) {
-      await addIfValid(prod, g, 'gallery');
-    }
-  }
-
-  console.log(
-    `[import] batch ${batchId}: media jobs enqueued for ${prods.length} products`
-  );
+  console.log(`[import] batch ${batchId}: media jobs enqueued for ${skus.length} products`);
 }
