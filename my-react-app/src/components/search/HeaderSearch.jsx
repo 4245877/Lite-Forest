@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import SearchBar from './SearchBar';
 import { api } from '../../api/client';
@@ -28,7 +28,7 @@ const mapForSuggestions = (list) =>
     };
   });
 
-export default function HeaderSearch({ onClose }) {
+export default function HeaderSearch({ onClose, autoFocus = false }) {
   const [allProducts, setAllProducts] = useState([]);
   const navigate = useNavigate();
   const location = useLocation();
@@ -46,17 +46,20 @@ export default function HeaderSearch({ onClose }) {
         console.warn('HeaderSearch preload failed:', e);
       }
     })();
-    return () => { alive = false; };
+    return () => {
+      alive = false;
+    };
   }, []);
 
   const commit = (q) => {
     const query = String(q || '').trim();
 
-    // Если уже на /catalog — обновляем состояние каталога СРАЗУ (без debounce) + URL
+    // Если уже на /catalog — обновляем состояние каталога сразу + URL
     if (location.pathname === '/catalog') {
       window.dispatchEvent(new CustomEvent('lf:applySearch', { detail: query }));
       const usp = new URLSearchParams(location.search);
-      if (query) usp.set('q', query); else usp.delete('q');
+      if (query) usp.set('q', query);
+      else usp.delete('q');
       navigate({ pathname: '/catalog', search: `?${usp.toString()}` }, { replace: true });
     } else {
       navigate(`/catalog?q=${encodeURIComponent(query)}`);
@@ -65,5 +68,11 @@ export default function HeaderSearch({ onClose }) {
     onClose?.();
   };
 
-  return <SearchBar onSearch={commit} allProducts={allProducts} />;
+  return (
+    <SearchBar
+      onSearch={commit}
+      allProducts={allProducts}
+      autoFocus={autoFocus}
+    />
+  );
 }

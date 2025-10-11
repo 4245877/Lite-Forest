@@ -37,6 +37,7 @@ const ShowAllIcon = () => (
 
 const SearchBar = ({ onSearch, allProducts, autoFocus = false, placeholder = "Поиск товаров…" }) => {
   const [query, setQuery] = useState('');
+  const [mounted, setMounted] = useState(false);
   const [suggestions, setSuggestions] = useState([]);
   const [activeIndex, setActiveIndex] = useState(-1);
   const [isLoading, setIsLoading] = useState(false);
@@ -48,6 +49,12 @@ const SearchBar = ({ onSearch, allProducts, autoFocus = false, placeholder = "П
   const listboxId = useId();
   const labelId = useId();
   const liveId = useId();
+
+  // мягкое появление контейнера
+  useEffect(() => {
+    const id = requestAnimationFrame(() => setMounted(true));
+    return () => cancelAnimationFrame(id);
+  }, []);
 
   // recent queries init
   useEffect(() => {
@@ -240,7 +247,7 @@ const SearchBar = ({ onSearch, allProducts, autoFocus = false, placeholder = "П
 
   return (
     <div
-      className={styles.searchContainer}
+      className={`${styles.searchContainer} ${mounted ? styles.enter : ''}`}
       ref={searchContainerRef}
       role="combobox"
       aria-haspopup="listbox"
@@ -262,6 +269,7 @@ const SearchBar = ({ onSearch, allProducts, autoFocus = false, placeholder = "П
         value={query}
         onChange={handleChange}
         autoFocus={autoFocus}
+        enterKeyHint="search"
         aria-autocomplete="list"
         aria-activedescendant={activeIndex > -1 ? (hasTypedEnough ? `suggestion-${activeIndex}` : `recent-${activeIndex}`) : undefined}
         onFocus={() => setIsOpen(true)}
@@ -300,7 +308,7 @@ const SearchBar = ({ onSearch, allProducts, autoFocus = false, placeholder = "П
             {/* Показать все результаты (всегда, если есть какой-то ввод) */}
             {query.trim().length > 0 && (
               <li
-                id={`showall`}
+                id="showall"
                 ref={(el) => (itemsRef.current[visibleItemsCount - 1] = el)}
                 className={`${styles.suggestionItem} ${styles.showAll} ${activeIndex === visibleItemsCount - 1 ? styles.active : ''}`}
                 role="option"

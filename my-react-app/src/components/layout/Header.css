@@ -172,6 +172,12 @@
 
 .action-btn:hover svg { transform: scale(1.1); }
 
+/* Сохраняем место под кнопку поиска на /catalog */
+.search-btn.inert {
+  visibility: hidden;        /* невидима, но занимает место */
+  pointer-events: none;      /* клики отключены */
+}
+
 /* Счетчик корзины */
 .cart-btn { position: relative; }
 

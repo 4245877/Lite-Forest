@@ -1,10 +1,13 @@
 // src/components/layout/Header.jsx
 import React, { useState, useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import './Header.css';
 import HeaderSearch from '../search/HeaderSearch';
 
 const Header = () => {
+  const location = useLocation();
+  const isCatalog = location.pathname.startsWith('/catalog');
+
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const firstNavLinkRef = useRef(null);
@@ -13,13 +16,13 @@ const Header = () => {
   const toggleSearch = () => setIsSearchOpen(prev => !prev);
   const closeSearch = () => setIsSearchOpen(false);
 
-  // Блокировка прокрутки, если открыто меню или поиск
+  // Блокировка прокрутки, если открыто меню или поиск (кроме каталога)
   useEffect(() => {
-    const needLock = isMobileMenuOpen || isSearchOpen;
+    const needLock = isMobileMenuOpen || (isSearchOpen && !isCatalog);
     document.body.classList.toggle('no-scroll', needLock);
     if (isMobileMenuOpen) setTimeout(() => firstNavLinkRef.current?.focus(), 120);
     return () => document.body.classList.remove('no-scroll');
-  }, [isMobileMenuOpen, isSearchOpen]);
+  }, [isMobileMenuOpen, isSearchOpen, isCatalog]);
 
   // Закрыть мобильное меню при переходе на десктоп
   useEffect(() => {
@@ -44,6 +47,11 @@ const Header = () => {
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [isMobileMenuOpen, isSearchOpen]);
+
+  // Если на каталоге — принудительно закрыть поиск из хедера
+  useEffect(() => {
+    if (isCatalog && isSearchOpen) setIsSearchOpen(false);
+  }, [isCatalog, isSearchOpen]);
 
   const handleNavLinkClick = () => { if (isMobileMenuOpen) setIsMobileMenuOpen(false); };
 
@@ -85,9 +93,11 @@ const Header = () => {
         {/* Действия */}
         <div className="header-actions">
           <button
-            className={`action-btn search-btn ${isSearchOpen ? 'active' : ''}`}
+            className={`action-btn search-btn ${isSearchOpen ? 'active' : ''} ${isCatalog ? 'inert' : ''}`}
             aria-label="Поиск"
-            onClick={toggleSearch}
+            onClick={isCatalog ? undefined : toggleSearch}
+            aria-hidden={isCatalog || undefined}
+            tabIndex={isCatalog ? -1 : undefined}
           >
             <svg
               className="icon-search"
@@ -105,7 +115,7 @@ const Header = () => {
 
           <Link to="/cart" className="action-btn cart-btn" aria-label="Корзина">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-              <path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17M17 13v6a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2v-6" />
+              <path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17M17 13в6a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2v-6" />
             </svg>
             <span className="cart-count">0</span>
           </Link>
@@ -130,20 +140,22 @@ const Header = () => {
         </div>
       </div>
 
-      {/* Поиск: десктоп — центрированный блок; мобилка — панель под шапкой */}
-      <div
-        className={`header-search-wrap ${isSearchOpen ? 'open' : ''}`}
-        role="dialog"
-        aria-modal={isSearchOpen || undefined}
-        aria-label="Пошук"
-      >
-        <div className="search-overlay" onClick={closeSearch} aria-hidden="true"></div>
-        <div className="header-search-panel">
-          <div className="header-search-card">
-            {isSearchOpen && <HeaderSearch onClose={closeSearch} />}
+      {/* Поиск: скрыт на каталоге */}
+      {!isCatalog && (
+        <div
+          className={`header-search-wrap ${isSearchOpen ? 'open' : ''}`}
+          role="dialog"
+          aria-modal={isSearchOpen || undefined}
+          aria-label="Пошук"
+        >
+          <div className="search-overlay" onClick={closeSearch} aria-hidden="true"></div>
+          <div className="header-search-panel">
+            <div className="header-search-card">
+              {isSearchOpen && <HeaderSearch onClose={closeSearch} autoFocus />}
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Мобильное меню overlay */}
       {isMobileMenuOpen && (
