@@ -173,10 +173,45 @@ const uaNumber = (n) => new Intl.NumberFormat('uk-UA').format(n);
 const encodeList = (arr) => (arr && arr.length ? arr.join(',') : '');
 const decodeList = (str) => (str ? str.split(',').map(s => s.trim()).filter(Boolean) : []);
 
+// ВНЕ компонента файла:
+export const ProductCardWithHighlight = React.memo(function ProductCardWithHighlight({ product, query }) {
+  const highlightedName = useMemo(
+    () => highlightMatch(product.name ?? product.name_uk ?? product.title ?? '', query),
+    [product.name, product.name_uk, product.title, query]
+  );
+
+  const image =
+    product.image_url
+    ?? product.main_image_url
+    ?? product.image
+    ?? product.media?.find(m => m.media_type === 'image')?.url
+    ?? 'https://placehold.co/300x300';
+
+  const priceRaw = typeof product.price === 'number'
+    ? product.price
+    : Number(product.price ?? product.base_price ?? 0);
+
+  const price = Number.isFinite(priceRaw) ? priceRaw : 0;
+
+  return (
+    <ProductCard
+      image={image}
+      title={highlightedName}
+      price={price}
+      onAddToCart={() => {}}
+    />
+  );
+});
+
 const CatalogPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
 
   const [products, setProducts] = useState([]);
+  const [total, setTotal] = useState(0);
+  const [cursor, setCursor] = useState(null);
+  const [hasMore, setHasMore] = useState(true);
+  const pageSize = 36;
+
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -215,11 +250,18 @@ const CatalogPage = () => {
   const headerRef = useRef(null);
   const categoryListRef = useRef(null);
   const moreBtnRef = useRef(null);
+  const sentinelRef = useRef(null);
 
-  // body scroll lock while drawer open (mobile)
+  // Скролл-лок без дёрганья при відкритих фільтрах
   useEffect(() => {
-    if (isFiltersVisible) document.body.style.overflow = 'hidden'; else document.body.style.overflow = '';
-    return () => { document.body.style.overflow = ''; };
+    if (!isFiltersVisible) { document.body.style.overflow=''; document.body.style.paddingRight=''; return; }
+    const hasScrollbar = window.innerWidth > document.documentElement.clientWidth;
+    if (hasScrollbar) {
+      const pr = window.innerWidth - document.documentElement.clientWidth;
+      document.body.style.paddingRight = `${pr}px`;
+    }
+    document.body.style.overflow='hidden';
+    return () => { document.body.style.overflow=''; document.body.style.paddingRight=''; };
   }, [isFiltersVisible]);
 
   // watch viewport
@@ -347,15 +389,14 @@ const CatalogPage = () => {
     try { localStorage.setItem('lf.catExpanded', JSON.stringify(catExpanded)); } catch {}
   }, [catExpanded]);
 
-  // Нормалізатор продуктів з різних бекенд-форматів у єдиний вигляд для UI
+  // Нормалізатор продуктів (для UI)
   const adaptProduct = (p) => ({
     ...p,
-    id: p.id ?? p._id ?? p.product_id ?? p.sku,            // підстраховка ключа
-    name: p.name ?? p.name_uk ?? p.title ?? '',            // ім'я з i18n/alt полів
+    id: p.id ?? p._id ?? p.product_id ?? p.sku,
+    name: p.name ?? p.name_uk ?? p.title ?? '',
     price: (typeof p.price === 'number')
       ? p.price
       : Number(p.price ?? p.price_min_printed ?? p.base_price ?? 0),
-    // головне: підхопити картинку з main_image_url -> image_url
     image_url: p.image_url
       ?? p.main_image_url
       ?? p.image?.url
@@ -364,39 +405,52 @@ const CatalogPage = () => {
       ?? null,
   });
 
-  // Products fetch
-  useEffect(() => {
-    const controller = new AbortController();
-
-    const fetchProducts = async () => {
-      setIsLoading(true);
-      setError(null);
-      try {
-        const data = await api.listProducts(searchQuery, 50, {
+  // Products fetch (cursor-based)
+  const fetchProducts = useCallback(async (mode = 'reset', controller) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const data = await api.listProducts(
+        searchQuery,
+        pageSize,
+        {
           categories: selectedCatsForQuery,
           minPrice,
           maxPrice,
           material,
           printTech,
           sortBy,
-          // Нові фасети
           franchise,
           scale,
           finish,
-        });
-        setProducts(normalizeProducts(data).map(adaptProduct));
-      } catch (err) {
-        if (err.name === 'AbortError') return;
-        setError(err.message || 'Помилка завантаження');
-        console.error('Помилка під час отримання товарів:', err);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+          cursor: mode === 'more' ? cursor : null,
+        },
+        { signal: controller?.signal }
+      );
 
-    fetchProducts();
+      const items = normalizeProducts(data).map(adaptProduct);
+      setTotal(Number(data.total ?? 0));
+
+      if (mode === 'more') setProducts(prev => [...prev, ...items]);
+      else setProducts(items);
+
+      setCursor(data.nextCursor ?? null);
+      setHasMore(Boolean(data.nextCursor));
+    } catch (err) {
+      if (err?.name === 'AbortError') return;
+      setError(err?.message || 'Помилка завантаження');
+      console.error('Помилка під час отримання товарів:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [searchQuery, pageSize, selectedCatsForQuery, minPrice, maxPrice, material, printTech, sortBy, franchise, scale, finish, cursor]);
+
+  // Перезагрузка при изменении фильтров/поиска
+  useEffect(() => {
+    const controller = new AbortController();
+    fetchProducts('reset', controller);
     return () => controller.abort();
-  }, [searchQuery, selectedCatsForQuery, minPrice, maxPrice, material, printTech, sortBy, franchise, scale, finish]);
+  }, [fetchProducts]);
 
   // Debounced search
   const handleSearch = useCallback((value) => {
@@ -407,7 +461,6 @@ const CatalogPage = () => {
       debounceTimer.current = null;
     }, 450);
   }, []);
-
   useEffect(() => () => { if (debounceTimer.current) clearTimeout(debounceTimer.current); }, []);
 
   // Category selection
@@ -539,48 +592,38 @@ const CatalogPage = () => {
     });
   }, []);
 
-  const ProductCardWithHighlight = React.memo(function ProductCardWithHighlight({ product, query }) {
-    const highlightedName = useMemo(
-      () => highlightMatch(product.name ?? product.name_uk ?? product.title ?? '', query),
-      [product.name, product.name_uk, product.title, query]
-    );
-
-    const image =
-      product.image_url
-      ?? product.main_image_url
-      ?? product.image
-      ?? product.media?.find(m => m.media_type === 'image')?.url
-      ?? 'https://placehold.co/300x300';
-
-    const priceRaw = typeof product.price === 'number'
-      ? product.price
-      : Number(product.price ?? product.base_price ?? 0);
-
-    const price = Number.isFinite(priceRaw) ? priceRaw : 0;
-
-    return (
-      <ProductCard
-        image={image}
-        title={highlightedName}
-        price={price}
-        onAddToCart={() => {}}
-      />
-    );
-  });
-
   const renderContent = () => {
-    if (isLoading) return <div className="loading-container"><div className="loading-spinner" aria-hidden="true" /><p>Завантаження товарів...</p></div>;
-    if (error) return <div className="error-container"><p className="error">Помилка: {error}</p></div>;
+    if (isLoading) {
+      return (
+        <li className="loading-container">
+          <div className="loading-spinner" aria-hidden="true" />
+          <p>Завантаження товарів...</p>
+        </li>
+      );
+    }
+    if (error) {
+      return (
+        <li className="error-container">
+          <p className="error">Помилка: {error}</p>
+        </li>
+      );
+    }
     if (products.length > 0) {
-      return products.map((p, idx) => (
-        <div role="listitem" key={p.id ?? p._id ?? p.sku ?? p.slug ?? idx}>
+      return products.map((p) => (
+        <li key={p.id ?? p._id ?? p.sku ?? p.slug}>
           <Link to={`/products/${p.id ?? p._id}`} className="product-card-link" aria-label={`Відкрити ${p.name}`}>
             <ProductCardWithHighlight product={p} query={searchQuery} />
           </Link>
-        </div>
+        </li>
       ));
     }
-    return <div className="empty-state"><div className="empty-icon" aria-hidden>🕵️‍♂️</div><h3>Нічого не знайдено</h3><p>Спробуйте змінити фільтри або скинути їх.</p></div>;
+    return (
+      <li className="empty-state">
+        <div className="empty-icon" aria-hidden>🕵️‍♂️</div>
+        <h3>Нічого не знайдено</h3>
+        <p>Спробуйте змінити фільтри або скинути їх.</p>
+      </li>
+    );
   };
 
   // List style when collapsed
@@ -588,13 +631,25 @@ const CatalogPage = () => {
     ? { overflow: 'hidden', maxHeight: `${collapsedMaxHeight}px`, transition: 'max-height 260ms ease' }
     : { transition: 'max-height 260ms ease' };
 
+  // Кнопка і «сторож» (IntersectionObserver) для підвантаження
+  useEffect(() => {
+    if (!sentinelRef.current || !hasMore) return;
+    const io = new IntersectionObserver(([e]) => {
+      if (e.isIntersecting && !isLoading) {
+        const controller = new AbortController();
+        fetchProducts('more', controller);
+      }
+    }, { rootMargin: '600px 0px' });
+    io.observe(sentinelRef.current);
+    return () => io.disconnect();
+  }, [hasMore, isLoading, cursor, searchQuery, selectedCatsForQuery, sortBy, fetchProducts]);
+
   return (
     <div className="catalog-page">
-      {isFiltersVisible && <div className="filters-overlay" onClick={toggleFiltersVisibility} aria-hidden="true" />}
+      {isFiltersVisible && <div className="filters-overlay visible" onClick={toggleFiltersVisibility} aria-hidden="true" />}
 
       <header className="catalog-header">
         <h1>Каталог</h1>
-        {/* Убрана дубль-кнопка мобильных фильтров из шапки для чистоты UI */}
       </header>
 
       {activeTags.length > 0 && (
@@ -804,13 +859,11 @@ const CatalogPage = () => {
           {/* Липкая панель: Поиск + Фильтры (моб) + Сортировка + Счётчик */}
           <div className="catalog-toolbar" role="region" aria-label="Панель каталога">
             <div className="toolbar-left">
-              {/* было: <SearchBar onSearch={handleSearch} allProducts={products} /> */}
+              {/* поиск не от «всех товаров»; автофокус на мобилке выключаем */}
               <SearchBar
                 onSearch={handleSearch}
-                allProducts={products}
                 value={searchInput}
                 placeholder="Пошук товарів"
-                autoFocus={isMobile}
                 mobile
               />
             </div>
@@ -832,23 +885,26 @@ const CatalogPage = () => {
                 <option value="price_asc">Спершу дешеві</option>
                 <option value="price_desc">Спочатку дорогі</option>
               </select>
-              <span className="products-count inline" aria-live="polite">{`Знайдено: ${uaNumber(products.length)}`}</span>
+              <span className="products-count inline" aria-live="polite">{`Знайдено: ${uaNumber(total)}`}</span>
             </div>
           </div>
 
           <div className="products-header" aria-hidden="true"></div>
 
-          <div className="products-list-grid" role="list">
-            {isLoading || error || products.length === 0
-              ? renderContent()
-              : products.map((p, idx) => (
-                  <div role="listitem" key={p.id ?? p._id ?? p.sku ?? p.slug ?? idx}>
-                    <Link to={`/products/${p.id ?? p._id}`} className="product-card-link" aria-label={`Відкрити ${p.name}`}>
-                      <ProductCardWithHighlight product={p} query={searchQuery} />
-                    </Link>
-                  </div>
-                ))}
-          </div>
+          <ul className="products-list-grid">
+            {renderContent()}
+            {hasMore && !isLoading && (
+              <li className="list-load-more">
+                <button className="btn btn--secondary" onClick={() => {
+                  const controller = new AbortController();
+                  fetchProducts('more', controller);
+                }}>Показати ще</button>
+              </li>
+            )}
+            <li aria-hidden>
+              <div ref={sentinelRef} />
+            </li>
+          </ul>
 
         </main>
       </div>

@@ -153,6 +153,11 @@
 }
 .filters-panel::-webkit-scrollbar-thumb:hover { background: var(--color-text-muted); }
 
+/* Анти-скролл фон при открытых фильтрах (десктоп) */
+@media (min-width: 769px){
+  .filters-panel { overscroll-behavior: contain; }
+}
+
 .filters-header {
   display: flex;
   justify-content: space-between;
@@ -391,7 +396,8 @@
   overflow: hidden;
   transition: max-height 220ms ease;
 }
-.category-children.open { max-height: 1000dvh; }
+/* безопасный fallback для старых браузеров */
+.category-children.open { max-height: 9999px; }
 
 .category-item.child { padding: 8px 6px; }
 
@@ -537,7 +543,7 @@
 .catalog-toolbar {
   position: sticky;
   top: calc(var(--spacing-xl));
-  z-index: 5;
+  z-index: 120; /* единый слой */
   display: grid;
   grid-template-columns: 1fr auto; /* слева — поиск, справа — контролы */
   align-items: center;
@@ -827,8 +833,9 @@
   .catalog-page { padding: var(--spacing-sm); }
   .catalog-header h1 { font-size: 1.75rem; }
 
+  /* мобильная сетка — не ломать карточки */
   .products-list-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(160px, 1fr));
     gap: var(--spacing-lg);
   }
 
@@ -910,7 +917,7 @@
 .catalog-toolbar .toolbar-left { position: relative; min-width: 0; overflow: visible; }
 .catalog-toolbar .toolbar-left > * { min-width: 0; }
 
-/* само поле: единая высота, без iOS-зума */
+*/* само поле: единая высота, без iOS-зума */
 .catalog-toolbar .toolbar-left input[type="search"],
 .catalog-toolbar .toolbar-left .search-input,
 .catalog-toolbar .toolbar-left .input {
