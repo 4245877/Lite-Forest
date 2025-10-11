@@ -804,7 +804,15 @@ const CatalogPage = () => {
           {/* Липкая панель: Поиск + Фильтры (моб) + Сортировка + Счётчик */}
           <div className="catalog-toolbar" role="region" aria-label="Панель каталога">
             <div className="toolbar-left">
-              <SearchBar onSearch={handleSearch} allProducts={products} />
+              {/* было: <SearchBar onSearch={handleSearch} allProducts={products} /> */}
+              <SearchBar
+                onSearch={handleSearch}
+                allProducts={products}
+                value={searchInput}
+                placeholder="Пошук товарів"
+                autoFocus={isMobile}
+                mobile
+              />
             </div>
             <div className="toolbar-right">
               <button
