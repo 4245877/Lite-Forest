@@ -371,6 +371,9 @@ body.no-scroll { overflow: hidden; }
     min-height: calc(100dvh - var(--header-height));
     box-shadow: 0 8px 28px rgba(0,0,0,.22);
   }
+
+  /* Полностью скрыть верхнее меню на мобиле (было и остаётся) */
+  .main-nav { display: none !important; }
 }
 
 @media (max-width: 480px) {
@@ -379,4 +382,26 @@ body.no-scroll { overflow: hidden; }
   .header-actions { gap: 0.25rem; }
   .action-btn { width: 40px; height: 40px; }
   .main-nav { width: 100vw; padding: 1.5rem; }
+}
+
+/* === Жёсткое удаление верхней кнопки меню и верхнего меню на мобиле === */
+@media (max-width: 768px) {
+  .mobile-menu-btn { display: none !important; }  /* кнопка точно скрыта */
+  .main-nav { display: none !important; }         /* меню точно скрыто */
+}
+
+/* === Спрятать дубли в хедере на мобиле (поиск, корзина, аккаунт) и уплотнить шапку === */
+@media (max-width: 768px) {
+  /* верхнее меню и бургер уже скрыты */
+  .mobile-menu-btn { display: none !important; }
+  .main-nav { display: none !important; }
+
+  /* убираем дубли действий: поиск, корзина, аккаунт */
+  .header-actions .search-btn,
+  .header-actions .cart-btn,
+  .header-actions .profile-btn { display: none !important; }
+
+  /* компактнее шапка */
+  :root { --header-height: 56px; }
+  .header-container { min-height: 56px; }
 }

@@ -16,6 +16,9 @@ const Header = () => {
   const toggleSearch = () => setIsSearchOpen(prev => !prev);
   const closeSearch = () => setIsSearchOpen(false);
 
+  // Закрывать поиск при любом переходе
+  useEffect(() => { setIsSearchOpen(false); }, [location.pathname]);
+
   // Блокировка прокрутки, если открыто меню или поиск (кроме каталога)
   useEffect(() => {
     const needLock = isMobileMenuOpen || (isSearchOpen && !isCatalog);
