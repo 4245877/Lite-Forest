@@ -532,11 +532,31 @@
 .sort-by:focus { outline: 3px solid var(--color-focus); outline-offset: 2px; }
 
 /* Сетка карточек */
+
+/* Убираем маркеры и отступы у списка карточек */
+.products-list-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.products-list-grid > li {
+  list-style: none;
+}
+.product-card-link {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+}
+
 .products-list-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: var(--spacing-3xl);
   margin-bottom: var(--spacing-4xl);
+  min-height: 40vh; /* стабильная высота */
+}
+@media (max-width: 768px) {
+  .products-list-grid { min-height: 55vh; } /* стабилизация на мобилке */
 }
 
 /* ========== ЛИПКАЯ ПАНЕЛЬ (ПОИСК + ФИЛЬТРЫ + СОРТ) ========== */
@@ -917,7 +937,7 @@
 .catalog-toolbar .toolbar-left { position: relative; min-width: 0; overflow: visible; }
 .catalog-toolbar .toolbar-left > * { min-width: 0; }
 
-*/* само поле: единая высота, без iOS-зума */
+/* само поле: единая высота, без iOS-зума */
 .catalog-toolbar .toolbar-left input[type="search"],
 .catalog-toolbar .toolbar-left .search-input,
 .catalog-toolbar .toolbar-left .input {

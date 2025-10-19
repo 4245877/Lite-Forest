@@ -439,6 +439,9 @@ const CatalogPage = () => {
     } catch (err) {
       if (err?.name === 'AbortError') return;
       setError(err?.message || 'Помилка завантаження');
+      setHasMore(false);           // жорстко глушимо автопідвантаження
+      setCursor(null);             // скидаємо курсор
+      setTotal(0);
       console.error('Помилка під час отримання товарів:', err);
     } finally {
       setIsLoading(false);
@@ -603,8 +606,20 @@ const CatalogPage = () => {
     }
     if (error) {
       return (
-        <li className="error-container">
+        <li className="error-container" aria-live="assertive">
           <p className="error">Помилка: {error}</p>
+          <button
+            className="btn btn--secondary"
+            onClick={() => {
+              setError(null);
+              setHasMore(true);
+              setCursor(null);
+              const controller = new AbortController();
+              fetchProducts('reset', controller);
+            }}
+          >
+            Повторити
+          </button>
         </li>
       );
     }
@@ -633,7 +648,7 @@ const CatalogPage = () => {
 
   // Кнопка і «сторож» (IntersectionObserver) для підвантаження
   useEffect(() => {
-    if (!sentinelRef.current || !hasMore) return;
+    if (!sentinelRef.current || !hasMore || !!error) return;
     const io = new IntersectionObserver(([e]) => {
       if (e.isIntersecting && !isLoading) {
         const controller = new AbortController();
@@ -642,7 +657,7 @@ const CatalogPage = () => {
     }, { rootMargin: '600px 0px' });
     io.observe(sentinelRef.current);
     return () => io.disconnect();
-  }, [hasMore, isLoading, cursor, searchQuery, selectedCatsForQuery, sortBy, fetchProducts]);
+  }, [hasMore, isLoading, error, cursor, searchQuery, selectedCatsForQuery, sortBy, fetchProducts]);
 
   return (
     <div className="catalog-page">
@@ -893,7 +908,7 @@ const CatalogPage = () => {
 
           <ul className="products-list-grid">
             {renderContent()}
-            {hasMore && !isLoading && (
+            {hasMore && !isLoading && !error && (
               <li className="list-load-more">
                 <button className="btn btn--secondary" onClick={() => {
                   const controller = new AbortController();
@@ -901,9 +916,11 @@ const CatalogPage = () => {
                 }}>Показати ще</button>
               </li>
             )}
-            <li aria-hidden>
-              <div ref={sentinelRef} />
-            </li>
+            {!error && (
+              <li aria-hidden>
+                <div ref={sentinelRef} />
+              </li>
+            )}
           </ul>
 
         </main>
