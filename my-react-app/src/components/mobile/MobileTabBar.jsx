@@ -1,5 +1,6 @@
+// src/components/layout/MobileTabBar.jsx
 import React, { useCallback } from 'react';
-import { NavLink, useLocation, Link } from 'react-router-dom';
+import { NavLink, useLocation } from 'react-router-dom';
 import { useCart } from '../../contexts/CartContext.jsx';
 import './mobile-tabbar.css';
 
@@ -12,10 +13,15 @@ export default function MobileTabBar() {
   const cartCount = Array.isArray(items) ? items.reduce((s, i) => s + (i.qty || 1), 0) : 0;
   const { pathname } = useLocation();
 
-  const openSearch = useCallback((e) => {
+  // Тоггл поиска: в каталоге — фокус локального поля, иначе — оверлей хедера
+  const toggleSearch = useCallback((e) => {
     e.preventDefault();
-    window.dispatchEvent(new CustomEvent('lf:openSearch'));
-  }, []);
+    if (pathname === '/catalog') {
+      window.dispatchEvent(new CustomEvent('lf:focusCatalogSearch'));
+    } else {
+      window.dispatchEvent(new CustomEvent('lf:toggleSearch'));
+    }
+  }, [pathname]);
 
   // где не показываем таббар (пример)
   const hideOn = /^\/admin\//.test(pathname);
@@ -34,13 +40,13 @@ export default function MobileTabBar() {
       </NavLink>
 
       {/* 2. Пошук */}
-      <Link to="/search" className="mtb-link" onClick={openSearch} aria-label="Пошук">
+      <button type="button" className="mtb-link" onClick={toggleSearch} aria-label="Пошук">
         <Icon>
           <circle cx="11" cy="11" r="6" />
           <path d="M20 20l-3.5-3.5" />
         </Icon>
         <span className="mtb-label">Пошук</span>
-      </Link>
+      </button>
 
       {/* 3. Кошик */}
       <NavLink to="/cart" className="mtb-link mtb-cart">
@@ -57,7 +63,7 @@ export default function MobileTabBar() {
         )}
       </NavLink>
 
-      {/* 4. Каталог (подумал за тебя) */}
+      {/* 4. Каталог */}
       <NavLink to="/catalog" className="mtb-link">
         {({ isActive }) => (
           <>

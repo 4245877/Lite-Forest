@@ -17,7 +17,9 @@ const Header = () => {
   const closeSearch = () => setIsSearchOpen(false);
 
   // Закрывать поиск при любом переходе
-  useEffect(() => { setIsSearchOpen(false); }, [location.pathname]);
+  useEffect(() => {
+    setIsSearchOpen(false);
+  }, [location.pathname]);
 
   // Блокировка прокрутки, если открыто меню или поиск (кроме каталога)
   useEffect(() => {
@@ -56,7 +58,34 @@ const Header = () => {
     if (isCatalog && isSearchOpen) setIsSearchOpen(false);
   }, [isCatalog, isSearchOpen]);
 
-  const handleNavLinkClick = () => { if (isMobileMenuOpen) setIsMobileMenuOpen(false); };
+  // Кастомные события: open/close/toggle
+  useEffect(() => {
+    const onOpen = () => {
+      if (!isCatalog) setIsSearchOpen(true);
+      else window.dispatchEvent(new CustomEvent('lf:focusCatalogSearch'));
+    };
+    const onClose = () => setIsSearchOpen(false);
+    const onToggle = () => {
+      if (isCatalog) {
+        window.dispatchEvent(new CustomEvent('lf:focusCatalogSearch'));
+      } else {
+        setIsSearchOpen(prev => !prev);
+      }
+    };
+
+    window.addEventListener('lf:openSearch', onOpen);
+    window.addEventListener('lf:closeSearch', onClose);
+    window.addEventListener('lf:toggleSearch', onToggle);
+    return () => {
+      window.removeEventListener('lf:openSearch', onOpen);
+      window.removeEventListener('lf:closeSearch', onClose);
+      window.removeEventListener('lf:toggleSearch', onToggle);
+    };
+  }, [isCatalog]);
+
+  const handleNavLinkClick = () => {
+    if (isMobileMenuOpen) setIsMobileMenuOpen(false);
+  };
 
   return (
     <header className="app-header">
@@ -97,7 +126,7 @@ const Header = () => {
         <div className="header-actions">
           <button
             className={`action-btn search-btn ${isSearchOpen ? 'active' : ''} ${isCatalog ? 'inert' : ''}`}
-            aria-label="Поиск"
+            aria-label="Пошук"
             onClick={isCatalog ? undefined : toggleSearch}
             aria-hidden={isCatalog || undefined}
             tabIndex={isCatalog ? -1 : undefined}
@@ -116,14 +145,14 @@ const Header = () => {
             </svg>
           </button>
 
-          <Link to="/cart" className="action-btn cart-btn" aria-label="Корзина">
+          <Link to="/cart" className="action-btn cart-btn" aria-label="Кошик">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-              <path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17M17 13в6a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2v-6" />
+              <path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17M17 13v6a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2v-6" />
             </svg>
             <span className="cart-count">0</span>
           </Link>
 
-          <Link to="/login" className="action-btn profile-btn" aria-label="Личный кабинет">
+          <Link to="/login" className="action-btn profile-btn" aria-label="Особистий кабінет">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
               <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
               <circle cx="12" cy="7" r="4" />
