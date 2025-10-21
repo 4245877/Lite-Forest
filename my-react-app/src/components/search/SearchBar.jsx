@@ -6,7 +6,7 @@ const MIN_LENGTH = 2;
 const RECENT_KEY = 'searchbar_recent_queries';
 const RECENT_LIMIT = 5;
 
-// Иконки (размеры управляются CSS)
+// Иконки
 const SearchIcon = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
     <circle cx="11" cy="11" r="8"></circle>
@@ -45,18 +45,18 @@ const SearchBar = ({ onSearch, allProducts, autoFocus = false, placeholder = "П
   const [recent, setRecent] = useState([]);
   const searchContainerRef = useRef(null);
   const inputRef = useRef(null);
-  const itemsRef = useRef([]); // refs для автоскролла активного пункта
+  const itemsRef = useRef([]);
   const listboxId = useId();
   const labelId = useId();
   const liveId = useId();
 
-  // мягкое появление контейнера
+  // мягкое появление
   useEffect(() => {
     const id = requestAnimationFrame(() => setMounted(true));
     return () => cancelAnimationFrame(id);
   }, []);
 
-  // recent queries init
+  // recent init
   useEffect(() => {
     try {
       const saved = JSON.parse(localStorage.getItem(RECENT_KEY) || '[]');
@@ -75,11 +75,12 @@ const SearchBar = ({ onSearch, allProducts, autoFocus = false, placeholder = "П
     });
   }, []);
 
-  // Debounced получение подсказок
+  // Debounced подсказки
   const debouncedGetSuggestions = useCallback(
     debounce((currentQuery) => {
-      if (currentQuery.trim().length >= MIN_LENGTH) {
-        const results = getSuggestions(allProducts, currentQuery);
+      const text = currentQuery.trim();
+      if (text.length >= MIN_LENGTH) {
+        const results = getSuggestions(allProducts, text);
         setSuggestions(results);
       } else {
         setSuggestions([]);
@@ -91,7 +92,17 @@ const SearchBar = ({ onSearch, allProducts, autoFocus = false, placeholder = "П
   );
 
   const hasTypedEnough = query.trim().length >= MIN_LENGTH;
-  const showRecent = !hasTypedEnough && recent.length > 0 && isOpen && !isLoading;
+
+  const showRecent = useMemo(() => {
+    return !hasTypedEnough && recent.length > 0 && isOpen && !isLoading;
+  }, [hasTypedEnough, recent.length, isOpen, isLoading]);
+
+  // количество видимых пунктов для клавиатуры
+  const visibleItemsCount = useMemo(() => {
+    const base = hasTypedEnough ? suggestions.length : showRecent ? recent.length : 0;
+    const addShowAll = query.trim().length > 0 ? 1 : 0;
+    return base + addShowAll;
+  }, [hasTypedEnough, suggestions.length, recent.length, showRecent, query]);
 
   const handleChange = (e) => {
     const newQuery = e.target.value;
@@ -109,14 +120,14 @@ const SearchBar = ({ onSearch, allProducts, autoFocus = false, placeholder = "П
     setSuggestions([]);
     setActiveIndex(-1);
     onSearch(finalQ);
-    saveRecent(finalQ);
+    if (finalQ) saveRecent(finalQ);
   };
 
   const handleClear = () => {
     setQuery('');
     setSuggestions([]);
     setActiveIndex(-1);
-    setIsOpen(true); // показать последние запросы
+    setIsOpen(true);
     inputRef.current?.focus();
   };
 
@@ -125,20 +136,14 @@ const SearchBar = ({ onSearch, allProducts, autoFocus = false, placeholder = "П
     const onDocClick = (e) => {
       if (searchContainerRef.current && !searchContainerRef.current.contains(e.target)) {
         setIsOpen(false);
+        setActiveIndex(-1);
       }
     };
     document.addEventListener('mousedown', onDocClick);
     return () => document.removeEventListener('mousedown', onDocClick);
   }, []);
 
-  // клавиатура
-  const visibleItemsCount = useMemo(() => {
-    const base = hasTypedEnough ? suggestions.length : 0;
-    // +1 под “Показать все результаты” если есть ввод или подсказки
-    const addShowAll = query.trim().length > 0 ? 1 : 0;
-    return base + addShowAll;
-  }, [hasTypedEnough, suggestions.length, query]);
-
+  // клавиатура на input
   const handleKeyDown = (e) => {
     if (!isOpen) {
       if (e.key === 'ArrowDown' && (suggestions.length || showRecent)) setIsOpen(true);
@@ -156,6 +161,8 @@ const SearchBar = ({ onSearch, allProducts, autoFocus = false, placeholder = "П
       e.preventDefault();
     }
 
+    const step = 5;
+
     if (e.key === 'ArrowDown') {
       setActiveIndex((prev) => (prev < total - 1 ? prev + 1 : 0));
     } else if (e.key === 'ArrowUp') {
@@ -164,11 +171,15 @@ const SearchBar = ({ onSearch, allProducts, autoFocus = false, placeholder = "П
       setActiveIndex(0);
     } else if (e.key === 'End') {
       setActiveIndex(total - 1);
+    } else if (e.key === 'PageDown') {
+      setActiveIndex((prev) => Math.min(total - 1, (prev < 0 ? 0 : prev) + step));
+    } else if (e.key === 'PageUp') {
+      setActiveIndex((prev) => Math.max(0, (prev < 0 ? 0 : prev) - step));
     } else if (e.key === 'Enter') {
-      // Если выделен элемент — выбрать его
       if (activeIndex > -1) {
-        // Последний элемент — это “Показать все результаты”
-        const isShowAll = activeIndex === total - 1 && query.trim().length > 0;
+        const hasShowAll = query.trim().length > 0;
+        // индекс "Показать все" — последний
+        const isShowAll = activeIndex === total - 1 && hasShowAll;
         if (isShowAll) {
           commitSearch(query);
         } else if (hasTypedEnough && suggestions[activeIndex]) {
@@ -189,12 +200,31 @@ const SearchBar = ({ onSearch, allProducts, autoFocus = false, placeholder = "П
   useEffect(() => {
     if (activeIndex < 0) return;
     const el = itemsRef.current[activeIndex];
-    if (el && el.scrollIntoView) {
-      el.scrollIntoView({ block: 'nearest' });
-    }
+    if (el && el.scrollIntoView) el.scrollIntoView({ block: 'nearest' });
   }, [activeIndex]);
 
-  // рендер элемента подсказки товара
+  // корректный aria-activedescendant
+  const activeDescendant = useMemo(() => {
+    if (activeIndex < 0) return undefined;
+    const qHas = query.trim().length > 0;
+    if (hasTypedEnough) {
+      const showAllExists = qHas;
+      if (showAllExists && activeIndex === suggestions.length) return 'showall';
+      return `suggestion-${activeIndex}`;
+    }
+    // recent
+    if (showRecent) {
+      const base = activeIndex;
+      const hasShowAll = qHas;
+      if (hasShowAll && base === recent.length) return 'showall';
+      return `recent-${base}`;
+    }
+    return undefined;
+  }, [activeIndex, hasTypedEnough, suggestions.length, recent.length, showRecent, query]);
+
+  // очистка refs перед отрисовкой списка
+  itemsRef.current = [];
+
   const renderSuggestion = (s, index) => {
     const id = `suggestion-${index}`;
     return (
@@ -209,9 +239,7 @@ const SearchBar = ({ onSearch, allProducts, autoFocus = false, placeholder = "П
         onMouseDown={(e) => e.preventDefault()}
         onClick={() => commitSearch(s.name)}
       >
-        {s.image && (
-          <img src={s.image} alt="" className={styles.thumb} loading="lazy" />
-        )}
+        {s.image && <img src={s.image} alt="" className={styles.thumb} loading="lazy" />}
         <div className={styles.itemText}>
           <div className={styles.itemTitle}>{highlightMatch(s.name, query)}</div>
           {s.price != null && <div className={styles.itemMeta}>{s.price}</div>}
@@ -220,7 +248,6 @@ const SearchBar = ({ onSearch, allProducts, autoFocus = false, placeholder = "П
     );
   };
 
-  // рендер “недавних”
   const renderRecent = (text, index) => {
     const id = `recent-${index}`;
     return (
@@ -249,13 +276,6 @@ const SearchBar = ({ onSearch, allProducts, autoFocus = false, placeholder = "П
     <div
       className={`${styles.searchContainer} ${mounted ? styles.enter : ''}`}
       ref={searchContainerRef}
-      role="combobox"
-      aria-haspopup="listbox"
-      aria-owns={listboxId}
-      aria-expanded={showList}
-      aria-controls={listboxId}
-      aria-labelledby={labelId}
-      onKeyDown={handleKeyDown}
     >
       <div id={labelId} className={styles.visuallyHidden}>Поиск товаров</div>
 
@@ -268,25 +288,35 @@ const SearchBar = ({ onSearch, allProducts, autoFocus = false, placeholder = "П
         placeholder={placeholder}
         value={query}
         onChange={handleChange}
+        onKeyDown={handleKeyDown}
+        onFocus={() => setIsOpen(true)}
         autoFocus={autoFocus}
         enterKeyHint="search"
-        aria-autocomplete="list"
-        aria-activedescendant={activeIndex > -1 ? (hasTypedEnough ? `suggestion-${activeIndex}` : `recent-${activeIndex}`) : undefined}
-        onFocus={() => setIsOpen(true)}
         inputMode="search"
         autoComplete="off"
         spellCheck={false}
+        role="combobox"
+        aria-haspopup="listbox"
+        aria-expanded={showList}
+        aria-controls={listboxId}
+        aria-labelledby={labelId}
+        aria-autocomplete="list"
+        aria-activedescendant={activeDescendant}
       />
 
       {!isLoading && query && (
-        <button className={styles.clearButton} onClick={handleClear} aria-label="Очистить поиск">
+        <button
+          type="button"
+          className={styles.clearButton}
+          onClick={handleClear}
+          aria-label="Очистить поиск"
+        >
           <ClearIcon />
         </button>
       )}
 
       {isLoading && <div className={styles.loader} aria-hidden="true"></div>}
 
-      {/* live region для анонса количества */}
       <div id={liveId} className={styles.visuallyHidden} aria-live="polite">
         {hasTypedEnough ? `Подсказок: ${suggestions.length}` : showRecent ? `Недавние запросы: ${recent.length}` : ''}
       </div>
@@ -305,7 +335,6 @@ const SearchBar = ({ onSearch, allProducts, autoFocus = false, placeholder = "П
               : recent.map((r, idx) => renderRecent(r, idx))
             }
 
-            {/* Показать все результаты (всегда, если есть какой-то ввод) */}
             {query.trim().length > 0 && (
               <li
                 id="showall"
