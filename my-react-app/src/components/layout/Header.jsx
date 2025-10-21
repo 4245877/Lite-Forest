@@ -21,12 +21,16 @@ const Header = () => {
     setIsSearchOpen(false);
   }, [location.pathname]);
 
-  // Блокировка прокрутки, если открыто меню или поиск (кроме каталога)
+  // Блокировка прокрутки и класс для убирания "шва" при открытом поиске
   useEffect(() => {
     const needLock = isMobileMenuOpen || (isSearchOpen && !isCatalog);
     document.body.classList.toggle('no-scroll', needLock);
+    document.body.classList.toggle('search-open', isSearchOpen); // <-- добавлено
     if (isMobileMenuOpen) setTimeout(() => firstNavLinkRef.current?.focus(), 120);
-    return () => document.body.classList.remove('no-scroll');
+    return () => {
+      document.body.classList.remove('no-scroll');
+      document.body.classList.remove('search-open'); // очистка
+    };
   }, [isMobileMenuOpen, isSearchOpen, isCatalog]);
 
   // Закрыть мобильное меню при переходе на десктоп
