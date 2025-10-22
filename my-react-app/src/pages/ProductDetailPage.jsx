@@ -37,6 +37,14 @@ const uaNumber = (n, opts = {}) => new Intl.NumberFormat('uk-UA', { maximumFract
 const clamp = (n, min, max) => Math.min(Math.max(n, min), max);
 const isRecord = (v) => v && typeof v === 'object' && !Array.isArray(v);
 
+// option ordering: 1) Технологія 2) Матеріал 3) інше
+function optionPriority(k){
+  const s = String(k).toLowerCase();
+  if (/технолог/i.test(s) || /technology/i.test(s) || /процес/i.test(s)) return 0;
+  if (/матер/i.test(s) || /material/i.test(s)) return 1;
+  return 2;
+}
+
 function ProductDetailPageInner() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -53,11 +61,11 @@ function ProductDetailPageInner() {
   const [qty, setQty] = useState(1);
   const [selectedOptions, setSelectedOptions] = useState({});
 
-  // simple selectors for ready-to-buy (radio)
+  // fallback (когда variants пуст)
   const colorOptionsFromProduct = Array.isArray(product?.colors) && product.colors.length
     ? product.colors
     : ['Чорний', 'Білий', 'Сірий', 'Червоний', 'Синій', 'Зелений'];
-  const materialOptions = ['PLA', 'PETG', 'TPU', 'TPE', 'TPC/Нейлон', 'ASA'];
+  const materialOptionsFallback = ['PLA', 'PETG', 'TPU', 'ASA', 'Нейлон', 'ABS-подібна смола'];
 
   const [selectedColor, setSelectedColor] = useState(null);
   const [selectedFilament, setSelectedFilament] = useState(null);
@@ -76,11 +84,11 @@ function ProductDetailPageInner() {
 
         const imageUrlAbs = assetUrl(p.image_url);
 
-        // ——— кандидатные базовые директории
+        // ——— candidate base dirs
         const baseFromMain = (() => {
           try {
             const u = new URL(imageUrlAbs, window.location.origin);
-            return `${u.origin}${u.pathname.replace(/\/[^/]*$/, '/')}`; // папка главного фото
+            return `${u.origin}${u.pathname.replace(/\/[^/]*$/, '/')}`;
           } catch {
             return '';
           }
@@ -90,19 +98,17 @@ function ProductDetailPageInner() {
         const baseFromSkuGallery = sku ? assetUrl(`/uploads/products/${sku}/gallery/`) : '';
         const bases = [baseFromMain, baseFromSkuImages, baseFromSkuGallery].filter(Boolean);
 
-        // ——— склейка имени файла с первоуспешной базой (без сетевого пробы — просто первый кандидат)
         const joinBase = (raw) => {
           if (!raw) return '';
           const s = String(raw).trim();
-          if (/^([a-z][a-z0-9+.\-]*:|\/\/|\/)/i.test(s)) return assetUrl(s); // уже абсолютный/корневой
+          if (/^([a-z][a-z0-9+.\-]*:|\/\/|\/)/i.test(s)) return assetUrl(s);
           const b = bases[0] || '';
           return assetUrl(`${String(b).replace(/\/+$/,'')}/${s.replace(/^\/+/, '')}`);
         };
 
-        // ---------- REPLACED BLOCK (images / files / videos / main) ----------
+        // ---------- normalize images / files / videos ----------
         const imgs = Array.isArray(p.images)
           ? p.images.filter(Boolean).map((im) => {
-              // Поддержка string и object
               if (typeof im === 'string') {
                 const u = assetUrl(im);
                 return { url: u, thumb_url: u, role: 'gallery' };
@@ -115,7 +121,6 @@ function ProductDetailPageInner() {
             }).filter(Boolean)
           : [];
 
-        // Файлы/відео как было
         const files = Array.isArray(p.files)
           ? p.files.map(f => {
               const raw = pick(f.url, f.path, f.src, f.filename, f.name);
@@ -132,18 +137,15 @@ function ProductDetailPageInner() {
 
         const image_url = imageUrlAbs;
 
-        // Фолбек: если нет галереи, но есть главное фото — добавим его как первый элемент
         const imagesNormalized = imgs.length ? imgs
           : (image_url ? [{ url: image_url, thumb_url: image_url, role: 'primary' }] : []);
 
         setProduct({ ...p, images: imagesNormalized, files, videos, image_url });
 
-        // Выставляем обложку: приоритет primary → первый из галереи → image_url
         const primary = imagesNormalized.find(g => g && g.role === 'primary') ?? imagesNormalized[0] ?? null;
         setMainImage(primary?.url ?? image_url ?? null);
-        // ---------- END REPLACED BLOCK ----------
 
-        // seed option selection from variants
+        // seed options from first variant
         const firstVariant = Array.isArray(p.variants) && p.variants.length ? p.variants[0] : null;
         const init = firstVariant?.options ? { ...firstVariant.options } : {};
         setSelectedOptions(init);
@@ -156,14 +158,13 @@ function ProductDetailPageInner() {
     return () => { alive = false; };
   }, [id]);
 
-  // ——— derived data (NO hooks to avoid hook-order issues) ———
+  // ——— derived data ———
   const gallery = Array.isArray(product?.images) ? product.images.filter(Boolean) : [];
-  // Переименовано, чтобы не перекрывать videos из нормализации
   const videosView = Array.isArray(product?.videos) ? product.videos : (product?.video_url ? [{ url: product.video_url }] : []);
   const models3d = Array.isArray(product?.files) ? product.files.filter(f => ['model3d', '3d', 'gltf', 'glb'].includes(String(f.role).toLowerCase())) : [];
   const has3d = models3d.length > 0 && models3d.some(m => /(gltf|glb)$/i.test(m.url || ''));
 
-  // Load <model-viewer> script once when 3D is present
+  // Load <model-viewer> script once
   useEffect(() => {
     if (!has3d) return;
     if (document.querySelector('script[src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"]')) return;
@@ -171,7 +172,7 @@ function ProductDetailPageInner() {
     s.src = 'https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js';
     s.async = true;
     document.body.appendChild(s);
-    return () => { /* keep script */ };
+    return () => {};
   }, [has3d]);
 
   // variants
@@ -181,6 +182,11 @@ function ProductDetailPageInner() {
     variants.forEach(v => Object.keys(v.options || {}).forEach(k => keys.add(k)));
     return Array.from(keys);
   })();
+  const orderedOptionKeys = [...optionKeys].sort((a,b) => {
+    const pa = optionPriority(a), pb = optionPriority(b);
+    if (pa !== pb) return pa - pb;
+    return String(a).localeCompare(String(b),'uk');
+  });
   const optionValues = (() => {
     const map = {};
     optionKeys.forEach(k => { map[k] = new Set(); });
@@ -217,7 +223,7 @@ function ProductDetailPageInner() {
   const leadDays = activeVariant?.lead_time_days ?? product?.lead_time_days;
   const availability = (Number(stock) > 0) ? 'in-stock' : (leadDays ? 'made-to-order' : 'out-of-stock');
 
-  // choose cover (always through assetUrl with fallback)
+  // cover
   const cover = assetUrl(
     mainImage
     ?? gallery[0]?.url
@@ -235,16 +241,22 @@ function ProductDetailPageInner() {
   );
   if (!product) return <div className="container"><p>Товар не знайдено.</p></div>;
 
-  // ——— cart actions (stubs) ———
-  const activeColor = selectedColor ?? (colorOptionsFromProduct[0] ?? '');
-  const activeFilament = selectedFilament ?? materialOptions[0];
+  // availability checks for options
+  function isChoiceAvailable(key, val){
+    const next = { ...selectedOptions, [key]: val };
+    return variants.some(v => {
+      const opts = v.options || {};
+      return Object.entries(next).every(([k, vv]) => vv == null || String(opts[k]) === String(vv));
+    });
+  }
 
+  // cart actions
   function addToCart() {
-    const extra =
-      [activeColor ? `Колір: ${activeColor}` : null, activeFilament ? `Матеріал: ${activeFilament}` : null]
-        .filter(Boolean)
-        .join(' • ');
-    alert(`Додано до кошика: ${product.name || product.sku} × ${qty}${extra ? `\n${extra}` : ''}`);
+    const selectionSummary = (orderedOptionKeys.length
+      ? orderedOptionKeys.map(k => selectedOptions[k] && `${k}: ${selectedOptions[k]}`).filter(Boolean).join(' • ')
+      : [selectedColor ? `Колір: ${selectedColor}` : null, selectedFilament ? `Матеріал: ${selectedFilament}` : null].filter(Boolean).join(' • ')
+    );
+    alert(`Додано до кошика: ${product.name || product.sku} × ${qty}${selectionSummary ? `\n${selectionSummary}` : ''}`);
   }
   function buyNow() { addToCart(); }
   function updateOption(k, v) { setSelectedOptions((s) => ({ ...s, [k]: v })); }
@@ -279,16 +291,26 @@ function ProductDetailPageInner() {
   const licenseInfo = isRecord(rawLicense) ? rawLicense : null;
   const licenseText = !licenseInfo && rawLicense ? String(rawLicense) : null;
 
-  // print settings (materials map)
+  // print settings (supports nested per process → material)
   const rawPrintSettings = product?.print_settings || product?.printing_params || null;
-  const printSettings = isRecord(rawPrintSettings) ? rawPrintSettings : null; // { PLA: {...}, PETG: {...} }
+  const printSettings = isRecord(rawPrintSettings) ? rawPrintSettings : null;
   const printSettingsNote = !printSettings && rawPrintSettings ? String(rawPrintSettings) : null;
 
   // specs convenience
   const dims = isRecord(product?.dimensions) ? product.dimensions : (isRecord(product?.size) ? product.size : null);
   const weight = product?.weight_g ?? product?.weight;
 
+  // selection summary for UI/SEO
+  const selectedMaterialKey = orderedOptionKeys.find(k => /матер/i.test(String(k)) || /material/i.test(String(k)));
+  const selectedTechnologyKey = orderedOptionKeys.find(k => /технолог/i.test(String(k)) || /technology/i.test(String(k)) || /процес/i.test(String(k)));
+  const selectedMaterialVal = selectedMaterialKey ? selectedOptions[selectedMaterialKey] : null;
+  const selectedTechnologyVal = selectedTechnologyKey ? selectedOptions[selectedTechnologyKey] : null;
+  const materialsCell = product?.materials
+    ? (Array.isArray(product.materials) ? product.materials.join(', ') : String(product.materials))
+    : ([selectedTechnologyVal, selectedMaterialVal].filter(Boolean).join(' · ') || null);
+
   // JSON-LD structured data
+  const selectedSummaryForJsonLd = [selectedTechnologyVal, selectedMaterialVal].filter(Boolean).join(' · ');
   const jsonLd = {
     '@context': 'https://schema.org/',
     '@type': 'Product',
@@ -297,6 +319,7 @@ function ProductDetailPageInner() {
     image: gallery.map(g => assetUrl(g?.url)).filter(Boolean).slice(0, 10),
     description: product.short_description || product.description,
     brand: product.brand ? { '@type': 'Brand', name: product.brand } : undefined,
+    material: selectedSummaryForJsonLd || undefined,
     aggregateRating: rating ? { '@type': 'AggregateRating', ratingValue: String(rating), reviewCount: String(ratingCount || 1) } : undefined,
     offers: {
       '@type': 'Offer',
@@ -307,6 +330,20 @@ function ProductDetailPageInner() {
     }
   };
 
+  // flatten print settings rows
+  const printRows = (() => {
+    if (!printSettings) return [];
+    const rows = [];
+    for (const [k, v] of Object.entries(printSettings)) {
+      if (isRecord(v)) {
+        for (const [mat, cfg] of Object.entries(v)) rows.push([`${k} · ${mat}`, cfg]);
+      } else {
+        rows.push([k, v]);
+      }
+    }
+    return rows.length ? rows : Object.entries(printSettings);
+  })();
+
   return (
     <div className="product-detail container">
       {/* ——— Breadcrumbs ——— */}
@@ -314,10 +351,10 @@ function ProductDetailPageInner() {
         <Link to="/catalog">Каталог</Link>
         {breadcrumbs.map((b, i) => (
           <span key={i}>
-            <span aria-hidden>›</span> <Link to={b.url}>{b.name}</Link>
+            <span aria-hidden="true">›</span> <Link to={b.url}>{b.name}</Link>
           </span>
         ))}
-        <span aria-hidden>›</span> <span>{product.name ?? product.sku}</span>
+        <span aria-hidden="true">›</span> <span>{product.name ?? product.sku}</span>
       </nav>
 
       <div className="pd-grid">
@@ -331,7 +368,11 @@ function ProductDetailPageInner() {
 
           {activeMediaTab === 'photos' && (
             <>
-              <div className="pd-cover">
+              {/* — Main Cover Image — */}
+              <div
+                className="pd-cover"
+                style={{ '--cover-url': `url("${cover}")` }}
+              >
                 <img
                   src={cover}
                   alt={gallery.find(g=>g?.url===cover)?.alt || product.name || product.sku}
@@ -455,19 +496,37 @@ function ProductDetailPageInner() {
               {availability === 'made-to-order' && `Під замовлення${leadDays ? ` • виготовлення ${leadDays} дн.` : ''}`}
               {availability === 'out-of-stock' && 'Тимчасово недоступно'}
             </div>
+            {orderedOptionKeys.length > 0 && (
+              <div className="pd-selected muted" aria-live="polite">
+                {[selectedTechnologyVal && `Технологія: ${selectedTechnologyVal}`,
+                  selectedMaterialVal && `Матеріал: ${selectedMaterialVal}`]
+                  .filter(Boolean).join(' • ')}
+              </div>
+            )}
           </div>
 
           {/* ——— variants ——— */}
-          {!!optionKeys.length && (
+          {!!orderedOptionKeys.length && (
             <div className="pd-variants">
-              {optionKeys.map((k) => (
+              {orderedOptionKeys.map((k) => (
                 <div key={k} className="pd-variant">
                   <div className="label">{k}:</div>
                   <div className="choices" role="group" aria-label={k}>
                     {optionValues[k].map((v) => {
                       const active = String(selectedOptions[k]) === String(v);
+                      const enabled = isChoiceAvailable(k, v);
                       return (
-                        <button key={v} className={`choice ${active ? 'active' : ''}`} onClick={() => updateOption(k, v)}>{v}</button>
+                        <button
+                          key={v}
+                          className={`choice ${active ? 'active' : ''}`}
+                          disabled={!enabled}
+                          onClick={() => enabled && updateOption(k, v)}
+                          aria-pressed={active}
+                          aria-disabled={!enabled}
+                          title={!enabled ? 'Недоступна комбінація' : String(v)}
+                        >
+                          {v}
+                        </button>
                       );
                     })}
                   </div>
@@ -487,52 +546,52 @@ function ProductDetailPageInner() {
             </button>
           </div>
 
-          {/* ——— REPLACED CONTACT WITH RADIO SELECTORS ——— */}
-          <div className="pd-aux-actions">
-            {/* Колір */}
-            <div className="pd-variant">
-              <div className="label">Колір:</div>
-              <div className="choices" role="radiogroup" aria-label="Колір">
-                {colorOptionsFromProduct.map((c) => (
-                  <label key={c} className={`choice ${activeColor === c ? 'active' : ''}`}>
-                    <input
-                      type="radio"
-                      name="color"
-                      value={c}
-                      checked={activeColor === c}
-                      onChange={() => setSelectedColor(c)}
-                    />
-                    <span>{c}</span>
-                  </label>
-                ))}
+          {/* ——— Fallback radios when no variants ——— */}
+          {!orderedOptionKeys.length && (
+            <div className="pd-aux-actions">
+              <div className="pd-variant">
+                <div className="label">Колір:</div>
+                <div className="choices" role="radiogroup" aria-label="Колір">
+                  {colorOptionsFromProduct.map((c) => (
+                    <label key={c} className={`choice ${selectedColor === c ? 'active' : ''}`}>
+                      <input
+                        type="radio"
+                        name="color"
+                        value={c}
+                        checked={selectedColor === c}
+                        onChange={() => setSelectedColor(c)}
+                      />
+                      <span>{c}</span>
+                    </label>
+                  ))}
+                </div>
               </div>
-            </div>
 
-            {/* Матеріал (філамент) */}
-            <div className="pd-variant">
-              <div className="label">Матеріал (філамент):</div>
-              <div className="choices" role="radiогroup" aria-label="Матеріал (філамент)">
-                {materialOptions.map((m) => (
-                  <label key={m} className={`choice ${activeFilament === m ? 'active' : ''}`}>
-                    <input
-                      type="radio"
-                      name="filament"
-                      value={m}
-                      checked={activeFilament === m}
-                      onChange={() => setSelectedFilament(m)}
-                    />
-                    <span>{m}</span>
-                  </label>
-                ))}
+              <div className="pd-variant">
+                <div className="label">Матеріал:</div>
+                <div className="choices" role="radiogroup" aria-label="Матеріал">
+                  {materialOptionsFallback.map((m) => (
+                    <label key={m} className={`choice ${selectedFilament === m ? 'active' : ''}`}>
+                      <input
+                        type="radio"
+                        name="material"
+                        value={m}
+                        checked={selectedFilament === m}
+                        onChange={() => setSelectedFilament(m)}
+                      />
+                      <span>{m}</span>
+                    </label>
+                  ))}
+                </div>
               </div>
-            </div>
 
-            {digitalFile && (
-              <a className="btn-ghost" href={assetUrl(digitalFile.url)} download>
-                Завантажити цифровий файл{digitalFile.license ? ` • ${digitalFile.license}` : ''}
-              </a>
-            )}
-          </div>
+              {digitalFile && (
+                <a className="btn-ghost" href={assetUrl(digitalFile.url)} download>
+                  Завантажити цифровий файл{digitalFile.license ? ` • ${digitalFile.license}` : ''}
+                </a>
+              )}
+            </div>
+          )}
 
           {product.short_description && (
             <div className="pd-shortdesc">
@@ -573,12 +632,12 @@ function ProductDetailPageInner() {
                   {typeof weight !== 'undefined' && (
                     <tr><th>Маса виробу</th><td>{uaNumber(weight)} г</td></tr>
                   )}
-                  {product.materials && (
-                    <tr><th>Матеріал(и)</th><td>{Array.isArray(product.materials) ? product.materials.join(', ') : String(product.materials)}</td></tr>
+                  {(product.materials || materialsCell) && (
+                    <tr><th>Матеріал(и)</th><td>{product.materials ? (Array.isArray(product.materials) ? product.materials.join(', ') : String(product.materials)) : materialsCell}</td></tr>
                   )}
                   {product.printer_type && (<tr><th>Тип принтера</th><td>{product.printer_type}</td></tr>)}
                   {product.layer_height_mm && (<tr><th>Товщина шару</th><td>{product.layer_height_mm} мм</td></tr>)}
-                  {product.infill_percent && (<tr><th>Заповнення</th><td>{product.infill_percent}% {product.infill_pattern ? `• ${product.infill_pattern}` : ''}</td></tr>)}
+                  {product.infill_percent && (<tr><th>Заповнення</th><td>{product.infill_percent}% {product.infill_pattern ? `• {product.infill_pattern}` : ''}</td></tr>)}
                   {product.tolerance_mm && (<tr><th>Точність / допуски</th><td>±{product.tolerance_mm} мм</td></tr>)}
                   {product.supports_required != null && (<tr><th>Підтримки</th><td>{product.supports_required ? 'Потрібні' : 'Не потрібні'}</td></tr>)}
                   {product.post_processing && (<tr><th>Постобробка</th><td>{product.post_processing}</td></tr>)}
@@ -613,7 +672,7 @@ function ProductDetailPageInner() {
                     </tr>
                   </thead>
                   <tbody>
-                    {Object.entries(printSettings).map(([mat, cfg]) => (
+                    {printRows.map(([mat, cfg]) => (
                       <tr key={mat}>
                         <td>{mat}</td>
                         <td>{cfg?.nozzle_temp ?? cfg?.nozzle ?? '-'}</td>
