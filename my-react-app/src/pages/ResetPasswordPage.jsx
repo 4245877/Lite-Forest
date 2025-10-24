@@ -61,11 +61,11 @@ const ResetPasswordPage = () => {
     if (!emailValid) { setErr('Введи коректний email'); return; }
     setErr(''); setOk(''); setSending(true);
     try{
-      const res = await fetch('/api/auth/send-code', {
+      const res = await fetch('/api/auth/password/send-code', {
         method:'POST',
         headers:{'Content-Type':'application/json'},
         credentials:'include',
-        body: JSON.stringify({ email, purpose:'reset' }) // [Непідтверджено]: поле purpose на бекенді
+        body: JSON.stringify({ email })
       });
       if(!res.ok) throw new Error(await readError(res));
       setCode(''); setCodeSent(true); setLeft(60);
@@ -78,11 +78,11 @@ const ResetPasswordPage = () => {
     if (left > 0 || resending) return;
     setResending(true); setErr(''); setOk('');
     try{
-      const res = await fetch('/api/auth/send-code', {
+      const res = await fetch('/api/auth/password/send-code', {
         method:'POST',
         headers:{'Content-Type':'application/json'},
         credentials:'include',
-        body: JSON.stringify({ email, purpose:'reset' })
+        body: JSON.stringify({ email })
       });
       if(!res.ok) throw new Error(await readError(res));
       setLeft(60);
@@ -99,7 +99,7 @@ const ResetPasswordPage = () => {
     if (!pwdMatch) { setErr('Паролі не співпадають'); return; }
     setErr(''); setOk('');
     try{
-      const res = await fetch('/api/auth/reset-password', {
+      const res = await fetch('/api/auth/password/confirm', {
         method:'POST',
         headers:{'Content-Type':'application/json'},
         credentials:'include',

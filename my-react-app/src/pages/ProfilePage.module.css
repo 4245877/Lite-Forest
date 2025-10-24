@@ -1,6 +1,6 @@
-/* Базовая сетка страницы кабинета */
+/* Базовая сетка */
 .container {
-  padding: 24px;
+  padding: var(--spacing-2xl);
   max-width: 1200px;
   margin: 0 auto;
   box-sizing: border-box;
@@ -12,89 +12,150 @@
   gap: 12px;
   margin-bottom: 18px;
 }
-.title {
-  font-size: 28px;
-  margin: 0;
-}
-.smallNote {
-  color: #666;
-  font-size: 14px;
-}
+.title { font-size: 28px; margin: 0; }
+.smallNote { color: var(--color-text-secondary); font-size: 14px; }
+
 .grid {
   display: grid;
-  grid-template-columns: 260px 1fr;
-  gap: 24px;
+  grid-template-columns: 280px 1fr;
+  gap: var(--spacing-2xl);
 }
+
+/* Сайдбар */
 .sidebar {
-  background: #fff;
-  border: 1px solid #eee;
-  padding: 16px;
-  border-radius: 8px;
+  position: sticky;
+  top: 16px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-light);
+  padding: var(--spacing-xl);
+  border-radius: var(--radius-lg);
   height: fit-content;
+  box-shadow: var(--shadow-sm);
 }
 .userCard {
   display: flex;
-  gap: 12px;
+  gap: var(--spacing-md);
   align-items: center;
-  margin-bottom: 12px;
+  margin-bottom: var(--spacing-md);
 }
 .avatar {
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  width: 56px; height: 56px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
   background: #e8f5ea;
-  font-weight: 700;
-  color: #2b6a3a;
+  font-weight: 700; color: #2b6a3a;
 }
-.userInfo {
-  font-size: 14px;
-}
+.userInfo { font-size: 14px; }
 .userName { font-weight: 600; }
-.userEmail { color: #666; font-size: 13px; }
+.userEmail { color: var(--color-text-secondary); font-size: 13px; }
+
 .menu { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
 .menuItem, .menuItemLink {
   padding: 10px 12px;
-  border-radius: 6px;
+  border-radius: var(--radius-md);
   background: transparent;
   border: none;
   text-align: left;
   cursor: pointer;
   font-size: 14px;
-  color: #222;
+  color: var(--color-text-primary);
   text-decoration: none;
 }
 .menuItem:hover, .menuItemLink:hover { background: #f6f6f6; }
-.active { background: #eaf5ec; }
+.active { background: #eaf5ec; border: 1px solid #d7efe0; }
+.logout { color: #9b1c1c; }
 
-.main {
-  min-height: 400px;
-}
-.section { margin-bottom: 18px; }
-.sectionTitle { font-size: 18px; margin-bottom: 8px; }
+/* Контент */
+.main { min-height: 400px; }
+
+.section { margin-bottom: var(--spacing-xl); }
+.sectionTitle { font-size: 18px; margin: 0 0 8px 0; }
+
 .card {
-  border: 1px solid #eee;
-  padding: 12px;
-  border-radius: 8px;
-  background: #fff;
-  margin-bottom: 12px;
+  border: 1px solid var(--color-border-light);
+  padding: var(--spacing-lg);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  margin-bottom: var(--spacing-md);
+  box-shadow: var(--shadow-sm);
 }
-.linkBtn { display: inline-block; margin-top: 8px; padding: 8px 12px; border-radius: 6px; background: #2b8a3e; color: white; text-decoration: none; }
-.actionsRow { display: flex; gap: 8px; margin-top: 8px; }
-.action { padding: 8px 10px; border-radius: 6px; background: #f3f3f3; text-decoration: none; }
+.cardTitle { margin: 0 0 8px 0; font-size: 16px; }
+.cardText { margin: 0; color: var(--color-text-secondary); }
 
+.btnPrimary {
+  display: inline-block;
+  margin-top: 10px;
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  background: var(--gradient-primary);
+  color: #fff; text-decoration: none; font-weight: 600;
+  box-shadow: var(--shadow-sm);
+}
+.linkInline { color: var(--color-secondary); text-decoration: underline; }
+
+.actionsRow { display: flex; gap: var(--spacing-sm); margin-top: 8px; }
+.action {
+  padding: 8px 10px; border-radius: var(--radius-md);
+  background: #f3f3f3; text-decoration: none; color: var(--color-text-primary);
+}
+
+/* Заказы */
 .ordersList { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
-.orderItem { border: 1px solid #eee; padding: 10px; border-radius: 8px; background: #fff; }
+.orderItem {
+  border: 1px solid var(--color-border-light);
+  padding: var(--spacing-md);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+}
 .orderHead { display:flex; justify-content: space-between; margin-bottom: 6px; }
+.orderDate { color: var(--color-text-secondary); }
 .orderFoot { display:flex; gap: 12px; align-items: center; }
-.status { padding: 4px 8px; border-radius: 6px; background: #f0f0f0; font-size: 13px; }
-.btnSmall { margin-left: auto; text-decoration: none; padding: 6px 10px; border-radius: 6px; background: #f6f6f6; }
+.orderSum { font-weight: 600; }
+.status {
+  padding: 4px 8px; border-radius: var(--radius-md);
+  font-size: 13px; background: #f0f0f0;
+}
+.statusNeutral { background: #eef6f0; color: #245b38; }
 
-/* Responsive */
+.btnSmall {
+  margin-left: auto; text-decoration: none;
+  padding: 6px 10px; border-radius: var(--radius-md);
+  background: #f6f6f6; color: var(--color-text-primary);
+}
+
+/* Пустые состояния */
+.empty {
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-xl);
+  text-align: center;
+  background: var(--color-surface);
+}
+.emptyTitle { font-weight: 700; margin-bottom: 4px; }
+.emptyText { color: var(--color-text-secondary); margin-bottom: 10px; }
+
+/* Скелетоны при загрузке */
+.skeletonGrid {
+  display: grid; grid-template-columns: 280px 1fr; gap: var(--spacing-2xl);
+}
+.skeletonCard, .skeletonMain {
+  background: linear-gradient(90deg, #eee 25%, #f7f7f7 37%, #eee 63%);
+  background-size: 400% 100%;
+  animation: shimmer 1.2s infinite;
+  border-radius: var(--radius-lg);
+  min-height: 120px;
+}
+.skeletonCard { height: 220px; }
+.skeletonMain { height: 360px; }
+@keyframes shimmer {
+  0% { background-position: 100% 0; }
+  100% { background-position: -100% 0; }
+}
+
+/* Адаптив */
 @media (max-width: 880px) {
   .grid { grid-template-columns: 1fr; }
-  .sidebar { order: 2; }
+  .sidebar { position: static; order: 2; }
   .main { order: 1; }
+  .skeletonGrid { grid-template-columns: 1fr; }
 }
