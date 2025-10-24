@@ -12,11 +12,12 @@ import ContactPage from '../pages/ContactPage';
 import AdminProducts from '../pages/AdminProducts';
 import LegalPages from '../pages/LegalPages';
 import ProductDetailPage from '../pages/ProductDetailPage';
+import ProfilePage from '../pages/ProfilePage';
+import ResetPasswordPage from '../pages/ResetPasswordPage';
 
 const AppRouter = () => {
   return (
     <Routes>
-      {/* Вся публичная часть сайта под общим лейаутом */}
       <Route element={<Layout />}>
         <Route index element={<HomePage />} />
         <Route path="catalog" element={<CatalogPage />} />
@@ -28,16 +29,19 @@ const AppRouter = () => {
         <Route path="products/:id" element={<ProductDetailPage />} />
         <Route path="legal" element={<LegalPages />} />
 
-        {/* Редиректы на якоря */}
+        {/* новые */}
+        <Route path="profile" element={<ProfilePage />} />
+        <Route path="reset" element={<ResetPasswordPage />} />
+
+        {/* редиректы на якоря */}
         <Route path="privacy" element={<Navigate to="/legal#privacy" replace />} />
         <Route path="terms"   element={<Navigate to="/legal#terms" replace />} />
         <Route path="cookies" element={<Navigate to="/legal#cookies" replace />} />
 
-        {/* Админ, если нужен — можно обернуть в RequireAuth */}
+        {/* админ */}
         <Route path="admin/products" element={<AdminProducts />} />
       </Route>
 
-      {/* fallback */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

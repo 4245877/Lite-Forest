@@ -254,7 +254,13 @@ const LoginForm = ({ onToggleForm }) => {
       </div>
 
       <div className={styles.linkGroup}>
-        <a href="#" className={styles.formLink} onClick={(e)=>e.preventDefault()}>Забули пароль?</a>
+        <button
+          type="button"
+          className={styles.formLink}
+          onClick={() => navigate('/reset')}
+        >
+          Забули пароль?
+        </button>
       </div>
 
       <button type="submit" className={styles.submitButton} disabled={!isFormValid || loading}>
