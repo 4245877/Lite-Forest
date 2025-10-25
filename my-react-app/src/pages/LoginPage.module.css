@@ -399,3 +399,20 @@
   text-align: center;
   margin-bottom: 1.5rem;
 }
+
+/* — мобильно-безопасная высота страницы без «хвоста» — */
+.loginPage{
+  /* заполняем экран минус хедер */
+  min-height: calc(100svh - var(--header-height));
+  min-height: calc(100dvh - var(--header-height));
+  /* запас для iOS safe area */
+  padding-bottom: max(16px, env(safe-area-inset-bottom));
+}
+
+/* убираем спурию перед футером */
+.loginPage > *:last-child{ margin-bottom: 0 !important; }
+
+/* внутри формы последний элемент без нижнего отступа */
+.formContainer > *:last-child,
+.formPanel > *:last-child,
+form > *:last-child{ margin-bottom: 0 !important; }

@@ -255,3 +255,9 @@ body.no-scroll, .no-scroll { overflow: hidden; }
   .action-btn { width: 40px; height: 40px; }
   .main-nav { width: 100vw; padding: 1.5rem; }
 }
+
+/* фон страницы, чтобы при инерционной прокрутке не мелькал белый */
+html, body { background: var(--color-surface, #fff); }
+
+/* если страница внутри <main>, тоже сняем «ступеньку» */
+main > *:last-child { margin-bottom: 0 !important; }
