@@ -17,7 +17,10 @@
   top: 0;
   z-index: 30; /* ниже поиска (z:120), выше контента */
   background: linear-gradient(135deg, var(--color-sand) 0%, rgba(241, 250, 238, 0.95) 100%);
+  -webkit-backdrop-filter: blur(10px);
   backdrop-filter: blur(10px);
+  will-change: transform;
+  transform: translateZ(0);
   border-bottom: 1px solid rgba(82, 183, 136, 0.2);
   box-shadow: var(--shadow-sm);
   background-image:
@@ -225,6 +228,8 @@ body.no-scroll, .no-scroll { overflow: hidden; }
     border-top: 0;
     border-radius: 0;
     padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+    /* было: min-height: calc(100dvh - var(--header-height)); */
+    min-height: calc(100svh - var(--header-height));
     min-height: calc(100dvh - var(--header-height));
     box-shadow: 0 8px 28px rgba(0,0,0,.22);
     max-width: none;

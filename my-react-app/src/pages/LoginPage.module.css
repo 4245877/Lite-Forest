@@ -196,13 +196,27 @@
   box-shadow: none;
 }
 
+/* ссылка-кнопка без обводки и с видимым фокусом через подчёркивание */
 .formLink {
   color: var(--color-primary);
   text-decoration: none;
   font-weight: 500;
+
+  /* сброс стилей кнопки */
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  cursor: pointer;
 }
 
-.formLink:hover {
+.formLink:hover { text-decoration: underline; }
+
+/* убираем рамку при фокусе у button и сохраняем видимость фокуса */
+.formLink:focus-visible {
+  outline: none;
+  box-shadow: none;
   text-decoration: underline;
 }
 
