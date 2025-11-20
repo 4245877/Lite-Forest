@@ -84,11 +84,17 @@ img, picture, video, canvas, svg { display: block; max-width: 100%; }
 input, button, textarea, select { font: inherit; }
 button { cursor: pointer; }
 a { color: inherit; text-decoration: none; }
-a:focus-visible, button:focus-visible, input:focus-visible, [tabindex]:focus-visible {
-  outline: 3px solid rgba(27, 127, 204, .4);
+
+/* Використовуємо змінну для консистентності */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+[tabindex]:focus-visible {
+  outline: 3px solid var(--color-focus); /* ВИПРАВЛЕНО */
   outline-offset: 2px;
   border-radius: 8px;
 }
+
 @media (prefers-reduced-motion: reduce) {
   html:focus-within { scroll-behavior: auto; }
   *, *::before, *::after {
@@ -106,7 +112,21 @@ a:focus-visible, button:focus-visible, input:focus-visible, [tabindex]:focus-vis
   clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
 }
 
-/* безпечні інпут-поля для мобільних */
+/* ГЛОБАЛЬНИЙ ВІДСТУП ДЛЯ КОНТЕНТУ ПІД МОБІЛЬНЕ МЕНЮ */
 @media (max-width: 768px) {
-  body { background-color: var(--color-background); }
+  body { 
+    background-color: var(--color-background);
+    /* Додаємо змінну висоти меню сюди, щоб використовувати в розрахунках */
+    --mobile-tabbar-h: 64px; 
+  }
+  
+  /* Це гарантує, що низ сторінки не буде перекритий фіксованим меню */
+  #root {
+    padding-bottom: calc(var(--mobile-tabbar-h) + env(safe-area-inset-bottom));
+  }
+  
+  /* Якщо використовуєш footer, можна додати йому відступ знизу */
+  .app-footer {
+    margin-bottom: calc(var(--mobile-tabbar-h) + env(safe-area-inset-bottom));
+  }
 }

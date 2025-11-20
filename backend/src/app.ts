@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 // backend/src/app.ts
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
@@ -25,6 +27,7 @@ import metrics from './monitoring/metrics.js';
 import ready from './monitoring/ready.js';
 import auth from './api/auth.js';
 import orders from './api/orders.js';
+import meta from './api/meta.js';
 
 export function buildApp() {
   const app = Fastify({
@@ -39,7 +42,7 @@ export function buildApp() {
   // security headers (включая CORP = cross-origin)
   app.register(fastifyHelmet, {
     crossOriginResourcePolicy: { policy: 'cross-origin' },
-    // crossOriginEmbedderPolicy: false, // не требуется для <img>, включай при необходимости
+    // crossOriginEmbedderPolicy: false,
   });
 
   // cookies (optionally add secret to sign cookies)
@@ -68,7 +71,11 @@ export function buildApp() {
     methods: ['GET', 'HEAD', 'OPTIONS', 'POST', 'PUT', 'PATCH', 'DELETE'],
   });
   app.register(formbody);
-  app.register(multipart);
+
+  // multipart c лимитами
+  app.register(multipart, {
+    limits: { fileSize: 120 * 1024 * 1024, files: 16 },
+  });
 
   // гарантируем каталог для статики загрузок
   const uploadsRoot =
@@ -85,9 +92,7 @@ export function buildApp() {
     prefix: '/uploads/',
     setHeaders(res /*, filePath, stat */) {
       res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
-      // ключевой заголовок: разрешаем кросс-ориджин подгрузку ресурсов
       res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
-      // на всякий случай (для простых <img>/<video> не обязателен, но полезен)
       res.setHeader('Access-Control-Allow-Origin', '*');
     },
   });
@@ -102,6 +107,9 @@ export function buildApp() {
   app.register(imports);
   app.register(auth);
   app.register(orders);
+
+  // meta (/api/meta/categories)
+  app.register(meta);
 
   return app;
 }

@@ -3,30 +3,23 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "tsx src/cli.ts",
-    "worker": "tsx src/queue.worker.ts",
-    "csv": "tsx src/cli.ts csv",
-    "url": "tsx src/cli.ts url"
+    "dev": "tsx src/server.ts",
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/server.js"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.676.0",
-    "bullmq": "^5.12.0",
-    "dotenv": "^16.4.5",
-    "fast-csv": "^5.0.1",
-    "file-type": "^18.5.0",
-    "fs-extra": "^11.3.2",
-    "got": "^14.4.1",
-    "ioredis": "^5.4.1",
-    "js-yaml": "^4.1.0",
-    "knex": "^3.1.0",
-    "pg": "^8.16.3",
-    "yargs": "^17.7.2"
+    "@fastify/cors": "^8.5.0",
+    "@fastify/http-proxy": "^9.5.0",
+    "@fastify/multipart": "^7.7.3",
+    "fast-csv": "^5.0.5",
+    "fastify": "^4.29.1",
+    "fastify-plugin": "^4.5.1",
+    "yargs": "^18.0.0"
   },
   "devDependencies": {
-    "@types/js-yaml": "^4.0.9",
-    "@types/node": "^24.6.2",
-    "@types/yargs": "^17.0.33",
-    "tsx": "^4.19.2",
-    "typescript": "^5.6.3"
+    "@types/node": "^20.19.24",
+    "@types/yargs": "^17.0.34",
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.3"
   }
 }

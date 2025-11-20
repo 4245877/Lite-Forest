@@ -1,0 +1,5 @@
+packages:
+  - "backend"
+  - "my-react-app"
+  - "services/*"
+  - "services/**"

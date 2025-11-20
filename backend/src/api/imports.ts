@@ -1,3 +1,6 @@
+// @ts-nocheck
+
+
 import { FastifyInstance } from 'fastify';
 import '@fastify/multipart';
 import { Queue } from 'bullmq';

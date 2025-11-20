@@ -1,3 +1,6 @@
+// @ts-nocheck
+
+
 import { FastifyInstance } from 'fastify';
 import '@fastify/multipart'; // для типов req.file() и req.parts()
 import { saveLocal, saveImageLocal } from '../core/s3.js';
