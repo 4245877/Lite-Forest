@@ -3,104 +3,102 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import styles from './HomePage.module.css';
 
+// Данные вынесены за пределы компонента (статичный контент)
+const newProducts = [
+  {
+    id: 1,
+    name: 'Еко-пляшка з бамбука',
+    price: '1 290 ₴',
+    image: '🌿',
+    ecoScore: 95
+  },
+  {
+    id: 2,
+    name: 'Органічна косметичка',
+    price: '2 150 ₴',
+    image: '🌱',
+    ecoScore: 92
+  },
+  {
+    id: 3,
+    name: 'Набір еко-посуду',
+    price: '3 450 ₴',
+    image: '🍃',
+    ecoScore: 98
+  },
+  {
+    id: 4,
+    name: 'Органічне мило',
+    price: '450 ₴',
+    image: '🌾',
+    ecoScore: 89
+  },
+  {
+    id: 5,
+    name: 'Лляна сумка-шопер',
+    price: '890 ₴',
+    image: '🌿',
+    ecoScore: 94
+  }
+];
+
+const categories = [
+  {
+    id: 1,
+    name: 'Еко-пакування',
+    slogan: 'Збережемо природу разом',
+    icon: '📦',
+    bgColor: 'var(--color-sand)' // Використовуємо змінні global.css
+  },
+  {
+    id: 2,
+    name: 'Сад та дача',
+    slogan: 'Вирощуй екологічно',
+    icon: '🌱',
+    bgColor: '#f7fee7'
+  },
+  {
+    id: 3,
+    name: 'Домашній затишок',
+    slogan: 'Комфорт без шкоди',
+    icon: '🏠',
+    bgColor: 'var(--color-cream)'
+  },
+  {
+    id: 4,
+    name: 'Краса та здоров\'я',
+    slogan: 'Натуральна краса',
+    icon: '💚',
+    bgColor: '#f0f9ff'
+  }
+];
+
+const benefits = [
+  {
+    icon: '♻️',
+    title: '100% еко-матеріали',
+    description: 'Лише сертифіковані екологічні товари'
+  },
+  {
+    icon: '🤝',
+    title: 'Підтримка локальних виробників',
+    description: 'Розвиваємо місцеву еко-економіку'
+  },
+  {
+    icon: '🚚',
+    title: 'Швидка доставка',
+    description: 'Доставка в еко-пакуванні за 1-2 дні'
+  },
+  {
+    icon: '✅',
+    title: 'Гарантія якості',
+    description: '30 днів на повернення, пожиттєва підтримка'
+  }
+];
+
 const HomePage = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [email, setEmail] = useState('');
-
-  // Данные для слайдера новинок
-  const newProducts = [
-    {
-      id: 1,
-      name: 'Эко-бутылка из бамбука',
-      price: '1 290 ₴',
-      image: '🌿',
-      ecoScore: 95
-    },
-    {
-      id: 2,
-      name: 'Органическая косметичка',
-      price: '2 150 ₴',
-      image: '🌱',
-      ecoScore: 92
-    },
-    {
-      id: 3,
-      name: 'Набор эко-посуды',
-      price: '3 450 ₴',
-      image: '🍃',
-      ecoScore: 98
-    },
-    {
-      id: 4,
-      name: 'Органическое мыло',
-      price: '450 ₴',
-      image: '🌾',
-      ecoScore: 89
-    },
-    {
-      id: 5,
-      name: 'Льняная сумка-шоппер',
-      price: '890 ₴',
-      image: '🌿',
-      ecoScore: 94
-    }
-  ];
-
-  // Категории
-  const categories = [
-    {
-      id: 1,
-      name: 'Еко-упаковка',
-      slogan: 'Збережемо природу разом',
-      icon: '📦',
-      bgColor: '#f0fdf4'
-    },
-    {
-      id: 2,
-      name: 'Сад та дача',
-      slogan: 'Вирощуй екологічно',
-      icon: '🌱',
-      bgColor: '#f7fee7'
-    },
-    {
-      id: 3,
-      name: 'Домашній затишок',
-      slogan: 'Комфорт без шкоди',
-      icon: '🏠',
-      bgColor: '#fefce8'
-    },
-    {
-      id: 4,
-      name: 'Краса та здоров я',
-      slogan: 'Натуральна краса',
-      icon: '💚',
-      bgColor: '#f0f9ff'
-    }
-  ];
-
-  // Преимущества
-  const benefits = [
-    {
-      icon: '♻️',
-      title: '100% еко-матеріали',
-      description: 'Лише сертифіковані екологічні товари'
-    },
-    {
-      icon: '🤝',
-      title: 'Підтримка локальних виробників',
-      description: 'Розвиваємо місцеву еко-економіку'
-    },
-    {
-      icon: '🚚',
-      title: 'Швидка доставка',
-      description: 'Доставка в еко-упаковці за 1-2 дня'
-    },
-    {
-      icon: '✅',
-      title: 'Гарантія якості',
-      description: '30 днів на повернення, пожиттєва підтримка'
-    }
-  ];
 
   // Автопрокрутка слайдера
   useEffect(() => {
@@ -109,7 +107,7 @@ const HomePage = () => {
     }, 4000);
 
     return () => clearInterval(interval);
-  }, [newProducts.length]);
+  }, []);
 
   const handleSlideChange = (direction) => {
     if (direction === 'next') {
@@ -122,8 +120,7 @@ const HomePage = () => {
   const handleNewsletterSubmit = (e) => {
     e.preventDefault();
     if (email) {
-      // Здесь будет логика подписки
-      alert('Дякуємо за передплату на еко-новини!');
+      alert('Дякуємо за підписку на еко-новини!');
       setEmail('');
     }
   };
@@ -144,7 +141,7 @@ const HomePage = () => {
             <div className={styles.heroActions}>
               <Link to="/catalog" className={styles.ctaButton}>
                 <span>Перейти до каталогу</span>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M5 12h14M12 5l7 7-7 7"/>
                 </svg>
               </Link>
@@ -178,7 +175,7 @@ const HomePage = () => {
             {categories.map((category) => (
               <Link
                 key={category.id}
-                to={`/catalog/${category.name.toLowerCase()}`}
+                to={`/catalog/${encodeURIComponent(category.name.toLowerCase())}`}
                 className={styles.categoryCard}
                 style={{ backgroundColor: category.bgColor }}
               >
@@ -212,9 +209,12 @@ const HomePage = () => {
             <div className={styles.sliderContainer}>
               <div 
                 className={styles.sliderTrack}
-                style={{ transform: `translateX(-${currentSlide * 280}px)` }}
+                style={{ 
+                  transform: `translateX(-${currentSlide * 280}px)`,
+                  '--current-slide': currentSlide 
+                }}
               >
-                {newProducts.map((product, index) => (
+                {newProducts.map((product) => (
                   <div key={product.id} className={styles.productCard}>
                     <div className={styles.productImage}>
                       <span className={styles.productEmoji}>{product.image}</span>
@@ -289,7 +289,7 @@ const HomePage = () => {
               <div className={styles.inputGroup}>
                 <input
                   type="email"
-                  placeholder="Введите ваш email"
+                  placeholder="Введіть ваш email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className={styles.newsletterInput}

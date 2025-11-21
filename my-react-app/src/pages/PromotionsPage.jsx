@@ -1,106 +1,95 @@
-import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom'; // Предполагаем, что используется React Router
-
-// Импортируем стили для этой страницы
+import React from 'react';
+import { Link } from 'react-router-dom';
 import styles from './PromotionsPage.module.css';
-// Импортируем стили с главной страницы, чтобы использовать общий класс кнопки
 import homePageStyles from './HomePage.module.css';
 
-// --- Mock-данные для акций ---
-// В реальном приложении эти данные будут приходить с API
-const mockPromotions = [
+// Данные для карточек (тексты взяты из твоего ТЗ)
+// В будущем эти данные могут приходить с бекенда, но пока они статичны и "вечны"
+const permanentPromotions = [
   {
-    id: 1,
-    title: 'Третій товар у подарунок!',
-    description: 'Купи 2 товари з категорії «Для дому» та отримай третій безкоштовно.',
-    imageUrl: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?q=80&w=1770', // Пример изображения
-    endDate: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000), // Акция закончится через 10 дней
-    ctaText: 'Обрати товари',
-    link: '/catalog/home',
+    id: 'shipping',
+    title: 'Безкоштовна доставка від 2000 грн', // Пример суммы, можно менять
+    description: 'Оформлюй замовлення на суму від 2000 грн — і доставка по Україні для тебе безкоштовна. Якщо сума менша, ми підкажемо, скільки ще додати.',
+    icon: '🚚', // Можно заменить на SVG или картинку
+    link: '/catalog',
   },
   {
-    id: 2,
-    title: 'Набір «Порядок на столі» зі знижкою 15%',
-    description: 'Збери свій ідеальний набір для робочого місця та отримай знижку.',
-    imageUrl: 'https://images.unsplash.com/photo-1484417894907-623942c8ee29?q=80&w=1887', // Пример изображения
-    endDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000), // Акция закончится через 3 дня
-    ctaText: 'Перейти до набору',
-    link: '/bundles/office-set',
+    id: 'sum-discount',
+    title: 'Знижка за суму замовлення',
+    description: 'Чим більша сума замовлення, тим вигідніша ціна. Приклад: від 1500 грн — 3%, від 3000 грн — 5%. Система автоматично обирає рівень.',
+    icon: '💰',
+    link: '/catalog',
   },
   {
-    id: 3,
-    title: 'Товар тижня: Еко-пляшка –40%',
-    description: 'Стильна та зручна пляшка для води за супер-ціною. Встигни купити!',
-    imageUrl: 'https://images.unsplash.com/photo-1602143407151-247e961438ae?q=80&w=1887', // Пример изображения
-    endDate: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000 + 5 * 60 * 60 * 1000), // Акция закончится через 1 день 5 часов
-    ctaText: 'У кошик',
-    link: '/products/eco-bottle',
+    id: 'item-count',
+    title: 'Більше товарів — вигідніша ціна',
+    description: 'Замовляй більше готових виробів і плати менше за штуку. Наприклад: при 3–4 товарах — знижка 5%, при 5 і більше — 7%.',
+    icon: '📦',
+    link: '/catalog',
+  },
+  {
+    id: 'combo',
+    title: 'Комбо-набори з різних категорій',
+    description: 'Поєднуй корисні речі! Додай до кошика товари з різних категорій (наприклад, «Організація» + «Зберігання») — і отримай 10% знижки на набір.',
+    icon: '🧩',
+    link: '/catalog',
+  },
+  {
+    id: 'loyalty',
+    title: 'Постійним клієнтам — постійна знижка',
+    description: 'Якщо ти вже робив у нас замовлення й авторизувався, отримуєш постійну знижку 3% на всі наступні покупки. Ми цінуємо твою лояльність.',
+    icon: '🤝',
+    link: '/login', // Ведем на вход, если это про лояльность
+  },
+  {
+    id: 'batch',
+    title: 'Вигідно друкувати партіями',
+    description: 'Замовляєш 5 тримачів чи 10 брелоків? Після 3-го екземпляра кожна наступна одиниця дешевша. Ми оптимізуємо друк у партіях для тебе.',
+    icon: '🖨️',
+    link: '/catalog',
   },
 ];
 
-// Функция для форматирования времени
-const formatTime = (time) => {
-    return time < 10 ? `0${time}` : time;
-};
-
-
 const PromotionsPage = () => {
-  const [timeLefts, setTimeLefts] = useState({});
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      const newTimeLefts = {};
-      mockPromotions.forEach(promo => {
-        const now = new Date();
-        const difference = promo.endDate - now;
-
-        if (difference > 0) {
-          const days = Math.floor(difference / (1000 * 60 * 60 * 24));
-          const hours = Math.floor((difference / (1000 * 60 * 60)) % 24);
-          const minutes = Math.floor((difference / 1000 / 60) % 60);
-          const seconds = Math.floor((difference / 1000) % 60);
-          newTimeLefts[promo.id] = `${formatTime(days)}:${formatTime(hours)}:${formatTime(minutes)}:${formatTime(seconds)}`;
-        } else {
-          newTimeLefts[promo.id] = 'Акцію завершено';
-        }
-      });
-      setTimeLefts(newTimeLefts);
-    }, 1000);
-
-    // Очистка интервала при размонтировании компонента
-    return () => clearInterval(timer);
-  }, []); // Пустой массив зависимостей, чтобы useEffect выполнился один раз
-
   return (
     <div className={styles.promotionsPage}>
-      {/* 1. Hero-блок */}
+      
+      {/* 1.1. Hero-блок */}
       <section className={styles.hero}>
         <div className={homePageStyles.container}>
-          <h1 className={styles.heroTitle}>Встигни забрати!</h1>
+          <h1 className={styles.heroTitle}>
+            Постійні акції для вигідного 3D-друку
+          </h1>
           <p className={styles.heroSubtitle}>
-            Найвигідніші пропозиції, що діють обмежений час. Не проґавте свою вигоду!
+            Ми друкуємо на 3D-принтерах під замовлення й допомагаємо економити. 
+            Усі акції діють довго й застосовуються автоматично під час оформлення замовлення — 
+            без промокодів і складних правил.
+          </p>
+          <p className={styles.heroNote}>
+            Просто додавай товари в кошик, а система підкаже, що зробити, щоб отримати більше вигоди.
           </p>
         </div>
       </section>
 
-      {/* 2. Список акционных карточек */}
+      {/* 1.2. Список акций (карточки) */}
       <main className={styles.mainContent}>
         <div className={homePageStyles.container}>
+          <h2 className={homePageStyles.sectionTitle}>Актуальні акції</h2>
+          <p className={styles.sectionIntro}>
+            Нижче — умови, які діють постійно або довгий час. Для одного замовлення застосовується 
+            одна найвигідніша знижка (крім безкоштовної доставки).
+          </p>
+          
           <div className={styles.promotionsGrid}>
-            {mockPromotions.map(promo => (
+            {permanentPromotions.map(promo => (
               <div key={promo.id} className={styles.promoCard}>
-                <div className={styles.promoBanner} style={{backgroundImage: `url(${promo.imageUrl})`}}>
-                  <div className={styles.timer}>
-                    <span>До кінця акції:</span>
-                    <strong className={styles.timerDigits}>{timeLefts[promo.id] || 'Завантаження...'}</strong>
-                  </div>
-                </div>
+                {/* Вместо картинки используем иконку для чистоты, или верни promoBanner, если есть фото */}
+                <div className={styles.cardIcon}>{promo.icon}</div>
                 <div className={styles.promoInfo}>
-                  <h2 className={styles.promoTitle}>{promo.title}</h2>
+                  <h3 className={styles.promoTitle}>{promo.title}</h3>
                   <p className={styles.promoDescription}>{promo.description}</p>
-                  <Link to={promo.link} className={`${homePageStyles.ctaButton} ${styles.promoCardButton}`}>
-                    {promo.ctaText}
-                  </Link>
+                  {/* Кнопка может быть опциональной, так как акции автоматические */}
+                  {/* <Link to={promo.link} className={styles.cardLink}>Детальніше &rarr;</Link> */}
                 </div>
               </div>
             ))}
@@ -108,37 +97,44 @@ const PromotionsPage = () => {
         </div>
       </main>
 
-      {/* 3. Блок "Как это работает" */}
+      {/* 1.3. Блок «Як це працює» */}
       <section className={styles.howItWorks}>
          <div className={homePageStyles.container}>
-            <h2 className={homePageStyles.sectionTitle}>Усього 3 простих кроки</h2>
-            <div className={styles.stepsGrid}>
-                <div className={styles.step}>
-                    <div className={styles.stepIcon}>1</div>
-                    <p>Обери товари</p>
-                </div>
-                 <div className={styles.step}>
-                    <div className={styles.stepIcon}>2</div>
-                    <p>Додай в кошик</p>
-                </div>
-                 <div className={styles.step}>
-                    <div className={styles.stepIcon}>3</div>
-                    <p>Отримай вигоду</p>
-                </div>
+            <h2 className={homePageStyles.sectionTitle}>Як працюють акції</h2>
+            <div className={styles.stepsList}>
+               <div className={styles.stepItem}>
+                  <span className={styles.checkIcon}>✔</span>
+                  <p>Усі акції застосовуються автоматично під час оформлення замовлення.</p>
+               </div>
+               <div className={styles.stepItem}>
+                  <span className={styles.checkIcon}>✔</span>
+                  <p>Якщо замовлення підпадає під декілька акцій, система обирає одну найвигіднішу для тебе.</p>
+               </div>
+               <div className={styles.stepItem}>
+                  <span className={styles.checkIcon}>✔</span>
+                  <p>Безкоштовна доставка (якщо доступна) може поєднуватися зі знижкою на замовлення.</p>
+               </div>
+               <div className={styles.stepItem}>
+                  <span className={styles.checkIcon}>✔</span>
+                  <p>У кошику ти завжди бачиш, яку саме акцію застосовано й яку суму вдалося заощадити.</p>
+               </div>
             </div>
          </div>
       </section>
       
-      {/* 4. Финальный призыв к действию */}
-      <section className={styles.finalCta}>
+      {/* 1.4. Блок із правилами / FAQ */}
+      <section className={styles.faqSection}>
         <div className={homePageStyles.container}>
-            <h2 className={styles.finalCtaTitle}>Годі чекати — дій!</h2>
-            <p className={styles.finalCtaSubtitle}>Сотні товарів вже чекають на вас у каталозі за вигідними цінами.</p>
-            <Link to="/catalog" className={`${homePageStyles.ctaButton} ${homePageStyles.ctaButtonLarge}`}>
-                До каталогу акцій
-            </Link>
+           <h3 className={styles.faqTitle}>Важливі уточнення</h3>
+           <ul className={styles.faqList}>
+              <li>Акції діють лише для роздрібних замовлень фізичних осіб.</li>
+              <li>Знижки не поширюються на індивідуальні проєкти з окремими кошторисами.</li>
+              <li>Ми залишаємо за собою право коригувати відсотки знижок і порогові суми, але завжди оновлюємо інформацію на цій сторінці.</li>
+              <li>Якщо в тебе є питання щодо застосування акції — напиши нам, і ми перевіримо твоє замовлення.</li>
+           </ul>
         </div>
       </section>
+
     </div>
   );
 };
