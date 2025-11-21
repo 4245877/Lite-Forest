@@ -1,48 +1,50 @@
 // src/pages/LoginPage.jsx
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../auth';
 import styles from './LoginPage.module.css';
 import { FaEye, FaEyeSlash, FaGoogle, FaFacebook } from 'react-icons/fa';
 
-// --- helper для читання тіла помилки ---
+// --- Helper для чтения тела ошибки ---
 async function readError(res) {
   try {
     const j = await res.json();
     return j?.message || res.statusText || 'Помилка запиту';
-  } catch {
+  } catch (e) {
     return res.statusText || 'Помилка запиту';
   }
 }
 
 /**
- * Відкриває OAuth у pop-up вікні та завершує вхід, коли:
- *  1) попап повернувся на наш origin (після того, як бекенд поставив HttpOnly cookie) — закриваємо попап і рефрешимо сторінку
- *  2) попап надіслав window.postMessage('oauth:success') на наш origin — закриваємо попап і рефрешимо сторінку
+ * Хук для OAuth в pop-up вікні.
+ * Керує відкриттям вікна та відстеженням результату.
  */
 function useOAuthPopup() {
   const timerRef = useRef(null);
 
-  const finalize = () => {
-    // Після успіху ведемо користувача в кабінет
-    window.location.replace('/profile');
-  };
+  // Очистка таймера при размонтировании компонента
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, []);
 
-  const openPopup = (url, { onBlocked, onStart, onFinish } = {}) => {
+  const finalize = useCallback(() => {
+    // После успеха ведем пользователя в кабинет
+    // Использование location.replace гарантирует полную перезагрузку и актуализацию состояния auth
+    window.location.replace('/profile');
+  }, []);
+
+  const openPopup = useCallback((url, { onBlocked, onStart, onFinish } = {}) => {
     const width = 520;
     const height = 650;
     const left = window.screenX + Math.max(0, (window.outerWidth - width) / 2);
     const top = window.screenY + Math.max(0, (window.outerHeight - height) / 2);
+    
     const features = [
-      'toolbar=no',
-      'menubar=no',
-      'status=no',
-      'resizable=yes',
-      'scrollbars=yes',
-      `width=${width}`,
-      `height=${height}`,
-      `top=${Math.round(top)}`,
-      `left=${Math.round(left)}`,
+      'toolbar=no', 'menubar=no', 'status=no', 'resizable=yes', 'scrollbars=yes',
+      `width=${width}`, `height=${height}`,
+      `top=${Math.round(top)}`, `left=${Math.round(left)}`,
     ].join(',');
 
     onStart?.();
@@ -55,60 +57,59 @@ function useOAuthPopup() {
       return;
     }
 
-    // Спроба взяти фокус
     popup.focus?.();
 
-    // 1) Обробка postMessage з попапа (якщо бекенд віддає сторінку-заглушку з window.opener.postMessage)
+    // 1) Обработка postMessage (если бекенд присылает событие)
     const onMessage = (event) => {
       try {
         if (event.origin !== window.location.origin) return;
         const data = event.data;
         if (data === 'oauth:success' || (data && data.type === 'oauth:success')) {
           window.removeEventListener('message', onMessage);
-          try { popup.close(); } catch {}
+          popup.close();
           clearInterval(timerRef.current);
           onFinish?.();
           finalize();
         }
-      } catch {
-        // ігноруємо
+      } catch (e) {
+        // ignore
       }
     };
     window.addEventListener('message', onMessage);
 
-    // 2) Полінг попапа: як тільки він повернувся на наш origin — закриваємо і завершуємо
+    // 2) Поллинг закрытия окна или смены URL
     timerRef.current = setInterval(() => {
+      // Если окно закрыто пользователем
       if (popup.closed) {
         clearInterval(timerRef.current);
         window.removeEventListener('message', onMessage);
         onFinish?.();
-        // Якщо користувач сам закрив попап — все одно спробуємо оновити сторінку:
+        // Можно попробовать обновить, вдруг кука успела встать
         finalize();
         return;
       }
       try {
-        // Коли попап повернувся на наш origin (наприклад, "/", "/oauth-complete" тощо)
+        // Проверка на same-origin (значит редирект прошел успешно)
         const sameOrigin = popup.location.origin === window.location.origin;
         if (sameOrigin) {
-          // Бекенд уже встановив куки — можна закривати попап і оновлювати застосунок
           popup.close();
           clearInterval(timerRef.current);
           window.removeEventListener('message', onMessage);
           onFinish?.();
           finalize();
         }
-      } catch {
-        // Cross-origin під час переходів на google.com/facebook.com — очікувано
+      } catch (e) {
+        // Ожидаемая ошибка Cross-origin пока мы на google/facebook
       }
     }, 500);
-  };
+  }, [finalize]);
 
   return { openPopup };
 }
 
-// --- Блок соц-автентифікації (кнопки) ---
+// --- Блок соц-автентифікації ---
 const SocialAuth = ({ setInlineError }) => {
-  const [oauthLoading, setOauthLoading] = useState(null); // 'google' | 'facebook' | null
+  const [oauthLoading, setOauthLoading] = useState(null);
   const { openPopup } = useOAuthPopup();
 
   const startOAuth = (provider) => {
@@ -116,27 +117,19 @@ const SocialAuth = ({ setInlineError }) => {
     setInlineError?.('');
     setOauthLoading(provider);
 
-    const origin = window.location.origin; // наприклад, https://app.example.com
-    // Повернення після логіну на бекенді: назад у застосунок. Попап закриємо автоматично.
+    const origin = window.location.origin;
     const redirectTo = encodeURIComponent(`${origin}/`);
-    // Параметри підказки для Google — щоб гарантовано показати вибір акаунта і базові скоупи.
-    const authParams =
-      provider === 'google'
+    const authParams = provider === 'google'
         ? '&prompt=select_account&scope=openid%20email%20profile'
         : '';
 
-    // Підказка бекенду, що ми працюємо у попапі (щоб він, наприклад, віддав сторінку із postMessage і window.close() після успіху)
-    const url = `/api/auth/oauth/${provider}?mode=popup&origin=${encodeURIComponent(
-      origin
-    )}&redirectTo=${redirectTo}${authParams}`;
+    const url = `/api/auth/oauth/${provider}?mode=popup&origin=${encodeURIComponent(origin)}&redirectTo=${redirectTo}${authParams}`;
 
     openPopup(url, {
       onBlocked: () => {
-        setInlineError?.(
-          'Браузер заблокував спливаюче вікно. Дозвольте pop-up для сайту і спробуйте ще раз.'
-        );
+        setInlineError?.('Браузер заблокував спливаюче вікно. Дозвольте pop-up для сайту.');
       },
-      onStart: () => {},
+      onStart: () => {}, // loading уже установлен
       onFinish: () => setOauthLoading(null),
     });
   };
@@ -147,34 +140,32 @@ const SocialAuth = ({ setInlineError }) => {
         type="button"
         className={`${styles.socialBtn} ${styles.googleBtn}`}
         onClick={() => startOAuth('google')}
-        aria-label="Продовжити з Google"
         disabled={oauthLoading !== null}
       >
         <FaGoogle aria-hidden="true" />
-        {oauthLoading === 'google' ? 'Входимо через Google…' : 'Продовжити з Google'}
+        {oauthLoading === 'google' ? 'Входимо...' : 'Google'}
       </button>
 
       <button
         type="button"
         className={`${styles.socialBtn} ${styles.facebookBtn}`}
         onClick={() => startOAuth('facebook')}
-        aria-label="Продовжити з Facebook"
         disabled={oauthLoading !== null}
       >
         <FaFacebook aria-hidden="true" />
-        {oauthLoading === 'facebook' ? 'Входимо через Facebook…' : 'Продовжити з Facebook'}
+        {oauthLoading === 'facebook' ? 'Входимо...' : 'Facebook'}
       </button>
     </div>
   );
 };
 
-// --- Компонент форми входу ---
+// --- Форма входу ---
 const LoginForm = ({ onToggleForm }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
-  const [inlineError, setInlineError] = useState(''); // для помилок попапа
+  const [inlineError, setInlineError] = useState('');
   const [loading, setLoading] = useState(false);
 
   const { signin } = useAuth();
@@ -194,12 +185,10 @@ const LoginForm = ({ onToggleForm }) => {
 
     try {
       await signin(email, password);
-      // Успішно — ведемо користувача в кабінет або на сторінку, куди він намагався потрапити
       navigate(from, { replace: true });
     } catch (e) {
       setError(e.message || 'Помилка входу');
-    } finally {
-      setLoading(false);
+      setLoading(false); // Сбрасываем только при ошибке, при успехе мы уходим со страницы
     }
   };
 
@@ -220,15 +209,12 @@ const LoginForm = ({ onToggleForm }) => {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           autoComplete="email"
-          aria-label="Поле для вводу email"
           required
         />
       </div>
 
-      {/* ВО ВХОДЕ: оборачиваем input+кнопку в собственный контейнер */}
       <div className={styles.inputGroup}>
         <label htmlFor="login-password" className={styles.inputLabel}>Пароль</label>
-
         <div className={styles.fieldControl}>
           <input
             id="login-password"
@@ -237,16 +223,13 @@ const LoginForm = ({ onToggleForm }) => {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             autoComplete="current-password"
-            aria-label="Поле для введення пароля"
             required
           />
           <button
             type="button"
             className={styles.passwordToggle}
             onClick={() => setShowPassword(!showPassword)}
-            aria-label={showPassword ? 'Приховати пароль' : 'Показати пароль'}
-            aria-pressed={showPassword}
-            title={showPassword ? 'Приховати пароль' : 'Показати пароль'}
+            title={showPassword ? 'Приховати' : 'Показати'}
           >
             {showPassword ? <FaEyeSlash /> : <FaEye />}
           </button>
@@ -254,11 +237,7 @@ const LoginForm = ({ onToggleForm }) => {
       </div>
 
       <div className={styles.linkGroup}>
-        <button
-          type="button"
-          className={styles.formLink}
-          onClick={() => navigate('/reset')}
-        >
+        <button type="button" className={styles.formLink} onClick={() => navigate('/reset')}>
           Забули пароль?
         </button>
       </div>
@@ -274,22 +253,20 @@ const LoginForm = ({ onToggleForm }) => {
         </a>
       </p>
 
-      {/* --- Роздільник і соц-кнопки ПІД блоком "Немає аккаунта? ..." --- */}
-      <div className={styles.orDivider} aria-hidden="true">
-        <span>або</span>
-      </div>
+      <div className={styles.orDivider} aria-hidden="true"><span>або</span></div>
       <SocialAuth setInlineError={setInlineError} />
     </form>
   );
 };
 
-// --- Компонент форми реєстрації ---
+// --- Форма реєстрації ---
 const RegisterForm = ({ onToggleForm }) => {
   const [email, setEmail] = useState('');
-  const [name, setName] = useState(''); // опціонально
+  const [name, setName] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [code, setCode] = useState('');
+  
   const [codeSent, setCodeSent] = useState(false);
   const [cooldown, setCooldown] = useState(0);
   const [sendingCode, setSendingCode] = useState(false);
@@ -302,6 +279,19 @@ const RegisterForm = ({ onToggleForm }) => {
   const [serverOk, setServerOk] = useState('');
   const [loading, setLoading] = useState(false);
 
+  // FIX: Таймер теперь живет в useEffect и не течет при размонтировании
+  useEffect(() => {
+    let timer = null;
+    if (cooldown > 0) {
+      timer = setInterval(() => {
+        setCooldown((prev) => (prev > 0 ? prev - 1 : 0));
+      }, 1000);
+    }
+    return () => {
+      if (timer) clearInterval(timer);
+    };
+  }, [cooldown]);
+
   const validateForm = () => {
     const e = {};
     if (!email || !email.includes('@')) e.email = 'Введіть правильний email.';
@@ -312,14 +302,11 @@ const RegisterForm = ({ onToggleForm }) => {
     return Object.keys(e).length === 0;
   };
 
-  const isFormValid =
-    email && password && confirmPassword &&
-    /^\d{6}$/.test(code) &&
-    Object.keys(errors).length === 0;
+  const isFormValid = email && password && confirmPassword && /^\d{6}$/.test(code) && Object.keys(errors).length === 0;
 
   async function sendSignupCode() {
     if (!email || !email.includes('@')) {
-      setErrors((e)=>({ ...e, email: 'Введіть правильний email.' }));
+      setErrors((e) => ({ ...e, email: 'Введіть правильний email.' }));
       return;
     }
     setSendingCode(true);
@@ -332,9 +319,7 @@ const RegisterForm = ({ onToggleForm }) => {
         body: JSON.stringify({ email, purpose: 'signup' }),
       });
       setCodeSent(true);
-      setCooldown(60);
-      const t = setInterval(() => setCooldown(s => (s > 0 ? s - 1 : 0)), 1000);
-      setTimeout(() => clearInterval(t), 61_000);
+      setCooldown(60); // Запускает useEffect
     } catch (e) {
       setServerError('Не вдалося надіслати код');
     } finally {
@@ -354,25 +339,21 @@ const RegisterForm = ({ onToggleForm }) => {
       const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include', // ВАЖЛИВО: server ставить HttpOnly cookie
+        credentials: 'include',
         body: JSON.stringify({
           email,
           password,
-          name: name?.trim() || email.split('@')[0], // якщо ім'я пусте — поставимо нік з email
-          code, // <<< додали код
+          name: name?.trim() || email.split('@')[0],
+          code,
         }),
       });
 
-      if (!res.ok) {
-        // 409 — email вже існує та ін.
-        throw new Error(await readError(res));
-      }
+      if (!res.ok) throw new Error(await readError(res));
 
       setServerOk('Реєстрація пройшла успішно! Ви можете увійти.');
       setTimeout(() => {
         onToggleForm?.({ preventDefault: () => {} });
       }, 600);
-      // або: window.location.assign('/login');
     } catch (err) {
       setServerError(err.message || 'Помилка реєстрації');
     } finally {
@@ -397,19 +378,19 @@ const RegisterForm = ({ onToggleForm }) => {
           onChange={(e) => setEmail(e.target.value)}
           onBlur={validateForm}
           autoComplete="email"
-          aria-label="Поле для вводу email для реєстрації"
           required
         />
-        <div style={{marginTop: 6}}>
+        <div style={{ marginTop: 6 }}>
           <button
             type="button"
-            className={styles.secondaryButton}
+            className={styles.secondaryButton} // Убедись, что этот класс есть в CSS или используй inline/общий класс
+            style={{ fontSize: '0.9rem', color: 'var(--color-primary)', background: 'none', border: 'none', padding: 0, cursor: 'pointer', textDecoration: 'underline' }}
             onClick={sendSignupCode}
             disabled={sendingCode || cooldown > 0}
           >
             {sendingCode ? 'Надсилаємо…' : cooldown ? `Повторити через ${cooldown} c` : 'Надіслати код'}
           </button>
-          {codeSent && <span style={{marginLeft:8, fontSize:12}}>Код відправлено на пошту</span>}
+          {codeSent && <span style={{ marginLeft: 8, fontSize: 12, color: 'green' }}>Код відправлено</span>}
         </div>
         {errors.email && <p className={styles.errorText}>{errors.email}</p>}
       </div>
@@ -426,10 +407,9 @@ const RegisterForm = ({ onToggleForm }) => {
             className={styles.input}
             value={code}
             onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
-            aria-label="6-значний код підтвердження"
             required
           />
-          {!/^\d{6}$/.test(code) && <p className={styles.errorText}>Введіть 6 цифр</p>}
+          {!/^\d{6}$/.test(code) && <p className={styles.errorText} style={{marginTop:4}}>Введіть 6 цифр</p>}
         </div>
       )}
 
@@ -441,16 +421,12 @@ const RegisterForm = ({ onToggleForm }) => {
           className={styles.input}
           value={name}
           onChange={(e) => setName(e.target.value)}
-          onBlur={validateForm}
           autoComplete="name"
-          aria-label="Ім’я користувача"
           placeholder="Іван"
         />
-        {errors.name && <p className={styles.errorText}>{errors.name}</p>}
       </div>
 
-      {/* РЕЄСТРАЦІЯ: оборачиваем оба поля паролей */}
-      {/* Пароль */}
+      {/* Пароли */}
       <div className={styles.inputGroup}>
         <label htmlFor="reg-password" className={styles.inputLabel}>Пароль</label>
         <div className={styles.fieldControl}>
@@ -462,16 +438,12 @@ const RegisterForm = ({ onToggleForm }) => {
             onChange={(e) => setPassword(e.target.value)}
             onBlur={validateForm}
             autoComplete="new-password"
-            aria-label="Поле для вводу пароля для реєстрації"
             required
           />
           <button
             type="button"
             className={styles.passwordToggle}
             onClick={() => setShowPwd1(!showPwd1)}
-            aria-label={showPwd1 ? 'Приховати пароль' : 'Показати пароль'}
-            aria-pressed={showPwd1}
-            title={showPwd1 ? 'Приховати пароль' : 'Показати пароль'}
           >
             {showPwd1 ? <FaEyeSlash /> : <FaEye />}
           </button>
@@ -479,7 +451,6 @@ const RegisterForm = ({ onToggleForm }) => {
         {errors.password && <p className={styles.errorText}>{errors.password}</p>}
       </div>
 
-      {/* Підтвердження пароля */}
       <div className={styles.inputGroup}>
         <label htmlFor="reg-confirm-password" className={styles.inputLabel}>Підтвердьте пароль</label>
         <div className={styles.fieldControl}>
@@ -491,16 +462,12 @@ const RegisterForm = ({ onToggleForm }) => {
             onChange={(e) => setConfirmPassword(e.target.value)}
             onBlur={validateForm}
             autoComplete="new-password"
-            aria-label="Поле для підтвердження пароля"
             required
           />
           <button
             type="button"
             className={styles.passwordToggle}
             onClick={() => setShowPwd2(!showPwd2)}
-            aria-label={showPwd2 ? 'Приховати пароль' : 'Показати пароль'}
-            aria-pressed={showPwd2}
-            title={showPwd2 ? 'Приховати пароль' : 'Показати пароль'}
           >
             {showPwd2 ? <FaEyeSlash /> : <FaEye />}
           </button>
@@ -518,23 +485,20 @@ const RegisterForm = ({ onToggleForm }) => {
           Увійти
         </a>
       </p>
-      {/* Соц-вхід тут не показуємо: він зосереджений на формі входу */}
     </form>
   );
 };
 
-// --- Основний компонент сторінки ---
 const LoginPage = () => {
   const [isLoginView, setIsLoginView] = useState(true);
 
   const handleToggleForm = (e) => {
     e?.preventDefault?.();
-    setIsLoginView(v => !v);
+    setIsLoginView((v) => !v);
   };
 
   return (
     <div className={styles.loginPage}>
-      {/* Ліва декоративна панель */}
       <div className={styles.leftPanel}>
         <div className={styles.brandLogo} aria-hidden="true">🌿</div>
         <h1 className={styles.brandTitle}>Lite Forest</h1>
@@ -543,7 +507,6 @@ const LoginPage = () => {
         </p>
       </div>
 
-      {/* Права панель з формою */}
       <div className={styles.formPanel}>
         <div className={styles.formContainer}>
           {isLoginView ? (

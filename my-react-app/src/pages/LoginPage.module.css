@@ -3,11 +3,22 @@
 /* --- Базовая структура страницы --- */
 .loginPage {
   display: flex;
-  min-height: 100vh;
+  flex-direction: row; /* Явно указываем направление */
+  min-height: 100dvh; /* Используем динамическую высоту для мобильных */
   font-family: 'Inter', sans-serif;
   background: var(--gradient-hero);
   color: var(--color-text-primary);
   -webkit-tap-highlight-color: transparent;
+
+  /* FIX: Заставляем блок растягиваться (убираем белую полосу) */
+  flex-grow: 1;
+  padding-bottom: env(safe-area-inset-bottom); /* Отступ только для iOS safe area */
+  margin-bottom: 0;
+}
+
+/* Гарантируем, что последний элемент не создает лишних отступов */
+.loginPage > *:last-child {
+  margin-bottom: 0 !important;
 }
 
 /* --- Левая панель (с иллюстрацией) --- */
@@ -52,6 +63,11 @@
   padding: 3rem 2rem;
 }
 
+/* ВАЖНО: убираем лишние margin-bottom внутри панели */
+.formPanel > *:last-child {
+  margin-bottom: 0 !important;
+}
+
 .formContainer {
   width: 100%;
   max-width: 420px;
@@ -83,7 +99,6 @@
   color: var(--color-text-secondary);
 }
 
-/* Немного выравниваем поля по визуальному весу */
 .input {
   width: 100%;
   height: 50px;
@@ -109,19 +124,14 @@
   box-shadow: 0 0 0 3px var(--color-focus);
 }
 
-/* Обёртка вокруг input + глаз — правильная система отсчёта для absolute */
 .fieldControl {
   position: relative;
 }
 
-/* У input с иконкой увеличиваем правый внутренний отступ,
-   чтобы текст не налезал на кнопку */
 .inputWithToggle {
-  padding-right: 56px; /* 44px таргет + ~12px зазор */
+  padding-right: 56px;
 }
 
-/* Иконка "показать/скрыть пароль" — корректное вертикальное центрирование
-   и стилистика ближе к теме */
 .passwordToggle {
   position: absolute;
   top: 50%;
@@ -131,22 +141,18 @@
   color: var(--color-text-secondary);
   font-size: 1.1rem;
   line-height: 1;
-
-  /* комфортный тап-таргет */
   width: 44px;
   height: 44px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   border-radius: 10px;
-
-  /* базовая стилистика */
   background: transparent;
   border: none;
 }
 
 .passwordToggle:hover {
-  background: rgba(47, 82, 51, 0.06); /* лёгкий зелёный оттенок из палитры */
+  background: rgba(47, 82, 51, 0.06);
 }
 
 .passwordToggle:active {
@@ -196,13 +202,10 @@
   box-shadow: none;
 }
 
-/* ссылка-кнопка без обводки и с видимым фокусом через подчёркивание */
 .formLink {
   color: var(--color-primary);
   text-decoration: none;
   font-weight: 500;
-
-  /* сброс стилей кнопки */
   background: none;
   border: none;
   padding: 0;
@@ -211,9 +214,10 @@
   cursor: pointer;
 }
 
-.formLink:hover { text-decoration: underline; }
+.formLink:hover {
+  text-decoration: underline;
+}
 
-/* убираем рамку при фокусе у button и сохраняем видимость фокуса */
 .formLink:focus-visible {
   outline: none;
   box-shadow: none;
@@ -222,7 +226,7 @@
 
 .linkGroup {
   display: flex;
-  justify-content: flex-end; /* одна ссылка — выравниваем вправо */
+  justify-content: flex-end;
   margin-top: 1rem;
   font-size: 0.9rem;
 }
@@ -250,6 +254,15 @@
   margin-bottom: 1.5rem;
 }
 
+.serverOk {
+  color: #1b5e20;
+  background-color: rgba(46, 125, 50, 0.12);
+  padding: 1rem;
+  border-radius: 8px;
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
 /* --- Адаптивность --- */
 @media (max-width: 768px) {
   .loginPage {
@@ -257,7 +270,7 @@
   }
 
   .leftPanel {
-    display: none; /* Скрываем левую панель на мобильных */
+    display: none;
   }
 
   .formPanel {
@@ -274,7 +287,6 @@
   }
 }
 
-/* --- Меньшие экраны --- */
 @media (max-width: 380px) {
   .formContainer {
     padding: 1.25rem;
@@ -292,13 +304,12 @@
   100% { transform: translateY(0px); }
 }
 
-/* Уважение к системной настройке "уменьшить анимацию" */
 @media (prefers-reduced-motion: reduce) {
   .brandLogo { animation: none; }
-  .submitButton, .input, .logo { transition: none; }
+  .submitButton, .input { transition: none; }
 }
 
-/* --- Социальный вход (Google / Facebook) --- */
+/* --- Социальный вход --- */
 .socialButtons {
   display: grid;
   gap: 10px;
@@ -307,7 +318,7 @@
 
 @media (min-width: 480px) {
   .socialButtons {
-    grid-template-columns: 1fr 1fr; /* на десктопе — в ряд */
+    grid-template-columns: 1fr 1fr;
   }
 }
 
@@ -331,7 +342,7 @@
 }
 
 .socialBtn svg {
-  font-size: 1.1rem; /* размер иконки из react-icons */
+  font-size: 1.1rem;
 }
 
 .socialBtn:hover:not(:disabled) {
@@ -355,7 +366,6 @@
   box-shadow: 0 0 0 3px var(--color-focus), var(--shadow-md);
 }
 
-/* Вариации под провайдеров — делаем нейтральнее, чтобы не спорили с зелёной палитрой */
 .googleBtn {
   background: #fff;
   color: var(--color-text-primary);
@@ -363,7 +373,7 @@
 }
 
 .facebookBtn {
-  background: #fff;               /* вместо сплошного синего */
+  background: #fff;
   color: #1877f2;
   border-color: #1877f2;
 }
@@ -372,7 +382,6 @@
   background: rgba(24, 119, 242, 0.06);
 }
 
-/* Разделитель "или" — спокойнее под стиль сайта */
 .orDivider {
   display: flex;
   align-items: center;
@@ -382,6 +391,7 @@
   font-size: 0.9rem;
   margin: 6px 0 16px;
 }
+
 .orDivider::before,
 .orDivider::after {
   content: "";
@@ -389,30 +399,3 @@
   background: var(--color-border);
   flex: 1;
 }
-
-/* --- Сообщение об успехе (используется класс serverOk в JSX) --- */
-.serverOk {
-  color: #1b5e20;
-  background-color: rgba(46, 125, 50, 0.12);
-  padding: 1rem;
-  border-radius: 8px;
-  text-align: center;
-  margin-bottom: 1.5rem;
-}
-
-/* — мобильно-безопасная высота страницы без «хвоста» — */
-.loginPage{
-  /* заполняем экран минус хедер */
-  min-height: calc(100svh - var(--header-height));
-  min-height: calc(100dvh - var(--header-height));
-  /* запас для iOS safe area */
-  padding-bottom: max(16px, env(safe-area-inset-bottom));
-}
-
-/* убираем спурию перед футером */
-.loginPage > *:last-child{ margin-bottom: 0 !important; }
-
-/* внутри формы последний элемент без нижнего отступа */
-.formContainer > *:last-child,
-.formPanel > *:last-child,
-form > *:last-child{ margin-bottom: 0 !important; }
