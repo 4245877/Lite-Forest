@@ -14,15 +14,14 @@
     "skipLibCheck": true,
     "resolveJsonModule": true,
 
-    // главное для TSX:
     "jsx": "react-jsx",
-
-    // чтобы TS видел типы React (у вас раньше было только "node"):
-    "types": ["node", "react", "react-dom"],
-
-    // полезно для типизации HTML-атрибутов и т.п. в JSX
     "lib": ["ES2022", "DOM"]
+    
+    // МЫ УБРАЛИ typeRoots и types - пусть TS использует настройки по умолчанию
   },
-  "include": ["src/**/*"],
+  "include": [
+    "src/**/*",         
+    "src/types/**/*.d.ts" // Для надёжности явно укажем расширение
+  ],
   "exclude": ["node_modules", "dist"]
 }

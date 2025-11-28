@@ -29,6 +29,11 @@ import auth from './api/auth.js';
 import orders from './api/orders.js';
 import meta from './api/meta.js';
 
+// нові реальні модулі
+import favorites from './api/favorites.js';
+import shipping from './api/shipping.js';
+import profile from './api/profile.js';
+
 export function buildApp() {
   const app = Fastify({
     logger: {
@@ -107,6 +112,9 @@ export function buildApp() {
   app.register(imports);
   app.register(auth);
   app.register(orders);
+  app.register(favorites);
+  app.register(shipping);
+  app.register(profile);
 
   // meta (/api/meta/categories)
   app.register(meta);

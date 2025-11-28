@@ -235,10 +235,15 @@ const OrdersTab = () => {
   const load = async (next = null) => {
     setLoading(true); setErr('');
     try{
-      const url = new URL('/api/orders', window.location.origin); // [Непідтверджено]
-      url.searchParams.set('limit','10'); if(next) url.searchParams.set('cursor', next);
+      // ВИПРАВЛЕННЯ ТУТ:
+      const url = new URL('/api/me/orders', window.location.origin); // ✅ Це маршрут користувача
+      
+      url.searchParams.set('limit','10'); 
+      if(next) url.searchParams.set('cursor', next);
+      
       const res = await fetch(url.toString(), { credentials:'include' });
       if(!res.ok) throw new Error(await readError(res));
+      
       const data = await res.json();
       setItems(prev => next ? [...prev, ...(data?.items||[])] : (data?.items||[]));
       setCursor(data?.nextCursor || null);
