@@ -3,6 +3,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth';
 import styles from './ProfilePage.module.css';
+import LoginPage from './LoginPage'; // <--- добавлен импорт
 
 /* utils */
 async function readError(res){
@@ -858,16 +859,8 @@ const ProfilePage = () => {
   }
 
   if (!user) {
-    return (
-      <div className={styles.container}>
-        <div className={styles.headerRow}>
-          <h1 className={styles.title}>Особистий кабінет</h1>
-          <div className={styles.smallNote}>
-            Ви не авторизовані. <Link to="/login" className={styles.linkInline}>Увійти</Link>
-          </div>
-        </div>
-      </div>
-    );
+    // Если пользователь не вошел, показываем полноценную страницу входа
+    return <LoginPage />;
   }
 
   return (

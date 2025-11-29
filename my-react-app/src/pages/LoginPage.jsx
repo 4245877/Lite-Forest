@@ -492,6 +492,17 @@ const RegisterForm = ({ onToggleForm }) => {
 const LoginPage = () => {
   const [isLoginView, setIsLoginView] = useState(true);
 
+  // Достаем user и loading из нашего контекста
+  const { user, loading } = useAuth();
+  const navigate = useNavigate();
+
+  // Если загрузка прошла и user существует — сразу уходим в профиль
+  useEffect(() => {
+    if (!loading && user) {
+      navigate('/profile', { replace: true });
+    }
+  }, [user, loading, navigate]);
+
   const handleToggleForm = (e) => {
     e?.preventDefault?.();
     setIsLoginView((v) => !v);

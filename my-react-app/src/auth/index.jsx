@@ -11,14 +11,37 @@ export const AuthProvider = ({ children }) => {
 
   const refresh = useCallback(async () => {
     try {
-      const res = await fetch('/api/me', { credentials: 'include' });
+      // 1. Пробуем получить данные пользователя
+      let res = await fetch('/api/me', { credentials: 'include' });
+
+      // 2. Если Access Token устарел (401), пробуем обновить его через Refresh Token
+      if (res.status === 401) {
+        try {
+          // ВНИМАНИЕ: Проверь, что адрес '/api/auth/refresh' правильный для твоего бэкенда!
+          const refreshRes = await fetch('/api/auth/refresh', { 
+            method: 'POST', 
+            credentials: 'include' 
+          });
+
+          if (refreshRes.ok) {
+            // Если обновление прошло успешно, повторяем запрос за профилем
+            res = await fetch('/api/me', { credentials: 'include' });
+          }
+        } catch (err) {
+          // Если refresh тоже упал — значит точно выходим
+          console.error('Auto-refresh failed', err);
+        }
+      }
+
+      // 3. Обрабатываем итоговый результат
       if (res.ok) {
         const u = await res.json();
         setUser(u || null);
       } else {
         setUser(null);
       }
-    } catch {
+    } catch (e) {
+      console.error('Auth check failed', e);
       setUser(null);
     } finally {
       setLoading(false);
@@ -59,7 +82,10 @@ export const AuthProvider = ({ children }) => {
 export const RequireAuth = () => {
   const { user, loading } = useAuth();
   const location = useLocation();
-  if (loading) return null; // можно заменить на спиннер
+  
+  // Можно добавить красивый спиннер, пока идет проверка
+  if (loading) return null; 
+  
   if (!user) return <Navigate to="/login" state={{ from: location }} replace />;
   return <Outlet />;
 };
