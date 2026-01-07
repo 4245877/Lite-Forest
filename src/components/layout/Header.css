@@ -1,0 +1,263 @@
+/* src/components/layout/Header.css */
+
+/* Подключение шрифтов */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; }
+
+/* --- размеры и уровни --- */
+:root{
+  --header-height: 70px;         /* десктопная высота шапки */
+  --search-max-width: 820px;     /* ширина поля на десктопе */
+}
+
+/* Основной хедер */
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 30; /* ниже поиска (z:120), выше контента */
+  background: linear-gradient(135deg, var(--color-sand) 0%, rgba(241, 250, 238, 0.95) 100%);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  will-change: transform;
+  transform: translateZ(0);
+  border-bottom: 1px solid rgba(82, 183, 136, 0.2);
+  box-shadow: var(--shadow-sm);
+  background-image:
+    radial-gradient(circle at 20% 80%, rgba(149, 213, 178, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(233, 196, 106, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 40% 40%, rgba(82, 183, 136, 0.05) 0%, transparent 50%);
+}
+
+/* Убрать «шов» при открытом поиске */
+.search-open .app-header { border-bottom: 0; box-shadow: none; }
+
+.header-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: var(--header-height);
+}
+
+/* Логотип */
+.logo { display: flex; align-items: center; text-decoration: none; transition: var(--transition-normal); }
+.logo:hover { transform: translateY(-1px); }
+.logo-icon { font-size: 1.8rem; margin-right: 8px; animation: gentle-sway 3s ease-in-out infinite; }
+.logo-text { font-family: 'Inter', sans-serif; font-size: 1.75rem; font-weight: 700; color: var(--color-primary); letter-spacing: -0.02em; }
+.logo-accent { color: var(--color-accent); position: relative; }
+.logo-accent::after {
+  content: ''; position: absolute; bottom: -2px; left: 0; width: 100%; height: 2px;
+  background: linear-gradient(90deg, var(--color-accent), var(--color-surface));
+  border-radius: 1px; opacity: 0; transition: var(--transition-normal);
+}
+.logo:hover .logo-accent::after { opacity: 1; }
+
+/* Основная навигация */
+.main-nav { display: flex; align-items: center; gap: 2rem; }
+.nav-link {
+  position: relative; text-decoration: none; color: var(--color-text-primary);
+  font-family: 'Inter', sans-serif; font-size: 1rem; font-weight: 500;
+  padding: 8px 16px; border-radius: 8px; transition: var(--transition-normal); overflow: hidden;
+}
+.nav-link::before {
+  content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(82, 183, 136, 0.1), transparent);
+  transition: var(--transition-normal);
+}
+.nav-link:hover::before { left: 100%; }
+.nav-link:hover {
+  color: var(--color-primary); background-color: rgba(82, 183, 136, 0.1);
+  box-shadow: 0 0 20px rgba(82, 183, 136, 0.3); transform: translateY(-1px);
+}
+.nav-link span { position: relative; z-index: 1; }
+
+/* Действия в хедере */
+.header-actions { display: flex; align-items: center; gap: 1rem; }
+.action-btn {
+  position: relative; display: flex; align-items: center; justify-content: center;
+  width: 44px; height: 44px; background: var(--color-surface);
+  border: 1px solid rgba(82, 183, 136, 0.2); border-radius: 12px;
+  color: var(--color-text-primary); cursor: pointer; text-decoration: none;
+  transition: var(--transition-normal); box-shadow: var(--shadow-sm);
+}
+.action-btn svg {
+  width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2;
+  stroke-linecap: round; stroke-linejoin: round; transition: var(--transition-normal);
+}
+.action-btn svg * { stroke: currentColor; }
+.action-btn:hover {
+  background: var(--color-accent); color: var(--color-surface); border-color: var(--color-accent);
+  transform: translateY(-2px); box-shadow: var(--shadow-md);
+}
+.action-btn:hover svg { transform: scale(1.1); }
+
+/* Сохраняем место под кнопку поиска на /catalog */
+.search-btn.inert { visibility: hidden; pointer-events: none; }
+
+/* Счетчик корзины */
+.cart-btn { position: relative; }
+.cart-count {
+  position: absolute; top: -8px; right: -8px; background: var(--color-accent-alt);
+  color: var(--color-text-primary); font-size: 0.75rem; font-weight: 600;
+  padding: 2px 6px; border-radius: 10px; min-width: 18px; text-align: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Мобильное меню кнопка */
+.mobile-menu-btn {
+  display: none; flex-direction: column; justify-content: center; align-items: center;
+  gap: 6px; width: 44px; height: 44px; padding: 0; line-height: 0;
+}
+.mobile-menu-btn span {
+  display: block; width: 22px; height: 2px; background: var(--color-border-light);
+  margin: 0; border-radius: 1px; transition: var(--transition-normal); transform-origin: center center;
+}
+.mobile-menu-btn:hover { background: var(--color-accent); border-color: var(--color-accent); }
+.mobile-menu-btn:hover span { background: var(--color-surface); }
+.mobile-menu-btn.active span:nth-child(1) { transform: translateY(8px) rotate(45deg); }
+.mobile-menu-btn.active span:nth-child(2) { opacity: 0; }
+.mobile-menu-btn.active span:nth-child(3) { transform: translateY(-8px) rotate(-45deg); }
+
+/* Мобильное меню overlay */
+.mobile-menu-overlay {
+  position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+  background: rgba(45, 90, 39, 0.5); backdrop-filter: blur(5px); z-index: 999; animation: fadeIn 0.3s ease;
+}
+
+/* Запрет прокрутки */
+body.no-scroll, .no-scroll { overflow: hidden; }
+
+/* --- Блок поиска: фикс и анимация без «полосы» --- */
+
+/* контейнер поиска поверх страницы, но без перехвата кликов над шапкой */
+.header-search-wrap{
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  display: none;
+  z-index: 120;
+  pointer-events: none; /* клики управляют только overlay и карточка */
+}
+.header-search-wrap.open{ display: block; }
+
+/* мягкое затемнение с блюром,
+   начинается НИЖЕ шапки, не затемняет стык */
+.search-overlay{
+  position: fixed;
+  top: var(--header-height);
+  left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,.35);
+  backdrop-filter: blur(2px);
+  opacity: 0;
+  transition: opacity .24s ease;
+  pointer-events: auto;
+}
+.header-search-wrap.open .search-overlay{ opacity: 1; }
+
+/* панель сразу под шапкой, без -1px и без верхнего паддинга */
+.header-search-panel{
+  position: fixed;
+  top: var(--header-height);
+  left: 0; right: 0;
+  width: 100%;
+  opacity: 0;
+  padding: 0 20px;                /* совпадает с .header-container по бокам */
+  transform: translateY(-8px);
+  transition: transform .28s ease, opacity .28s ease;
+  pointer-events: none;           /* клики только по карточке внутри */
+}
+.header-search-wrap.open .header-search-panel{
+  transform: translateY(0);
+  opacity: 1;
+}
+
+/* карточка по центру и без лишних рамок */
+.header-search-card{
+  position: relative;
+  max-width: var(--search-max-width);
+  margin: 10px auto 0;            /* зазор под шапкой без «полосы» */
+  background: var(--color-surface, #fff);
+  border: 0;
+  border-radius: 14px;
+  box-shadow: 0 16px 48px rgba(0,0,0,.18);
+  padding: 10px;
+  pointer-events: auto;
+}
+
+/* активное состояние кнопки */
+.search-btn.active .icon-search{ opacity: .85; }
+
+/* Анимации */
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes gentle-sway { 0%,100%{transform:rotate(0)} 25%{transform:rotate(2deg)} 75%{transform:rotate(-2deg)} }
+
+/* ===== Адаптивность ===== */
+@media (max-width: 768px) {
+  :root { --header-height: 56px; } /* мобильная высота шапки */
+
+  .mobile-menu-btn { display: flex; background: var(--color-accent); border: 1px solid var(--color-accent); }
+  .logo-text { font-size: 1.4rem; }
+  .logo-icon { font-size: 1.5rem; }
+
+  .main-nav {
+    position: fixed; top: 0; right: 0; width: min(280px, 100%); height: 100vh;
+    background: var(--color-surface); flex-direction: column; align-items: flex-start;
+    padding: 2rem; padding-top: 80px; gap: 1rem;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: var(--shadow-md); border-left: 1px solid rgba(82, 183, 136, 0.2);
+    z-index: 1000; overflow-y: auto; transform: translateX(100%);
+  }
+  .main-nav.mobile-open { transform: translateX(0); }
+
+  .nav-link { width: 100%; padding: 12px 16px; border-radius: 8px; background: rgba(82, 183, 136, 0.05); }
+
+  .header-actions { gap: 0.5rem; }
+  .action-btn { width: 40px; height: 40px; }
+
+  /* мобильный режим поиска: тянем на всю ширину */
+  .header-search-panel{
+    left: 0; right: 0;
+    padding: 0;
+    transform: translateY(-12px);
+  }
+  .header-search-wrap.open .header-search-panel{ transform: translateY(0); }
+
+  .header-search-card{
+    border-top: 0;
+    border-radius: 0;
+    padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+    /* было: min-height: calc(100dvh - var(--header-height)); */
+    min-height: calc(100svh - var(--header-height));
+    min-height: calc(100dvh - var(--header-height));
+    box-shadow: 0 8px 28px rgba(0,0,0,.22);
+    max-width: none;
+    margin: 0;
+  }
+
+  /* Полностью скрыть верхнее меню на мобиле */
+  .main-nav { display: none !important; }
+
+  /* Спрятать дубли в хедере (поиск, корзина, аккаунт) */
+  .header-actions .search-btn,
+  .header-actions .cart-btn,
+  .header-actions .profile-btn { display: none !important; }
+
+  /* Жёстко скрыть кнопку бургера, если не нужна */
+  .mobile-menu-btn { display: none !important; }
+}
+
+@media (max-width: 480px) {
+  .header-container { padding: 0 10px; }
+  .logo-text { font-size: 1.2rem; }
+  .header-actions { gap: 0.25rem; }
+  .action-btn { width: 40px; height: 40px; }
+  .main-nav { width: 100vw; padding: 1.5rem; }
+}
+
+/* фон страницы, чтобы при инерционной прокрутке не мелькал белый */
+html, body { background: var(--color-surface, #fff); }
+
+/* если страница внутри <main>, тоже сняем «ступеньку» */
+main > *:last-child { margin-bottom: 0 !important; }

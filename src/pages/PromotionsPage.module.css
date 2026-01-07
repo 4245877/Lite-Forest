@@ -1,0 +1,264 @@
+/* Подключение шрифтов */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+.promotionsPage {
+  background-color: var(--eco-sand); /* Используем твой основной фон */
+  color: var(--text-primary);
+  overflow-x: hidden;
+  font-family: 'Inter', sans-serif;
+}
+
+/* --- 1. Hero-блок --- */
+.hero {
+  padding: 5rem 0 4rem;
+  text-align: center;
+  background: var(--gradient-hero); /* Если градиента нет, будет просто фон */
+}
+
+.heroTitle {
+  font-size: 3rem;
+  font-weight: 800;
+  color: var(--eco-dark);
+  margin-bottom: 1.5rem;
+  line-height: 1.2;
+  animation: slideInDown 0.8s ease-out;
+}
+
+.heroSubtitle {
+  font-size: 1.125rem;
+  color: var(--text-secondary);
+  max-width: 650px;
+  margin: 0 auto 1.5rem;
+  line-height: 1.6;
+  animation: slideInUp 0.8s ease-out 0.2s backwards;
+}
+
+.heroNote {
+  font-size: 0.95rem;
+  color: var(--text-secondary); /* Или чуть светлее, если есть tertiary */
+  opacity: 0.8;
+  max-width: 600px;
+  margin: 0 auto;
+  font-style: italic;
+  animation: slideInUp 0.8s ease-out 0.4s backwards;
+}
+
+/* --- 2. Сетка акций --- */
+.mainContent {
+  padding: 4rem 0;
+}
+
+.sectionIntro {
+  text-align: center;
+  max-width: 700px;
+  margin: 0 auto 3rem;
+  font-size: 1.1rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.promotionsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+}
+
+/* Карточка акции */
+.promoCard {
+  background: var(--white);
+  border-radius: 16px;
+  box-shadow: var(--shadow-sm); /* Легкая тень */
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.3s ease;
+  height: 100%;
+}
+
+.promoCard:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--eco-green-light); /* Легкая подсветка границы при наведении */
+}
+
+/* Иконка карточки (вместо банера) */
+.cardIcon {
+  font-size: 3.5rem;
+  background-color: var(--eco-cream); /* Светлый фон под иконкой */
+  padding: 2rem 1.5rem;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--eco-dark);
+}
+
+.promoInfo {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+
+.promoTitle {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--eco-dark);
+  margin-bottom: 0.75rem;
+  line-height: 1.4;
+}
+
+.promoDescription {
+  font-size: 1rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  flex-grow: 1; /* Чтобы описание занимало все доступное место */
+}
+
+/* --- 3. Блок "Как это работает" (Список с галочками) --- */
+.howItWorks {
+  padding: 5rem 0;
+  background: var(--white);
+  border-top: 1px solid rgba(0,0,0,0.05);
+  border-bottom: 1px solid rgba(0,0,0,0.05);
+}
+
+.stepsList {
+  max-width: 800px;
+  margin: 3rem auto 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.stepItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1rem;
+  border-radius: 12px;
+  transition: background-color 0.3s;
+}
+
+.stepItem:hover {
+  background-color: var(--eco-cream);
+}
+
+.checkIcon {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  background-color: var(--eco-green); /* Основной зеленый */
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  font-weight: bold;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.stepItem p {
+  font-size: 1.1rem;
+  color: var(--eco-dark);
+  line-height: 1.5;
+  margin: 0;
+  padding-top: 2px; /* Выравнивание текста относительно иконки */
+}
+
+/* --- 4. Блок FAQ / Правила --- */
+.faqSection {
+  padding: 5rem 0;
+  background-color: var(--eco-sand);
+}
+
+.faqTitle {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--eco-dark);
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.faqList {
+  max-width: 800px;
+  margin: 0 auto;
+  list-style: none; /* Убираем стандартные буллеты */
+  padding: 0;
+  display: grid;
+  gap: 1rem;
+}
+
+.faqList li {
+  position: relative;
+  padding-left: 1.5rem;
+  font-size: 1rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+/* Кастомный буллет для списка правил */
+.faqList li::before {
+  content: "•";
+  color: var(--eco-green); /* Цвет буллета */
+  font-size: 1.5rem;
+  position: absolute;
+  left: 0;
+  top: -4px;
+}
+
+/* --- Анимации --- */
+@keyframes slideInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideInDown {
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* --- Адаптивность --- */
+
+@media (max-width: 992px) {
+  .heroTitle {
+    font-size: 2.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .hero {
+    padding: 3rem 0;
+  }
+  
+  .heroTitle {
+    font-size: 2rem;
+  }
+
+  .promotionsGrid {
+    grid-template-columns: 1fr; /* Одна колонка на планшетах/мобильных */
+    max-width: 500px;
+    margin: 0 auto;
+  }
+
+  .stepItem {
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 480px) {
+  .heroTitle {
+    font-size: 1.75rem;
+  }
+  
+  .cardIcon {
+    font-size: 3rem;
+    padding: 1.5rem;
+  }
+  
+  .promoTitle {
+    font-size: 1.1rem;
+  }
+}

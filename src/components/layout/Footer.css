@@ -1,0 +1,346 @@
+/* src/components/layout/Footer.css */
+
+/* Шрифты (лучше держать единожды в app, но оставлю здесь для drop-in) */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+/* ===== Основной футер ===== */
+.app-footer {
+  position: relative;
+  background-color: var(--color-primary-dark); /* фикс: был отсутствующий --footer-bg */
+  color: #fff;                                  /* фикс: не используем несуществующий --white */
+  margin-top: auto;
+  overflow: hidden;
+
+  /* Декоративные «листья» поверх базового фона */
+  background-image:
+    radial-gradient(circle at 10% 20%, rgba(149, 213, 178, 0.12) 0%, transparent 50%),
+    radial-gradient(circle at 90% 80%, rgba(233, 196, 106, 0.12) 0%, transparent 50%),
+    radial-gradient(circle at 50% 50%, rgba(82, 183, 136, 0.07) 0%, transparent 70%);
+}
+
+.footer-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+  position: relative;
+  z-index: 2;
+}
+
+/* ===== Основное содержимое ===== */
+.footer-content {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 2.5rem;
+  padding: 3rem 0 2rem;
+}
+
+.footer-column {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.footer-title {
+  font-family: 'Inter', sans-serif;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--color-accent-alt); /* фикс: был eco-sand */
+  margin-bottom: 0.5rem;
+  position: relative;
+}
+
+.footer-title::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  width: 40px;
+  height: 2px;
+  background: linear-gradient(90deg, var(--color-accent), var(--color-primary-light));
+  border-radius: 1px;
+}
+
+/* Логотип и миссия */
+.footer-logo {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1rem;
+  font-family: 'Inter', sans-serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-accent-alt);
+}
+
+.footer-logo-icon {
+  font-size: 1.5rem;
+  margin-right: 8px;
+  animation: gentle-glow 4s ease-in-out infinite;
+}
+
+.footer-mission {
+  color: rgba(255, 255, 255, 0.85); /* фикс: был eco-light */
+  line-height: 1.6;
+  margin-bottom: 1rem;
+  font-size: 0.95rem;
+}
+
+.footer-link-accent {
+  color: var(--color-accent-alt);        /* фикс: был eco-beige */
+  text-decoration: none;
+  font-weight: 500;
+  transition: var(--transition-normal);  /* фикс: был transition-smooth */
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.footer-link-accent:hover { color: #fff; transform: translateX(4px); }
+.footer-link-accent:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--color-focus);
+  border-radius: 6px;
+}
+
+/* Ссылки секций */
+.footer-links {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.footer-links li a {
+  color: rgba(255, 255, 255, 0.9);       /* фикс: был eco-light */
+  text-decoration: none;
+  font-size: 0.95rem;
+  transition: var(--transition-normal);
+  padding: 4px 0;
+  display: block;
+  position: relative;
+}
+.footer-links li a::before {
+  content: '';
+  position: absolute;
+  left: -16px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 4px;
+  height: 4px;
+  background: var(--color-accent);        /* фикс: был eco-accent */
+  border-radius: 50%;
+  opacity: 0;
+  transition: var(--transition-normal);
+}
+.footer-links li a:hover { color: var(--color-accent-alt); padding-left: 12px; }
+.footer-links li a:hover::before { opacity: 1; }
+.footer-links li a:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--color-focus);
+  border-radius: 6px;
+}
+
+/* Соцсети */
+.footer-social-text {
+  color: rgba(255, 255, 255, 0.85);
+  margin-bottom: 1rem;
+  font-size: 0.95rem;
+}
+.social-links {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+.social-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  background: rgba(82, 183, 136, 0.1);
+  border: 1px solid rgba(82, 183, 136, 0.2);
+  border-radius: 12px;
+  color: #fff;                             /* фикс: был eco-light */
+  text-decoration: none;
+  transition: var(--transition-normal);
+  position: relative;
+  overflow: hidden;
+}
+.social-link::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(82, 183, 136, 0.12), transparent);
+  transition: var(--transition-normal);
+}
+.social-link:hover::before { left: 100%; }
+.social-link:hover {
+  background: var(--color-accent);
+  color: #fff;
+  border-color: var(--color-accent);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(82, 183, 136, 0.3);
+}
+.social-link:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--color-focus), 0 4px 20px rgba(82,183,136,0.3);
+  border-radius: 12px;
+}
+.social-link svg { transition: var(--transition-normal); }
+.social-link:hover svg { transform: scale(1.1); }
+
+/* Подписка */
+.newsletter-signup { margin-top: 1rem; }
+.newsletter-signup h4 {
+  color: var(--color-accent-alt);          /* фикс: был eco-sand */
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+.newsletter-form { display: flex; gap: 8px; margin-top: 0.5rem; }
+.newsletter-input {
+  flex: 1;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(82, 183, 136, 0.3);
+  border-radius: var(--radius-md);
+  color: #fff;                             /* фикс контраста: был text-dark */
+  caret-color: #fff;
+  font-size: 0.9rem;
+  transition: var(--transition-normal);
+}
+.newsletter-input::placeholder { color: rgba(255, 255, 255, 0.65); }
+.newsletter-input:focus {
+  outline: none;
+  border-color: var(--color-accent);
+  background: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 0 0 2px var(--color-focus);
+}
+.newsletter-btn {
+  width: 44px;
+  height: 44px;
+  background: var(--color-accent);
+  border: none;
+  border-radius: var(--radius-md);
+  color: #fff;
+  cursor: pointer;
+  transition: var(--transition-normal);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+.newsletter-btn:hover {
+  background: var(--color-secondary);      /* фикс: был eco-secondary */
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(82, 183, 136, 0.3);
+}
+.newsletter-btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--color-focus);
+  border-radius: var(--radius-md);
+}
+
+/* Нижняя кромка футера */
+.footer-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem 0;
+  border-top: 1px solid rgba(82, 183, 136, 0.2);
+  margin-top: 1rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+.footer-bottom-left p {
+  color: rgba(255, 255, 255, 0.85);        /* фикс: был eco-light */
+  font-size: 0.9rem;
+  margin: 0;
+}
+.footer-bottom-right { display: flex; gap: 1.5rem; flex-wrap: wrap; }
+.footer-bottom-link {
+  color: rgba(255, 255, 255, 0.85);
+  text-decoration: none;
+  font-size: 0.9rem;
+  transition: var(--transition-normal);
+  position: relative;
+}
+.footer-bottom-link::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 1px;
+  background: var(--color-accent-alt);     /* фикс: был eco-beige */
+  transition: var(--transition-normal);
+}
+.footer-bottom-link:hover { color: var(--color-accent-alt); }
+.footer-bottom-link:hover::after { width: 100%; }
+.footer-bottom-link:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--color-focus);
+  border-radius: 4px;
+}
+
+/* Декор */
+.footer-decoration {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  pointer-events: none;
+  z-index: 1;
+}
+.eco-particle {
+  position: absolute;
+  width: 6px; height: 6px;
+  background: var(--color-accent);
+  border-radius: 50%;
+  opacity: 0.3;
+  animation: float-particle 8s ease-in-out infinite;
+}
+.eco-particle:nth-child(1) { top: 20%; left: 10%; animation-delay: 0s; }
+.eco-particle:nth-child(2) { top: 60%; right: 15%; animation-delay: 2s; }
+.eco-particle:nth-child(3) { bottom: 30%; left: 60%; animation-delay: 4s; }
+
+/* Анимации */
+@keyframes gentle-glow {
+  0%, 100% { filter: brightness(1) drop-shadow(0 0 2px rgba(82, 183, 136, 0.3)); }
+  50%      { filter: brightness(1.2) drop-shadow(0 0 6px rgba(82, 183, 136, 0.5)); }
+}
+@keyframes float-particle {
+  0%, 100% { transform: translateY(0) rotate(0);   opacity: 0.3; }
+  25%      { transform: translateY(-20px) rotate(90deg);  opacity: 0.6; }
+  50%      { transform: translateY(-10px) rotate(180deg); opacity: 0.4; }
+  75%      { transform: translateY(-30px) rotate(270deg); opacity: 0.7; }
+}
+/* Уважение к prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  .footer-logo-icon, .eco-particle { animation: none; }
+}
+
+/* ===== Адаптив ===== */
+@media (max-width: 768px) {
+  .footer-content {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+    padding: 2rem 0 1.5rem;
+  }
+  .footer-container { padding: 0 15px; }
+  .social-links { justify-content: flex-start; flex-wrap: wrap; }
+  .newsletter-form { flex-direction: column; gap: 12px; }
+  .newsletter-btn { width: 100%; height: 48px; }
+  .footer-bottom { flex-direction: column; text-align: center; gap: 1rem; }
+  .footer-bottom-right { justify-content: center; gap: 1rem; }
+}
+@media (max-width: 480px) {
+  .footer-container { padding: 0 10px; }
+  .footer-content { gap: 1.5rem; padding: 1.5rem 0 1rem; }
+  .footer-title { font-size: 1.1rem; }
+  .social-links { gap: 0.75rem; }
+  .social-link { width: 40px; height: 40px; }
+  .footer-bottom-right { flex-direction: column; gap: 0.5rem; }
+}

@@ -1,0 +1,27 @@
+/* App.css — исправлено */
+
+/* Корневые контейнеры на всю ширину/высоту и без горизонтального скролла */
+html, body, #root {
+  width: 100%;
+  min-height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
+
+/* Опционально: общий контейнер приложения, если ты в App.jsx задаёшь className="App" */
+.App {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  width: 100%;
+}
+
+/* Универсальный контейнер для контента (если используешь) */
+.container {
+  max-width: 1680px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 0;
+  box-sizing: border-box;
+}

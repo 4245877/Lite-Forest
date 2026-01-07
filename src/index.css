@@ -1,0 +1,64 @@
+/* === index.css — мягкий ресет корня приложения === */
+
+/* Базовые системные настройки */
+:root {
+  color-scheme: light;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Корневые контейнеры — на всю ширину/высоту, без неожиданных отступов */
+html, body, #root {
+  width: 100%;
+  min-height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+/* Не делаем body flex’ом (это ломает макет страниц),
+   оставляем обычный блочный поток */
+body {
+  display: block;
+  min-width: 320px;
+  line-height: 1.5;
+  font-weight: 400;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial, sans-serif;
+
+  /* Фон и цвет подтянутся из global.css, но дадим безопасные fallback-и */
+  background-color: var(--color-background, #ffffff);
+  color: var(--color-text-primary, #213547);
+}
+
+/* Корневой узел приложения:
+   — не даём вылезать горизонтальному скроллу
+   — если родитель внезапно grid, дочерний .app-shell перекроет все колонки */
+#root {
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+/* Каркас приложения всегда занимает все колонки грида (если они есть) */
+#root > .app-shell {
+  grid-column: 1 / -1;
+  width: 100%;
+  min-height: 100vh;
+}
+
+/* Утилитарные мелочи */
+a {
+  color: inherit;
+  text-decoration: none;
+}
+a:hover { text-decoration: underline; }
+
+img, video, canvas, svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+button, input, select, textarea {
+  font: inherit;
+}
