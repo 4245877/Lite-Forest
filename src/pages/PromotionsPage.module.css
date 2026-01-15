@@ -1,250 +1,541 @@
-/* Подключение шрифтов */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+/* FILE: src/pages/PromotionsPage.module.css */
+
+/* ============================================
+   PROMOTIONS PAGE — MODERN & DYNAMIC DESIGN
+   ============================================ */
 
 .promotionsPage {
-  background-color: var(--eco-sand); /* Используем твой основной фон */
-  color: var(--text-primary);
-  overflow-x: hidden;
-  font-family: 'Inter', sans-serif;
+  min-height: 100vh;
+  background: var(--color-background);
 }
 
-/* --- 1. Hero-блок --- */
+/* ============================================
+   1.1. HERO SECTION
+   ============================================ */
+
 .hero {
-  padding: 5rem 0 4rem;
-  text-align: center;
-  background: var(--gradient-hero); /* Если градиента нет, будет просто фон */
+  position: relative;
+  padding: clamp(3rem, 8vw, 6rem) 0 clamp(2rem, 6vw, 4rem);
+  background: var(--gradient-hero);
+  overflow: hidden;
+}
+
+/* Subtle animated background pattern */
+.hero::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -20%;
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(
+    circle,
+    rgba(82, 183, 136, 0.08) 0%,
+    transparent 70%
+  );
+  border-radius: 50%;
+  animation: floatShape 20s ease-in-out infinite;
+}
+
+.hero::after {
+  content: '';
+  position: absolute;
+  bottom: -30%;
+  left: -10%;
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(
+    circle,
+    rgba(47, 82, 51, 0.06) 0%,
+    transparent 70%
+  );
+  border-radius: 50%;
+  animation: floatShape 25s ease-in-out infinite reverse;
+}
+
+@keyframes floatShape {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(30px, -30px) scale(1.1);
+  }
 }
 
 .heroTitle {
-  font-size: 3rem;
+  position: relative;
+  font-size: clamp(2rem, 5vw, 3.5rem);
   font-weight: 800;
-  color: var(--eco-dark);
-  margin-bottom: 1.5rem;
   line-height: 1.2;
-  animation: slideInDown 0.8s ease-out;
+  color: var(--color-primary-dark);
+  margin: 0 0 var(--spacing-xl);
+  letter-spacing: -0.02em;
+  animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .heroSubtitle {
-  font-size: 1.125rem;
-  color: var(--text-secondary);
-  max-width: 650px;
-  margin: 0 auto 1.5rem;
+  position: relative;
+  font-size: clamp(1.1rem, 2vw, 1.25rem);
   line-height: 1.6;
-  animation: slideInUp 0.8s ease-out 0.2s backwards;
+  color: var(--color-text-secondary);
+  margin: 0 0 var(--spacing-lg);
+  max-width: 700px;
+  animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both;
 }
 
 .heroNote {
-  font-size: 0.95rem;
-  color: var(--text-secondary); /* Или чуть светлее, если есть tertiary */
-  opacity: 0.8;
-  max-width: 600px;
-  margin: 0 auto;
-  font-style: italic;
-  animation: slideInUp 0.8s ease-out 0.4s backwards;
+  position: relative;
+  font-size: 1rem;
+  line-height: 1.6;
+  color: var(--color-text-muted);
+  margin: 0;
+  max-width: 650px;
+  animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both;
 }
 
-/* --- 2. Сетка акций --- */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ============================================
+   1.2. MAIN CONTENT
+   ============================================ */
+
 .mainContent {
-  padding: 4rem 0;
+  padding: clamp(3rem, 8vw, 5rem) 0;
 }
 
 .sectionIntro {
-  text-align: center;
-  max-width: 700px;
-  margin: 0 auto 3rem;
-  font-size: 1.1rem;
-  color: var(--text-secondary);
-  line-height: 1.6;
+  font-size: 1.05rem;
+  line-height: 1.7;
+  color: var(--color-text-secondary);
+  margin: 0 0 var(--spacing-4xl);
+  max-width: 740px;
 }
+
+/* ============================================
+   1.3. PROMOTIONS GRID
+   ============================================ */
 
 .promotionsGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 2rem;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr));
+  gap: var(--spacing-3xl);
+  animation: fadeIn 0.8s ease-out 0.3s both;
 }
 
-/* Карточка акции */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* ============================================
+   PROMO CARD — MODERN GLASSMORPHISM STYLE
+   ============================================ */
+
 .promoCard {
-  background: var(--white);
-  border-radius: 16px;
-  box-shadow: var(--shadow-sm); /* Легкая тень */
-  border: 1px solid rgba(0, 0, 0, 0.05);
-  overflow: hidden;
+  position: relative;
   display: flex;
-  flex-direction: column;
-  transition: all 0.3s ease;
-  height: 100%;
+  gap: var(--spacing-xl);
+  padding: var(--spacing-3xl);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition-normal);
+  overflow: hidden;
+  animation: cardSlideIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: calc(var(--card-index, 0) * 0.08s);
 }
 
+.promoCard:nth-child(1) { --card-index: 0; }
+.promoCard:nth-child(2) { --card-index: 1; }
+.promoCard:nth-child(3) { --card-index: 2; }
+.promoCard:nth-child(4) { --card-index: 3; }
+.promoCard:nth-child(5) { --card-index: 4; }
+.promoCard:nth-child(6) { --card-index: 5; }
+
+@keyframes cardSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Hover effect with subtle lift */
 .promoCard:hover {
-  transform: translateY(-5px);
+  transform: translateY(-4px);
   box-shadow: var(--shadow-md);
-  border-color: var(--eco-green-light); /* Легкая подсветка границы при наведении */
+  border-color: var(--color-accent);
 }
 
-/* Иконка карточки (вместо банера) */
+/* Gradient overlay on hover */
+.promoCard::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(82, 183, 136, 0.03) 0%,
+    transparent 60%
+  );
+  opacity: 0;
+  transition: var(--transition-normal);
+  pointer-events: none;
+}
+
+.promoCard:hover::before {
+  opacity: 1;
+}
+
+/* ============================================
+   CARD ICON
+   ============================================ */
+
 .cardIcon {
-  font-size: 3.5rem;
-  background-color: var(--eco-cream); /* Светлый фон под иконкой */
-  padding: 2rem 1.5rem;
-  text-align: center;
+  flex-shrink: 0;
+  width: 64px;
+  height: 64px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--eco-dark);
+  font-size: 2rem;
+  background: linear-gradient(
+    135deg,
+    rgba(82, 183, 136, 0.1) 0%,
+    rgba(47, 82, 51, 0.05) 100%
+  );
+  border-radius: var(--radius-md);
+  transition: var(--transition-normal);
 }
 
+.promoCard:hover .cardIcon {
+  transform: scale(1.1) rotate(5deg);
+  background: linear-gradient(
+    135deg,
+    rgba(82, 183, 136, 0.15) 0%,
+    rgba(47, 82, 51, 0.08) 100%
+  );
+}
+
+/* ============================================
+   CARD INFO
+   ============================================ */
+
 .promoInfo {
-  padding: 1.5rem;
+  flex: 1;
   display: flex;
   flex-direction: column;
-  flex-grow: 1;
+  gap: var(--spacing-md);
 }
 
 .promoTitle {
   font-size: 1.25rem;
   font-weight: 700;
-  color: var(--eco-dark);
-  margin-bottom: 0.75rem;
-  line-height: 1.4;
+  line-height: 1.3;
+  color: var(--color-primary-dark);
+  margin: 0;
+  letter-spacing: -0.01em;
+  transition: var(--transition-fast);
+}
+
+.promoCard:hover .promoTitle {
+  color: var(--color-accent);
 }
 
 .promoDescription {
-  font-size: 1rem;
-  color: var(--text-secondary);
-  line-height: 1.5;
-  flex-grow: 1; /* Чтобы описание занимало все доступное место */
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: var(--color-text-secondary);
+  margin: 0;
 }
 
-/* --- 3. Блок "Как это работает" (Список с галочками) --- */
+.cardLink {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-accent);
+  margin-top: var(--spacing-sm);
+  transition: var(--transition-fast);
+}
+
+.cardLink:hover {
+  color: var(--color-primary-light);
+  gap: var(--spacing-sm);
+}
+
+/* ============================================
+   1.4. HOW IT WORKS SECTION
+   ============================================ */
+
 .howItWorks {
-  padding: 5rem 0;
-  background: var(--white);
-  border-top: 1px solid rgba(0,0,0,0.05);
-  border-bottom: 1px solid rgba(0,0,0,0.05);
+  padding: clamp(3rem, 8vw, 5rem) 0;
+  background: linear-gradient(
+    180deg,
+    var(--color-surface) 0%,
+    var(--color-sand) 100%
+  );
+  position: relative;
+  overflow: hidden;
+}
+
+/* Decorative element */
+.howItWorks::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 800px;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--color-accent) 50%,
+    transparent 100%
+  );
+  opacity: 0.3;
 }
 
 .stepsList {
-  max-width: 800px;
-  margin: 3rem auto 0;
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
+  display: grid;
+  gap: var(--spacing-2xl);
+  margin-top: var(--spacing-3xl);
 }
 
 .stepItem {
   display: flex;
   align-items: flex-start;
-  gap: 1rem;
-  padding: 1rem;
-  border-radius: 12px;
-  transition: background-color 0.3s;
+  gap: var(--spacing-lg);
+  padding: var(--spacing-xl);
+  background: var(--color-surface);
+  border-left: 3px solid var(--color-accent);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition-normal);
+  animation: stepSlideIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: calc(var(--step-index, 0) * 0.1s);
+}
+
+.stepItem:nth-child(1) { --step-index: 0; }
+.stepItem:nth-child(2) { --step-index: 1; }
+.stepItem:nth-child(3) { --step-index: 2; }
+.stepItem:nth-child(4) { --step-index: 3; }
+
+@keyframes stepSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
 .stepItem:hover {
-  background-color: var(--eco-cream);
+  transform: translateX(4px);
+  box-shadow: var(--shadow-md);
+  border-left-color: var(--color-primary-light);
 }
 
 .checkIcon {
   flex-shrink: 0;
-  width: 32px;
-  height: 32px;
-  background-color: var(--eco-green); /* Основной зеленый */
-  color: white;
-  border-radius: 50%;
+  width: 28px;
+  height: 28px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 1rem;
-  font-weight: bold;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  color: var(--color-surface);
+  background: var(--color-accent);
+  border-radius: var(--radius-round);
+  transition: var(--transition-fast);
+}
+
+.stepItem:hover .checkIcon {
+  transform: scale(1.15);
+  background: var(--color-primary-light);
 }
 
 .stepItem p {
-  font-size: 1.1rem;
-  color: var(--eco-dark);
-  line-height: 1.5;
   margin: 0;
-  padding-top: 2px; /* Выравнивание текста относительно иконки */
+  font-size: 1rem;
+  line-height: 1.6;
+  color: var(--color-text-primary);
+  flex: 1;
 }
 
-/* --- 4. Блок FAQ / Правила --- */
+/* ============================================
+   1.5. FAQ SECTION
+   ============================================ */
+
 .faqSection {
-  padding: 5rem 0;
-  background-color: var(--eco-sand);
+  padding: clamp(3rem, 8vw, 5rem) 0 clamp(4rem, 10vw, 6rem);
+  background: var(--color-surface);
 }
 
 .faqTitle {
-  font-size: 1.8rem;
+  font-size: clamp(1.5rem, 3vw, 2rem);
   font-weight: 700;
-  color: var(--eco-dark);
-  margin-bottom: 2rem;
-  text-align: center;
+  color: var(--color-primary-dark);
+  margin: 0 0 var(--spacing-3xl);
+  letter-spacing: -0.01em;
 }
 
 .faqList {
-  max-width: 800px;
-  margin: 0 auto;
-  list-style: none; /* Убираем стандартные буллеты */
+  list-style: none;
   padding: 0;
+  margin: 0;
   display: grid;
-  gap: 1rem;
+  gap: var(--spacing-lg);
 }
 
 .faqList li {
   position: relative;
-  padding-left: 1.5rem;
+  padding-left: var(--spacing-3xl);
   font-size: 1rem;
-  color: var(--text-secondary);
-  line-height: 1.6;
+  line-height: 1.7;
+  color: var(--color-text-secondary);
+  animation: fadeInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: calc(var(--faq-index, 0) * 0.05s);
 }
 
-/* Кастомный буллет для списка правил */
+.faqList li:nth-child(1) { --faq-index: 0; }
+.faqList li:nth-child(2) { --faq-index: 1; }
+.faqList li:nth-child(3) { --faq-index: 2; }
+.faqList li:nth-child(4) { --faq-index: 3; }
+
+/* Custom bullet */
 .faqList li::before {
-  content: "•";
-  color: var(--eco-green); /* Цвет буллета */
-  font-size: 1.5rem;
+  content: '→';
   position: absolute;
   left: 0;
-  top: -4px;
+  top: 0;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--color-accent);
+  transition: var(--transition-fast);
 }
 
-/* --- Анимации --- */
-@keyframes slideInUp {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
+.faqList li:hover::before {
+  transform: translateX(4px);
+  color: var(--color-primary-light);
 }
 
-@keyframes slideInDown {
-  from { opacity: 0; transform: translateY(-20px); }
-  to { opacity: 1; transform: translateY(0); }
-}
+/* ============================================
+   RESPONSIVE — TABLET
+   ============================================ */
 
-/* --- Адаптивность --- */
+@media (max-width: 1024px) {
+  .promotionsGrid {
+    gap: var(--spacing-2xl);
+  }
 
-@media (max-width: 992px) {
-  .heroTitle {
-    font-size: 2.5rem;
+  .promoCard {
+    padding: var(--spacing-2xl);
+  }
+
+  .cardIcon {
+    width: 56px;
+    height: 56px;
+    font-size: 1.75rem;
   }
 }
+
+/* ============================================
+   RESPONSIVE — MOBILE
+   ============================================ */
 
 @media (max-width: 768px) {
   .hero {
-    padding: 3rem 0;
+    padding: var(--spacing-4xl) 0 var(--spacing-3xl);
   }
-  
+
   .heroTitle {
     font-size: 2rem;
   }
 
+  .heroSubtitle {
+    font-size: 1.05rem;
+  }
+
+  .mainContent {
+    padding: var(--spacing-4xl) 0;
+  }
+
   .promotionsGrid {
-    grid-template-columns: 1fr; /* Одна колонка на планшетах/мобильных */
-    max-width: 500px;
-    margin: 0 auto;
+    gap: var(--spacing-xl);
+  }
+
+  .promoCard {
+    flex-direction: column;
+    gap: var(--spacing-lg);
+    padding: var(--spacing-xl);
+  }
+
+  .cardIcon {
+    width: 52px;
+    height: 52px;
+    font-size: 1.5rem;
+  }
+
+  .promoTitle {
+    font-size: 1.15rem;
+  }
+
+  .promoDescription {
+    font-size: 0.9rem;
+  }
+
+  .howItWorks,
+  .faqSection {
+    padding: var(--spacing-4xl) 0;
+  }
+
+  .stepsList {
+    gap: var(--spacing-lg);
   }
 
   .stepItem {
-    align-items: flex-start;
+    padding: var(--spacing-lg);
+    gap: var(--spacing-md);
+  }
+
+  .checkIcon {
+    width: 24px;
+    height: 24px;
+    font-size: 0.9rem;
+  }
+
+  .stepItem p {
+    font-size: 0.95rem;
+  }
+
+  .faqList li {
+    padding-left: var(--spacing-2xl);
+    font-size: 0.95rem;
   }
 }
 
@@ -252,13 +543,64 @@
   .heroTitle {
     font-size: 1.75rem;
   }
-  
-  .cardIcon {
-    font-size: 3rem;
-    padding: 1.5rem;
+
+  .heroSubtitle,
+  .heroNote {
+    font-size: 1rem;
   }
-  
+
+  .promoCard {
+    padding: var(--spacing-lg);
+  }
+
+  .cardIcon {
+    width: 48px;
+    height: 48px;
+    font-size: 1.4rem;
+  }
+
   .promoTitle {
     font-size: 1.1rem;
+  }
+
+  .faqTitle {
+    font-size: 1.5rem;
+  }
+}
+
+/* ============================================
+   ACCESSIBILITY & REDUCED MOTION
+   ============================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  .promoCard,
+  .stepItem,
+  .faqList li,
+  .heroTitle,
+  .heroSubtitle,
+  .heroNote {
+    animation: none !important;
+  }
+
+  .promoCard:hover,
+  .stepItem:hover {
+    transform: none;
+  }
+
+  .hero::before,
+  .hero::after {
+    animation: none;
+  }
+}
+
+/* Dark mode support (optional) */
+@media (prefers-color-scheme: dark) {
+  .promoCard {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+
+  .stepItem {
+    background: rgba(255, 255, 255, 0.05);
   }
 }
