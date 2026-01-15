@@ -1,418 +1,648 @@
-/* ============================================= */
-/* === 📄 Стилі для юридичної сторінки (оновлено) === */
-/* ============================================= */
+/* ======================================================================
+   LegalPages.css — Сучасний дизайн юридичних сторінок
+   ====================================================================== */
 
-/* --- Основний контейнер --- */
+/* === 🎯 Основний контейнер === */
 .legal {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: var(--spacing-3xl) calc(var(--spacing-xl) + env(safe-area-inset-left));
-  padding-right: calc(var(--spacing-xl) + env(safe-area-inset-right));
   min-height: 100vh;
-  background: var(--color-background);
+  padding-top: clamp(2rem, 5vw, 4rem);
+  padding-bottom: clamp(3rem, 8vw, 6rem);
+  animation: fadeInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Центруємо контентні блоки на десктопі */
-@media (min-width: 769px) {
-  .legal__header { text-align: center; }
-  .legal__tabs { justify-content: center; }
-  .prose { margin-left: auto; margin-right: auto; }
-}
-
-@media (max-width: 768px) {
-  .legal {
-    padding: var(--spacing-2xl) calc(var(--spacing-lg) + env(safe-area-inset-left));
-    padding-right: calc(var(--spacing-lg) + env(safe-area-inset-right));
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
-/* --- Заголовок сторінки --- */
+/* === 📋 Шапка сторінки === */
 .legal__header {
-  margin-bottom: var(--spacing-4xl);
-  padding-bottom: var(--spacing-3xl);
+  position: relative;
+  padding-bottom: clamp(1.5rem, 4vw, 2.5rem);
   border-bottom: 2px solid var(--color-border-light);
-  background: var(--gradient-hero);
-  background-size: 100% clamp(140px, 28vw, 220px);
-  background-position: top center;
-  background-repeat: no-repeat;
-  padding: var(--spacing-4xl) var(--spacing-3xl);
-  border-radius: var(--radius-lg);
-  margin: calc(-1 * var(--spacing-3xl)) calc(-1 * var(--spacing-xl)) var(--spacing-4xl);
+  margin-bottom: clamp(2rem, 5vw, 3rem);
 }
 
-@media (max-width: 768px) {
-  .legal__header {
-    margin: calc(-1 * var(--spacing-2xl)) calc(-1 * var(--spacing-lg)) var(--spacing-3xl);
-    padding: var(--spacing-3xl) var(--spacing-xl);
-    border-radius: 0; /* повний відступ під мобільні */
+.legal__header::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 80px;
+  height: 2px;
+  background: var(--gradient-primary);
+  animation: slideIn 0.8s cubic-bezier(0.4, 0, 0.2, 1) 0.2s backwards;
+}
+
+@keyframes slideIn {
+  from {
+    width: 0;
+    opacity: 0;
+  }
+  to {
+    width: 80px;
+    opacity: 1;
   }
 }
 
 .legal__header h1 {
-  font-size: clamp(1.75rem, 4.5vw, 2.5rem);
+  font-size: clamp(1.75rem, 4vw, 2.5rem);
   font-weight: 700;
   color: var(--color-primary-dark);
-  margin-bottom: var(--spacing-md);
   letter-spacing: -0.02em;
   line-height: 1.2;
-  text-wrap: balance;
+  margin: 0 0 0.5rem 0;
 }
 
 .legal__header p {
-  font-size: 0.875rem;
   color: var(--color-text-secondary);
-  opacity: 0.9;
-  margin-bottom: var(--spacing-2xl);
+  font-size: clamp(0.875rem, 2vw, 0.9375rem);
+  margin: 0;
 }
 
-/* --- Навігаційні табки (кнопки) --- */
+/* === 🔖 Навігаційні таби === */
 .legal__tabs {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--spacing-md);
-  margin-top: var(--spacing-2xl);
-  justify-content: center; /* центруємо на всіх розмірах */
+  margin-top: 1.5rem;
+  position: sticky;
+  top: 80px;
+  z-index: 100;
+  background: var(--color-background);
+  padding: 1rem 0;
+  border-radius: var(--radius-md);
+  animation: fadeIn 0.8s cubic-bezier(0.4, 0, 0.2, 1) 0.3s backwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 .legal__tab {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: var(--spacing-sm) var(--spacing-xl);
-  min-height: 44px; /* зручна зона натискання */
-  border-radius: var(--radius-md, 8px); /* нормальна прямокутна форма */
-  border: 1.5px solid var(--color-border);
+  position: relative;
+  padding: 0.625rem 1.25rem;
   font-size: 0.875rem;
-  text-decoration: none;
+  font-weight: 500;
   color: var(--color-text-secondary);
   background: var(--color-surface);
+  border: 1.5px solid var(--color-border);
+  border-radius: 999px;
   transition: var(--transition-fast);
-  font-weight: 500;
   white-space: nowrap;
-  position: relative;
   overflow: hidden;
-  touch-action: manipulation;
-  -webkit-tap-highlight-color: transparent;
 }
 
 .legal__tab::before {
   content: '';
   position: absolute;
-  inset: 0 100% 0 0; /* початково 0 ширини */
+  inset: 0;
   background: var(--gradient-primary);
-  opacity: 0.1;
-  transition: var(--transition-normal);
+  opacity: 0;
+  transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: inherit;
+  z-index: -1;
 }
 
-/* Ховери лише на пристроях з курсором */
-@media (hover: hover) and (pointer: fine) {
-  .legal__tab:hover {
-    border-color: var(--color-accent);
-    color: var(--color-primary);
-    transform: translateY(-1px);
-    box-shadow: var(--shadow-sm);
-  }
-  .legal__tab:hover::before {
-    inset-inline-end: 0; /* розгорнути до 100% */
-  }
+.legal__tab:hover {
+  border-color: var(--color-accent);
+  color: var(--color-primary-dark);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
 }
 
+.legal__tab:hover::before {
+  opacity: 0.06;
+}
+
+.legal__tab:active {
+  transform: translateY(0);
+}
+
+/* Активний таб */
 .legal__tab[aria-current="page"] {
-  background: linear-gradient(135deg, var(--color-accent-alt) 0%, rgba(233, 196, 106, 0.3) 100%);
-  border-color: var(--color-accent-alt);
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  border-color: #fbbf24;
   color: var(--color-primary-dark);
   font-weight: 600;
-  box-shadow: var(--shadow-sm);
-  border-radius: var(--radius-md, 8px); /* узгодити стан активної кнопки */
+  box-shadow: 
+    0 2px 8px rgba(251, 191, 36, 0.2),
+    0 0 0 3px rgba(251, 191, 36, 0.1);
 }
 
-/* --- Секції контенту --- */
+.legal__tab[aria-current="page"]::before {
+  opacity: 0;
+}
+
+/* === 📄 Секції контенту === */
 .legal__section {
-  scroll-margin-top: 96px;
-  animation: fadeInUp 0.5s ease-out;
-  padding: var(--spacing-4xl) 0;
-  border-bottom: 1px solid var(--color-border-light);
-}
-
-.legal__section:last-child { border-bottom: none; }
-
-@keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-/* --- Стилі для prose контенту --- */
-.prose {
-  max-width: 72ch; /* краще читання на великих екранах */
-  color: var(--color-text-primary);
-  line-height: 1.75;
-  margin-left: auto;  /* центруємо колонку тексту */
-  margin-right: auto; /* на десктопі */
-}
-
-.prose h2 {
-  font-size: 2rem;
-  font-weight: 700;
-  color: var(--color-primary);
-  margin-top: 0;
-  margin-bottom: var(--spacing-3xl);
-  padding-bottom: var(--spacing-lg);
-  border-bottom: 3px solid var(--color-accent);
   position: relative;
-  letter-spacing: -0.01em;
-  text-wrap: balance;
+  padding: clamp(2rem, 5vw, 3rem) 0;
+  animation: fadeInSection 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  animation-fill-mode: backwards;
+}
+
+.legal__section:nth-child(2) { animation-delay: 0.1s; }
+.legal__section:nth-child(3) { animation-delay: 0.15s; }
+.legal__section:nth-child(4) { animation-delay: 0.2s; }
+.legal__section:nth-child(5) { animation-delay: 0.25s; }
+.legal__section:nth-child(6) { animation-delay: 0.3s; }
+
+@keyframes fadeInSection {
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Розділова лінія між секціями */
+.legal__section + .legal__section {
+  border-top: 1px solid var(--color-border-light);
+}
+
+/* === 🎨 Типографіка Prose === */
+.prose {
+  color: var(--color-text-primary);
+  font-size: clamp(0.9375rem, 2vw, 1.0625rem);
+  line-height: 1.75;
+  max-width: 75ch;
+}
+
+/* Заголовки */
+.prose h2 {
+  font-size: clamp(1.5rem, 3.5vw, 1.875rem);
+  font-weight: 700;
+  color: var(--color-primary-dark);
+  margin-top: 0;
+  margin-bottom: 1.25rem;
+  letter-spacing: -0.02em;
+  line-height: 1.3;
+  position: relative;
+  padding-bottom: 0.75rem;
 }
 
 .prose h2::after {
   content: '';
   position: absolute;
-  bottom: -3px;
+  bottom: 0;
   left: 0;
   width: 60px;
   height: 3px;
   background: var(--gradient-primary);
+  border-radius: 999px;
+  opacity: 0.8;
 }
 
 .prose h3 {
-  font-size: 1.25rem;
+  font-size: clamp(1.125rem, 2.5vw, 1.375rem);
   font-weight: 600;
-  color: var(--color-secondary);
-  margin-top: var(--spacing-4xl);
-  margin-bottom: var(--spacing-xl);
-  position: relative;
-  padding-left: var(--spacing-lg);
-  text-wrap: balance;
+  color: var(--color-primary);
+  margin-top: 2rem;
+  margin-bottom: 0.875rem;
+  letter-spacing: -0.01em;
+  line-height: 1.4;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .prose h3::before {
-  content: '▸';
-  position: absolute;
-  left: 0;
-  color: var(--color-accent);
-  font-weight: 700;
+  content: '';
+  display: inline-block;
+  width: 4px;
+  height: 1.2em;
+  background: var(--color-accent);
+  border-radius: 999px;
+  flex-shrink: 0;
 }
 
+/* Параграфи */
 .prose p {
-  margin-bottom: var(--spacing-xl);
-  font-size: 1rem;
+  margin-top: 0;
+  margin-bottom: 1.25rem;
   color: var(--color-text-primary);
-  text-align: justify;
+}
+
+.prose p:last-child {
+  margin-bottom: 0;
+}
+
+/* Списки */
+.prose ul,
+.prose ol {
+  margin-top: 1rem;
+  margin-bottom: 1.5rem;
+  padding-left: 1.75rem;
 }
 
 .prose ul {
-  margin: var(--spacing-xl) 0;
-  padding-left: var(--spacing-3xl);
   list-style: none;
+  padding-left: 0;
 }
 
 .prose ul li {
   position: relative;
-  margin-bottom: var(--spacing-md);
-  padding-left: var(--spacing-2xl);
-  color: var(--color-text-primary);
-  line-height: 1.75;
+  padding-left: 2rem;
+  margin-bottom: 0.75rem;
+  transition: var(--transition-fast);
 }
 
 .prose ul li::before {
-  content: '•';
+  content: '';
   position: absolute;
   left: 0;
-  color: var(--color-accent);
-  font-weight: bold;
-  font-size: 1.2em;
-}
-
-.prose ul li strong {
-  color: var(--color-primary-dark);
-  font-weight: 600;
-}
-
-.prose a {
-  color: var(--color-primary);
-  text-decoration: none;
-  border-bottom: 1px solid transparent;
+  top: 0.6em;
+  width: 6px;
+  height: 6px;
+  background: var(--color-accent);
+  border-radius: 50%;
   transition: var(--transition-fast);
+}
+
+.prose ul li:hover::before {
+  transform: scale(1.4);
+  background: var(--color-primary);
+}
+
+.prose ol {
+  counter-reset: legal-counter;
+  list-style: none;
+  padding-left: 0;
+}
+
+.prose ol li {
+  position: relative;
+  padding-left: 2.5rem;
+  margin-bottom: 0.75rem;
+  counter-increment: legal-counter;
+}
+
+.prose ol li::before {
+  content: counter(legal-counter) ".";
+  position: absolute;
+  left: 0;
+  top: 0;
+  font-weight: 700;
+  color: var(--color-accent);
+  font-size: 0.95em;
+}
+
+/* Nested lists */
+.prose ul ul,
+.prose ol ol,
+.prose ul ol,
+.prose ol ul {
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+/* Strong */
+.prose strong {
+  font-weight: 600;
+  color: var(--color-primary-dark);
+}
+
+/* Посилання */
+.prose a {
+  color: var(--color-accent);
   font-weight: 500;
+  text-decoration: none;
+  position: relative;
+  transition: var(--transition-fast);
+  border-bottom: 1px solid transparent;
+}
+
+.prose a::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 0;
+  height: 1px;
+  background: var(--color-accent);
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .prose a:hover {
-  color: var(--color-accent);
-  border-bottom-color: var(--color-accent);
+  color: var(--color-primary);
 }
 
-/* --- Таблиця cookie --- */
-.overflow-x-auto {
-  overflow-x: auto;
-  margin: var(--spacing-3xl) 0;
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-md);
-  -webkit-overflow-scrolling: touch;
-}
-
-.overflow-x-auto table {
+.prose a:hover::after {
   width: 100%;
-  min-width: 600px;
-  font-size: 0.875rem;
+}
+
+/* === 📊 Таблиці === */
+.prose table {
+  width: 100%;
   border-collapse: separate;
   border-spacing: 0;
+  margin: 2rem 0;
+  font-size: 0.9375rem;
   background: var(--color-surface);
   border-radius: var(--radius-md);
   overflow: hidden;
+  box-shadow: var(--shadow-sm);
 }
 
-.overflow-x-auto thead {
-  background: var(--gradient-primary);
-  color: var(--color-light);
+.prose thead {
+  background: linear-gradient(135deg, var(--color-sand) 0%, var(--color-cream) 100%);
 }
 
-.overflow-x-auto th {
-  padding: var(--spacing-lg) var(--spacing-md);
-  text-align: left;
+.prose thead th {
   font-weight: 600;
-  white-space: nowrap;
-  letter-spacing: 0.025em;
-  text-transform: uppercase;
-  font-size: 0.75rem;
+  text-align: left;
+  color: var(--color-primary-dark);
+  padding: 1rem;
+  border-bottom: 2px solid var(--color-border);
 }
 
-.overflow-x-auto tbody tr { transition: var(--transition-fast); }
-.overflow-x-auto tbody tr:hover { background: var(--color-sand); }
+.prose tbody tr {
+  transition: var(--transition-fast);
+  border-bottom: 1px solid var(--color-border-light);
+}
 
-.overflow-x-auto tbody tr:not(:last-child) td { border-bottom: 1px solid var(--color-border-light); }
+.prose tbody tr:last-child {
+  border-bottom: none;
+}
 
-.overflow-x-auto td {
-  padding: var(--spacing-lg) var(--spacing-md);
+.prose tbody tr:hover {
+  background: var(--color-sand);
+}
+
+.prose tbody td {
+  padding: 0.875rem 1rem;
   color: var(--color-text-primary);
-  vertical-align: top;
 }
 
-.overflow-x-auto tbody tr:nth-child(even) { background: rgba(241, 250, 238, 0.3); }
+/* Перший стовпець жирніший */
+.prose tbody td:first-child {
+  font-weight: 500;
+  color: var(--color-primary);
+}
 
-/* --- Примітка під таблицею --- */
-.overflow-x-auto + p.text-sm {
+/* === 🎭 Спеціальні елементи === */
+
+/* Блок нотаток */
+.prose .text-sm.opacity-80 {
+  background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+  border-left: 3px solid var(--color-accent);
+  padding: 1rem 1.25rem;
+  border-radius: var(--radius-sm);
+  margin-top: 1.5rem;
   font-size: 0.875rem;
-  color: var(--color-text-muted);
-  font-style: italic;
-  margin-top: calc(-1 * var(--spacing-xl));
-  margin-bottom: var(--spacing-3xl);
+  line-height: 1.6;
+  color: var(--color-text-secondary);
+  box-shadow: 0 2px 6px rgba(82, 183, 136, 0.08);
 }
 
-/* --- Адаптивність --- */
+/* Overflow таблиць на мобільних */
+.overflow-x-auto {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin: 1.5rem -1rem;
+  padding: 0 1rem;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border) transparent;
+}
+
+.overflow-x-auto::-webkit-scrollbar {
+  height: 8px;
+}
+
+.overflow-x-auto::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.overflow-x-auto::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 999px;
+}
+
+.overflow-x-auto::-webkit-scrollbar-thumb:hover {
+  background: var(--color-accent);
+}
+
+/* === 📱 Адаптивність === */
+
+/* Планшети */
+@media (max-width: 1024px) {
+  .legal {
+    padding-left: clamp(1rem, 4vw, 1.5rem);
+    padding-right: clamp(1rem, 4vw, 1.5rem);
+  }
+
+  .legal__tabs {
+    top: 70px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    gap: 0.5rem;
+  }
+
+  .legal__tabs::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Мобільні */
 @media (max-width: 768px) {
-  .prose { max-width: none; }
-  .prose h2 { font-size: 1.5rem; }
+  .legal {
+    padding-top: 1.5rem;
+    padding-bottom: 2rem;
+  }
+
+  .legal__header {
+    padding-bottom: 1.25rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .legal__header::after {
+    width: 60px;
+  }
+
+  .legal__tabs {
+    top: 60px;
+    margin-top: 1rem;
+    padding: 0.75rem 0;
+    flex-wrap: nowrap;
+    overflow-x: scroll;
+    scrollbar-width: none;
+  }
+
+  .legal__tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .legal__tab {
+    padding: 0.5rem 1rem;
+    font-size: 0.8125rem;
+    flex-shrink: 0;
+  }
+
+  .legal__section {
+    padding: 1.5rem 0;
+  }
+
+  .prose {
+    font-size: 0.9375rem;
+  }
+
+  .prose h2 {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+  }
+
+  .prose h2::after {
+    width: 50px;
+    height: 2px;
+  }
+
   .prose h3 {
     font-size: 1.125rem;
-    margin-top: var(--spacing-3xl);
+    margin-top: 1.5rem;
+    margin-bottom: 0.75rem;
   }
-  .prose p { text-align: left; } /* краще читання на мобільних */
-  .prose ul { padding-left: var(--spacing-xl); }
-  .prose ul li { padding-left: var(--spacing-xl); }
+
+  .prose ul li,
+  .prose ol li {
+    padding-left: 1.5rem;
+    margin-bottom: 0.625rem;
+  }
+
+  .prose table {
+    font-size: 0.875rem;
+    margin: 1.5rem 0;
+  }
+
+  .prose thead th,
+  .prose tbody td {
+    padding: 0.75rem 0.625rem;
+  }
+
   .overflow-x-auto {
-    margin-left: calc(-1 * var(--spacing-lg));
-    margin-right: calc(-1 * var(--spacing-lg));
-    border-radius: 0;
-    box-shadow: var(--shadow-sm);
+    margin: 1rem -1rem;
   }
-  .legal__section { scroll-margin-top: 80px; }
+
+  /* Sticky tabs на мобільному не перекривають контент */
+  .legal__tabs {
+    backdrop-filter: blur(8px);
+    background: rgba(248, 250, 252, 0.95);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  }
 }
 
-@media (max-width: 480px) {
+/* Дуже маленькі екрани */
+@media (max-width: 375px) {
   .legal__tab {
-    font-size: 0.8125rem;
-    padding: var(--spacing-sm) var(--spacing-md);
-    min-height: 44px;
+    padding: 0.5rem 0.875rem;
+    font-size: 0.75rem;
   }
-  .overflow-x-auto table { font-size: 0.8125rem; }
+
+  .prose {
+    font-size: 0.875rem;
+  }
+
+  .prose ul li,
+  .prose ol li {
+    padding-left: 1.25rem;
+  }
 }
 
-/* --- Стан фокусу для доступності --- */
-.legal__tab:focus-visible {
-  outline: 2px solid var(--color-accent);
-  outline-offset: 2px;
-  border-radius: var(--radius-md, 8px);
+/* === ⚡ Анімації для взаємодії === */
+
+/* Smooth scroll для всієї сторінки */
+html {
+  scroll-behavior: smooth;
 }
 
-.prose a:focus-visible {
-  outline: 2px solid var(--color-accent);
-  outline-offset: 2px;
-  border-radius: var(--radius-sm);
-}
-
-/* --- Друк --- */
-@media (print) {
-  .legal__header {
-    background: none;
-    border-bottom: 2px solid #000;
-    padding: var(--spacing-xl) 0;
-    margin: 0 0 var(--spacing-3xl);
-    text-align: left;
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
   }
-  .legal__tabs { display: none; }
-  .legal__section {
-    page-break-inside: avoid;
-    border-bottom: 1px solid #ccc;
-    padding: var(--spacing-2xl) 0;
-  }
+  
+  .legal,
+  .legal__section,
+  .legal__tab,
+  .prose ul li,
   .prose a {
-    color: #000;
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* Parallax ефект для заголовків (опціонально) */
+@media (min-width: 1024px) {
+  .prose h2 {
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .prose h2:hover {
+    transform: translateX(4px);
+  }
+}
+
+/* Hover ефект для секцій */
+@media (hover: hover) {
+  .legal__section:hover {
+    background: linear-gradient(
+      to right,
+      transparent 0%,
+      rgba(82, 183, 136, 0.02) 50%,
+      transparent 100%
+    );
+  }
+}
+
+/* === 🎯 Accessibility improvements === */
+
+/* Висококонтрастний режим */
+@media (prefers-contrast: high) {
+  .legal__tab {
+    border-width: 2px;
+  }
+
+  .prose a {
     text-decoration: underline;
   }
-  .overflow-x-auto { box-shadow: none; }
-}
 
-/* --- Анімація завантаження секцій --- */
-.legal__section {
-  opacity: 0;
-  animation: sectionFadeIn 0.6s ease-out forwards;
-}
-
-.legal__section:nth-child(2) { animation-delay: 0.1s; }
-.legal__section:nth-child(3) { animation-delay: 0.2s; }
-.legal__section:nth-child(4) { animation-delay: 0.3s; }
-
-@keyframes sectionFadeIn {
-  from { opacity: 0; transform: translateY(30px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-/* --- Зменшення руху для доступності --- */
-@media (prefers-reduced-motion: reduce) {
-  * { animation: none !important; transition: none !important; }
-}
-
-/* --- Покращення читабельності --- */
-.prose {
-  font-feature-settings: "kern" 1, "liga" 1;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-/* --- Спеціальні акценти --- */
-.legal__section:target { animation: highlight 1s ease-out; }
-
-@keyframes highlight {
-  0% { background: transparent; }
-  50% { background: linear-gradient(90deg, transparent, var(--color-sand), transparent); }
-  100% { background: transparent; }
-}
-
-/* --- Мобільна навігація --- */
-@media (max-width: 640px) {
-  .legal__tabs {
-    position: sticky;
-    top: 60px;
-    background: var(--color-surface);
-    padding: var(--spacing-md);
-    margin: calc(-1 * var(--spacing-md)) calc(-1 * var(--spacing-lg)) var(--spacing-3xl);
-    box-shadow: var(--shadow-sm);
-    z-index: 10;
-    border-radius: 0;
+  .prose h2::after,
+  .prose h3::before {
+    opacity: 1;
   }
-  .legal__tab {
-    flex: 1;
-    font-size: 0.75rem;
-    padding: var(--spacing-sm) var(--spacing-md);
-    border-radius: var(--radius-md, 8px); /* нормальна форма і на мобайлі */
-  }
+}
+
+/* Dark mode ready (опціонально) */
+@media (prefers-color-scheme: dark) {
+  /* Можна додати темну тему за потреби */
+}
+
+/* === 🔍 Додаткові утиліти === */
+
+/* Вирівнювання для вузьких контейнерів */
+.prose.prose-neutral {
+  max-width: 75ch;
+}
+
+/* Якщо потрібен ширший контент */
+.prose.prose-wide {
+  max-width: 85ch;
+}
+
+/* Spacing для not-prose елементів */
+.not-prose {
+  margin: 1.5rem 0;
+}
+
+/* Плавна поява при скролі (опціонально, потребує JS) */
+.legal__section.in-view {
+  animation: fadeInSection 0.6s cubic-bezier(0.4, 0, 0.2, 1);
 }
