@@ -1,0 +1,682 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   OrdersTab.module.css
+   Aesthetic: Raphtalia — warm, trustworthy, organic, quietly alive
+   Тёплые тени, мягкие анимации входа, зелено-золотая тема, четкая типографика
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─── Локальные токены вкладки ──────────────────────────────────────────── */
+.orders {
+  /* Цвета карточек */
+  --ot-card-bg: var(--color-surface);
+  --ot-card-border: rgba(var(--color-primary-rgb), 0.1);
+  --ot-card-border-hover: rgba(var(--color-primary-rgb), 0.22);
+  --ot-card-shadow: 0 2px 12px rgba(var(--color-primary-rgb), 0.07);
+  --ot-card-shadow-hover: 0 8px 28px rgba(var(--color-primary-rgb), 0.14);
+  --ot-card-radius: var(--radius-lg);
+
+  /* Акцент — золото Raphtalia */
+  --ot-gold: var(--color-accent-alt);
+  --ot-gold-soft: color-mix(in srgb, var(--color-accent-alt) 18%, var(--color-surface));
+  --ot-gold-mid: color-mix(in srgb, var(--color-accent-alt) 40%, var(--color-surface));
+
+  /* Лесной зелёный */
+  --ot-forest: var(--color-primary);
+  --ot-forest-dark: var(--color-primary-dark);
+  --ot-forest-light: var(--color-secondary);
+  --ot-forest-pale: color-mix(in srgb, var(--color-accent) 14%, var(--color-surface));
+  --ot-accent: var(--color-accent);
+
+  /* Текст */
+  --ot-text: var(--color-text-primary);
+  --ot-text-soft: var(--color-text-secondary);
+  --ot-text-muted: var(--color-text-muted);
+
+  /* Миниатюры товаров */
+  --ot-thumb-size: 60px;
+  --ot-thumb-bg: color-mix(in srgb, var(--color-accent) 10%, var(--color-surface));
+  --ot-thumb-radius: var(--radius-md);
+  --ot-thumb-border: rgba(var(--color-primary-rgb), 0.1);
+
+  /* Кнопки действий */
+  --ot-btn-height: 40px;
+  --ot-btn-radius: 8px;
+  --ot-btn-font: 0.82rem;
+  --ot-btn-gap: 6px;
+
+  /* Статусы */
+  --ot-status-ok-bg: color-mix(in srgb, var(--color-accent) 14%, var(--color-surface));
+  --ot-status-ok-fg: var(--color-success);
+  --ot-status-ok-border: rgba(var(--color-accent-rgb), 0.3);
+  --ot-status-neutral-bg: color-mix(in srgb, var(--color-accent-alt) 14%, var(--color-surface));
+  --ot-status-neutral-fg: color-mix(in srgb, var(--color-accent-alt) 55%, var(--color-primary-dark));
+  --ot-status-neutral-border: rgba(233, 196, 106, 0.35);
+
+  /* Анимации */
+  --ot-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ot-ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ot-duration-in: 0.55s;
+  --ot-duration-hover: 0.25s;
+
+  /* Разделитель */
+  --ot-divider: 1px solid rgba(var(--color-primary-rgb), 0.07);
+}
+
+/* ─── Шапка секции ──────────────────────────────────────────────────────── */
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--spacing-lg);
+  margin-bottom: var(--spacing-3xl);
+}
+
+.title {
+  position: relative;
+  display: inline-block;
+  margin: 0 0 var(--spacing-xs);
+  color: var(--ot-forest-dark);
+  font-size: clamp(1.25rem, 3vw, 1.6rem);
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: 1.2;
+}
+
+/* Золотая черта-подчёркивание — подпись Raphtalia */
+.title::after {
+  content: "";
+  position: absolute;
+  bottom: -3px;
+  left: 0;
+  width: 0;
+  height: 3px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--ot-gold) 0%, transparent 100%);
+  animation: titleLine var(--ot-duration-in) var(--ot-ease-out) 0.2s both;
+}
+
+@keyframes titleLine {
+  from { width: 0; opacity: 0; }
+  to   { width: 100%; opacity: 1; }
+}
+
+.subtitle {
+  margin: 0;
+  color: var(--ot-text-soft);
+  font-size: 0.875rem;
+  line-height: 1.55;
+  max-width: 52ch;
+}
+
+/* ─── Скелетон загрузки ─────────────────────────────────────────────────── */
+.skeletonMain {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+  padding: var(--spacing-xs) 0;
+}
+
+.skeletonMain::before,
+.skeletonMain::after {
+  content: "";
+  display: block;
+  height: 128px;
+  border-radius: var(--ot-card-radius);
+  background: linear-gradient(
+    90deg,
+    var(--ot-forest-pale) 0%,
+    color-mix(in srgb, var(--color-accent) 22%, var(--color-surface)) 40%,
+    var(--ot-forest-pale) 80%
+  );
+  background-size: 240% 100%;
+  animation: shimmer 2.2s ease-in-out infinite;
+}
+
+.skeletonMain::after {
+  animation-delay: 0.35s;
+  opacity: 0.7;
+}
+
+@keyframes shimmer {
+  0%   { background-position: 200% center; }
+  100% { background-position: -200% center; }
+}
+
+/* ─── Пустое состояние ──────────────────────────────────────────────────── */
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-5xl) var(--spacing-xl);
+  text-align: center;
+  animation: fadeUp var(--ot-duration-in) var(--ot-ease-out) both;
+}
+
+.emptyTitle {
+  color: var(--ot-forest-dark);
+  font-size: 1.125rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+}
+
+.emptyText {
+  color: var(--ot-text-soft);
+  font-size: 0.9rem;
+  max-width: 32ch;
+  line-height: 1.6;
+}
+
+/* ─── Список замовлень ──────────────────────────────────────────────────── */
+.ordersList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+}
+
+/* ─── Карточка замовлення ────────────────────────────────────────────────── */
+.orderItem {
+  position: relative;
+  background: var(--ot-card-bg);
+  border: 1px solid var(--ot-card-border);
+  border-radius: var(--ot-card-radius);
+  box-shadow: var(--ot-card-shadow);
+  overflow: hidden;
+  transition:
+    border-color var(--ot-duration-hover) ease,
+    box-shadow var(--ot-duration-hover) ease,
+    transform var(--ot-duration-hover) var(--ot-ease-spring);
+
+  /* Плавный вход с задержкой через счётчик */
+  animation: cardIn var(--ot-duration-in) var(--ot-ease-out) both;
+}
+
+/* Staggered entrance для каждой карточки — через inline style в JSX не нужен,
+   делаем через nth-child */
+.orderItem:nth-child(1)  { animation-delay: 0.00s; }
+.orderItem:nth-child(2)  { animation-delay: 0.07s; }
+.orderItem:nth-child(3)  { animation-delay: 0.14s; }
+.orderItem:nth-child(4)  { animation-delay: 0.20s; }
+.orderItem:nth-child(5)  { animation-delay: 0.26s; }
+.orderItem:nth-child(6)  { animation-delay: 0.32s; }
+.orderItem:nth-child(7)  { animation-delay: 0.37s; }
+.orderItem:nth-child(8)  { animation-delay: 0.42s; }
+.orderItem:nth-child(9)  { animation-delay: 0.46s; }
+.orderItem:nth-child(10) { animation-delay: 0.50s; }
+
+@keyframes cardIn {
+  0% {
+    opacity: 0;
+    transform: translateY(16px) scale(0.98);
+    filter: blur(2px);
+  }
+  55% { filter: blur(0); }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+.orderItem:hover {
+  border-color: var(--ot-card-border-hover);
+  box-shadow: var(--ot-card-shadow-hover);
+  transform: translateY(-2px);
+}
+
+/* Декоративная боковая полоска (тихий акцент) */
+.orderItem::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 3px;
+  height: 100%;
+  background: linear-gradient(180deg, var(--ot-gold) 0%, var(--ot-accent) 100%);
+  opacity: 0;
+  border-radius: 0 0 0 0;
+  transition: opacity var(--ot-duration-hover) ease;
+}
+
+.orderItem:hover::before {
+  opacity: 1;
+}
+
+/* ─── Шапка карточки ────────────────────────────────────────────────────── */
+.orderHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-md);
+  padding: var(--spacing-lg) var(--spacing-xl);
+  border-bottom: var(--ot-divider);
+  background: linear-gradient(
+    135deg,
+    var(--ot-forest-pale) 0%,
+    transparent 60%
+  );
+}
+
+.orderHead strong {
+  color: var(--ot-forest-dark);
+  font-size: 0.9375rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.orderDate {
+  color: var(--ot-text-muted);
+  font-size: 0.8rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  padding: 2px var(--spacing-sm);
+  background: var(--ot-gold-soft);
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(233, 196, 106, 0.2);
+}
+
+/* ─── Состав замовлення ─────────────────────────────────────────────────── */
+.orderComposition {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-lg);
+  padding: var(--spacing-lg) var(--spacing-xl);
+  border-bottom: var(--ot-divider);
+}
+
+/* Ряд миниатюр */
+.orderThumbs {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  gap: var(--spacing-xs);
+}
+
+.orderThumbLink {
+  display: inline-flex;
+  flex: 0 0 auto;
+  border-radius: inherit;
+  color: inherit;
+  text-decoration: none;
+}
+
+.orderThumbLink:focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 3px;
+}
+
+.orderThumbLink .orderThumb {
+  display: block;
+}
+
+.orderThumb {
+  width: var(--ot-thumb-size);
+  height: var(--ot-thumb-size);
+  object-fit: cover;
+  border-radius: var(--ot-thumb-radius);
+  background: var(--ot-thumb-bg);
+  border: 1px solid var(--ot-thumb-border);
+  transition: transform var(--ot-duration-hover) var(--ot-ease-spring);
+}
+
+.orderThumbs:hover .orderThumb {
+  transform: none;
+}
+
+.orderThumb:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(var(--color-primary-rgb), 0.18);
+  z-index: 1;
+}
+
+.orderThumbMore {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--ot-thumb-size);
+  height: var(--ot-thumb-size);
+  border-radius: var(--ot-thumb-radius);
+  background: var(--ot-gold-mid);
+  border: 1px dashed var(--ot-gold);
+  color: var(--ot-forest-dark);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  flex-shrink: 0;
+}
+
+/* Текстовый блок состава */
+.orderSummary {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.orderSummaryCount {
+  color: var(--ot-forest-dark);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.orderSummaryText {
+  color: var(--ot-text-soft);
+  font-size: 0.8rem;
+  line-height: 1.5;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 36ch;
+}
+
+.orderProductLink {
+  color: var(--color-primary);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.orderProductLink:hover {
+  color: var(--color-primary-dark);
+  text-decoration: underline;
+}
+
+.orderProductLink:focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 3px;
+  border-radius: var(--radius-sm);
+}
+
+.orderTrackingNumber {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 4px;
+  padding: 3px var(--spacing-sm);
+  background: color-mix(in srgb, var(--color-accent) 10%, var(--color-surface));
+  border: 1px solid rgba(var(--color-accent-rgb), 0.22);
+  border-radius: 6px;
+  color: var(--color-success);
+  font-size: 0.75rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+  width: fit-content;
+}
+
+/* ─── Подвал карточки ────────────────────────────────────────────────────── */
+.orderFoot {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm) var(--spacing-md);
+  padding: var(--spacing-md) var(--spacing-xl);
+  background: linear-gradient(
+    135deg,
+    transparent 40%,
+    rgba(var(--color-accent-rgb), 0.03) 100%
+  );
+}
+
+.orderSum {
+  color: var(--ot-forest-dark);
+  font-size: 1rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  margin-right: auto;
+  white-space: nowrap;
+}
+
+/* ─── Статусы ────────────────────────────────────────────────────────────── */
+.status {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: var(--radius-md);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  line-height: 1;
+  border: 1px solid transparent;
+  transition: none;
+}
+
+.statusOk {
+  background: var(--ot-status-ok-bg);
+  color: var(--ot-status-ok-fg);
+  border-color: var(--ot-status-ok-border);
+}
+
+.statusNeutral {
+  background: var(--ot-status-neutral-bg);
+  color: var(--ot-status-neutral-fg);
+  border-color: var(--ot-status-neutral-border);
+}
+
+.statusPendingPayment {
+  background: #fff7ed;
+  color: #9a3412;
+  border-color: #fed7aa;
+}
+
+.statusProcessing {
+  background: #eff6ff;
+  color: #1d4ed8;
+  border-color: #bfdbfe;
+}
+
+.statusShipped {
+  background: #ecfeff;
+  color: #0e7490;
+  border-color: #a5f3fc;
+}
+
+.statusDelivered {
+  background: #ecfdf5;
+  color: #027a48;
+  border-color: #a7f3d0;
+}
+
+.statusCancelled {
+  background: #f8fafc;
+  color: #64748b;
+  border-color: #cbd5e1;
+}
+
+/* ─── Кнопки действий ───────────────────────────────────────────────────── */
+.orderActions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--ot-btn-gap);
+  width: 100%;
+  padding-top: var(--spacing-sm);
+  border-top: var(--ot-divider);
+}
+
+/* Базовая маленькая кнопка */
+.btnSmall {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: var(--ot-btn-height);
+  padding: 0 var(--spacing-md);
+  border: 1px solid var(--ot-card-border);
+  border-radius: var(--ot-btn-radius);
+  background: var(--ot-card-bg);
+  color: var(--ot-text);
+  font-size: var(--ot-btn-font);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  cursor: pointer;
+  text-decoration: none;
+  transition:
+    background var(--ot-duration-hover) ease,
+    border-color var(--ot-duration-hover) ease,
+    color var(--ot-duration-hover) ease,
+    box-shadow var(--ot-duration-hover) ease,
+    transform 0.15s var(--ot-ease-spring);
+}
+
+.btnSmall:hover {
+  background: var(--ot-forest-pale);
+  border-color: rgba(var(--color-primary-rgb), 0.22);
+  color: var(--ot-forest-dark);
+  box-shadow: 0 2px 8px rgba(var(--color-primary-rgb), 0.1);
+  transform: translateY(-1px);
+}
+
+.btnSmall:active {
+  transform: translateY(0) scale(0.97);
+}
+
+.btnSmall:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+/* Первичная кнопка (оплатить) */
+.btnSmallPrimary {
+  background: linear-gradient(135deg, var(--ot-forest) 0%, var(--ot-forest-light) 100%);
+  border-color: transparent;
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(var(--color-primary-rgb), 0.25);
+}
+
+.btnSmallPrimary:hover {
+  background: linear-gradient(135deg, var(--ot-forest-dark) 0%, var(--ot-forest) 100%);
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(var(--color-primary-rgb), 0.32);
+}
+
+.btnDanger {
+  color: var(--color-error);
+  border-color: rgba(var(--color-error-rgb), 0.28);
+  background: rgba(var(--color-error-rgb), 0.04);
+}
+
+.btnDanger:hover {
+  color: #fff;
+  background: var(--color-error);
+  border-color: var(--color-error);
+}
+
+/* Кнопка «Скасувати» */
+.btnSmall[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none !important;
+  pointer-events: none;
+}
+
+/* ─── Блок «Показати ще» ────────────────────────────────────────────────── */
+.loadMoreWrap {
+  display: flex;
+  justify-content: center;
+  padding-top: var(--spacing-xl);
+}
+
+/* ─── Анимация fade-up (общая) ──────────────────────────────────────────── */
+@keyframes fadeUp {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ─── Адаптивность ──────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .orders {
+    --ot-thumb-size: 50px;
+    --ot-btn-height: 44px;
+    --ot-btn-font: 0.8rem;
+  }
+
+  .orderHead {
+    padding: var(--spacing-md) var(--spacing-lg);
+  }
+
+  .orderComposition {
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-md) var(--spacing-lg);
+  }
+
+  .orderSummaryText {
+    max-width: 100%;
+    white-space: normal;
+  }
+
+  .orderFoot {
+    padding: var(--spacing-sm) var(--spacing-lg) var(--spacing-md);
+    gap: var(--spacing-sm);
+  }
+
+  .orderActions {
+    gap: var(--spacing-xs);
+  }
+
+  .btnSmall {
+    flex: 1 1 auto;
+    min-width: 120px;
+    padding: 0 var(--spacing-sm);
+    font-size: 0.8rem;
+  }
+
+  .header {
+    margin-bottom: var(--spacing-xl);
+  }
+
+  .title {
+    font-size: 1.2rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .orders {
+    --ot-thumb-size: 44px;
+  }
+
+  .orderHead strong {
+    font-size: 0.875rem;
+  }
+
+  .orderSum {
+    font-size: 0.9rem;
+  }
+}
+
+/* ─── Уменьшенный motion ────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .orderItem,
+  .orderItem::before,
+  .orderThumb,
+  .btnSmall,
+  .title::after {
+    animation: none !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .orderItem:hover {
+    transform: none;
+  }
+
+  .orderThumb:hover {
+    transform: none;
+  }
+
+  .btnSmall:hover {
+    transform: none;
+  }
+}

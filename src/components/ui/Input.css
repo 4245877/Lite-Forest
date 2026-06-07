@@ -1,0 +1,57 @@
+/* Контейнер для поля ввода и его метки */
+.input-wrapper {
+  width: 100%;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Стили для метки (label) */
+.input-label {
+  margin-bottom: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #333333;
+  align-self: flex-start; /* Выравнивание по левому краю */
+}
+
+/* Стили для самого поля ввода */
+.input-field {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+  font-size: 16px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
+    Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  color: #333;
+  background-color: #ffffff;
+  transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+  box-sizing: border-box; /* Чтобы padding не влиял на общую ширину */
+}
+
+/* Стили при фокусе на поле ввода */
+.input-field:focus {
+  outline: none;
+  border-color: #2c6e49; /* Акцентный зеленый цвет */
+  box-shadow: 0 0 0 3px rgba(44, 110, 73, 0.1); /* Легкая тень для подсветки */
+}
+
+/* Стиль для плейсхолдера */
+.input-field::placeholder {
+  color: #aaaaaa;
+}
+
+/* Убираем стрелочки у полей с type="number" для чистого вида */
+/* Chrome, Safari, Edge, Opera */
+.input-field::-webkit-outer-spin-button,
+.input-field::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Firefox */
+.input-field[type='number'] {
+  appearance: textfield;
+  -moz-appearance: textfield;
+}

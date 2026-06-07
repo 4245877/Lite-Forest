@@ -1,0 +1,300 @@
+/* CustomPrint.module.css */
+
+/* ─── Custom Print ───────────────────────────────────────────────────────── */
+.customPrintLead {
+  font-size: 1rem;
+  color: var(--color-text-secondary);
+  line-height: 1.6;
+  margin: 0 0 var(--spacing-2xl);
+}
+
+.customPrintTopGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--spacing-xl);
+  margin-bottom: var(--spacing-2xl);
+}
+
+.customPrintMainGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.7fr) minmax(280px, 1fr);
+  gap: var(--spacing-xl);
+  margin-bottom: var(--spacing-2xl);
+}
+
+.customPrintTopGrid > *,
+.customPrintMainGrid > * {
+  min-width: 0;
+  margin-bottom: 0;
+}
+
+.customPrintPreviewCard,
+.customPrintHistoryCard {
+  min-width: 0;
+}
+
+.customPrintHistoryCard {
+  align-self: start;
+}
+
+.customPrintDropzone {
+  min-height: 180px;
+  border: 2px dashed var(--color-border, #d1d5db);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  padding: var(--spacing-2xl);
+  text-align: center;
+  cursor: pointer;
+  transition:
+    border-color var(--transition-fast),
+    background-color var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+.customPrintDropzone:focus-visible {
+  outline: var(--profile-focus-outline-size, 2px) solid var(--color-accent);
+  outline-offset: var(--profile-focus-outline-offset, 2px);
+  box-shadow: var(--profile-focus-ring-soft);
+}
+
+.customPrintDropzone[aria-disabled='true'] {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background: var(--color-sand);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .customPrintDropzone:not([aria-disabled='true']):hover {
+    border-color: var(--color-accent);
+    background: var(--color-sand);
+  }
+}
+
+.customPrintDropzoneActive {
+  border-color: var(--color-accent);
+  background: var(--color-sand);
+  box-shadow: var(--profile-focus-ring-soft);
+}
+
+.customPrintDropIcon {
+  font-size: 2rem;
+  line-height: 1;
+  margin-bottom: var(--spacing-md);
+  color: var(--color-primary);
+}
+
+.customPrintDropTitle {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin-bottom: var(--spacing-sm);
+}
+
+.customPrintDropMeta {
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+}
+
+.customPrintCurrentFile {
+  margin-top: var(--spacing-lg);
+  font-size: 0.9375rem;
+  color: var(--color-text-primary);
+  overflow-wrap: anywhere;
+}
+
+.customPrintMeta {
+  display: grid;
+  gap: var(--spacing-md);
+  margin: var(--spacing-md) 0 0;
+}
+
+.customPrintMetaRow {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--spacing-md);
+  align-items: baseline;
+  padding-bottom: var(--spacing-sm);
+  border-bottom: 1px solid var(--color-border-light);
+}
+
+.customPrintMetaRow:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.customPrintMetaKey {
+  color: var(--color-text-secondary);
+  font-size: 0.9375rem;
+  min-width: 0;
+  flex: 0 1 auto;
+}
+
+.customPrintMetaValue {
+  color: var(--color-text-primary);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  text-align: right;
+  overflow-wrap: anywhere;
+  min-width: 0;
+  flex: 1;
+  margin: 0;
+}
+
+.customPrintCheckboxList {
+  display: grid;
+  gap: var(--spacing-sm);
+}
+
+.customPrintTextarea {
+  min-height: 120px;
+}
+
+.customPrintInlineActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-md);
+  margin-top: var(--spacing-lg);
+}
+
+.customPrintHistoryItem {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: var(--spacing-md);
+  align-items: start;
+}
+
+.customPrintHistoryMain {
+  width: 100%;
+  min-width: 0;
+  text-align: left;
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  padding: var(--spacing-lg);
+  cursor: pointer;
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast),
+    transform var(--transition-fast);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .customPrintHistoryMain:hover {
+    border-color: var(--color-accent);
+    box-shadow: var(--shadow-sm);
+    transform: translateY(-1px);
+  }
+}
+
+.customPrintHistoryMainActive {
+  border-color: var(--color-accent);
+  box-shadow: var(--profile-focus-ring-soft);
+  background: var(--color-sand);
+}
+
+.customPrintHistoryMain:focus-visible {
+  outline: var(--profile-focus-outline-size, 2px) solid var(--color-accent);
+  outline-offset: var(--profile-focus-outline-offset, 2px);
+  box-shadow: var(--profile-focus-ring-soft);
+}
+
+.customPrintQuoteSource {
+  margin-bottom: var(--spacing-md);
+}
+
+.customPrintHistoryHead {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--spacing-md);
+  align-items: start;
+  margin-bottom: var(--spacing-sm);
+  min-width: 0;
+}
+
+.customPrintHistoryTitle {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+
+.customPrintHistoryMuted {
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.customPrintDeleteBtn {
+  align-self: start;
+  color: var(--profile-error-fg);
+  border-color: var(--profile-error-fg);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .customPrintDeleteBtn:not(:disabled):hover {
+    background: var(--profile-error-bg);
+    border-color: var(--profile-error-fg);
+    color: var(--profile-error-fg);
+  }
+}
+
+@media (max-width: 900px) {
+  .customPrintTopGrid,
+  .customPrintMainGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .customPrintHistoryItem {
+    grid-template-columns: 1fr;
+  }
+
+  .customPrintDeleteBtn {
+    width: 100%;
+  }
+
+  .customPrintInlineActions {
+    flex-direction: column;
+  }
+
+  .customPrintInlineActions > * {
+    width: 100%;
+    white-space: normal;
+  }
+}
+
+@media (max-width: 640px) {
+  .customPrintMetaRow {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-xs, 0.25rem);
+  }
+
+  .customPrintMetaValue {
+    text-align: left;
+  }
+}
+
+@media (max-width: 480px) {
+  .customPrintDropzone {
+    padding: var(--spacing-xl) var(--spacing-md);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .customPrintDropzone,
+  .customPrintHistoryMain {
+    transition: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) and (hover: hover) and (pointer: fine) {
+  .customPrintHistoryMain:hover {
+    transform: none;
+    box-shadow: none;
+  }
+}

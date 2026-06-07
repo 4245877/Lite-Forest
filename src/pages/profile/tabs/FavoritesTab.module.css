@@ -1,0 +1,407 @@
+/* FavoritesTab.module.css */
+
+/* Локальные токены, согласованные с HomePage.module.css */
+.favoritesTab {
+  --eco-primary: var(--color-primary);
+  --eco-light: var(--color-primary-light);
+  --eco-dark: var(--color-primary-dark);
+  --eco-accent: var(--color-accent);
+  --eco-sand: var(--color-sand);
+  --eco-cream: var(--color-cream);
+
+  --fav-thumb-size-lg: var(--profile-favorites-thumb-size-lg, 80px);
+  --fav-thumb-size-md: var(--profile-favorites-thumb-size-md, 64px);
+  --fav-thumb-height-sm: var(--profile-favorites-thumb-height-sm, 140px);
+  --fav-check-size: var(--profile-favorites-check-size, 15px);
+  --fav-inline-offset: var(--profile-favorites-inline-action-offset, 0.35rem);
+  --fav-item-gap: var(--profile-favorites-item-gap, 1rem);
+  --fav-item-gap-sm: var(--profile-favorites-item-gap-sm, 0.75rem);
+  --fav-item-padding: var(--profile-favorites-item-padding, 1rem);
+  --fav-item-padding-sm: var(--profile-favorites-item-padding-sm, 0.85rem);
+  --fav-meta-gap: var(--profile-favorites-meta-gap, 0.45rem);
+
+  color: var(--color-text-primary);
+  line-height: 1.6;
+}
+
+/* Элемент списка — карточка товара */
+.favoriteItem {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--fav-item-gap);
+
+  padding: var(--fav-item-padding);
+  border: 1px solid rgba(var(--color-accent-rgb), 0.1);
+  border-radius: var(--radius-md);
+
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+
+  overflow: hidden;
+
+  transition: var(--transition-normal);
+  animation: favItemIn 0.45s ease-out both;
+}
+
+.favoriteItem:nth-child(n + 2) {
+  animation-delay: 0.04s;
+}
+
+.favoriteItem::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  left: -100%;
+
+  width: 100%;
+  height: 100%;
+
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(var(--color-accent-rgb), 0.05),
+    transparent
+  );
+
+  transition: var(--transition-normal);
+  pointer-events: none;
+}
+
+.favoriteItem:hover {
+  transform: translateY(-4px);
+  border-color: var(--eco-accent);
+  box-shadow: var(--shadow-md);
+}
+
+.favoriteItem:hover::before {
+  left: 100%;
+}
+
+@keyframes favItemIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Миниатюра товара */
+.favoriteThumb {
+  position: relative;
+  z-index: 1;
+
+  display: block;
+  flex-shrink: 0;
+
+  width: var(--fav-thumb-size-lg);
+  height: var(--fav-thumb-size-lg);
+
+  border-radius: var(--radius-md);
+  overflow: hidden;
+
+  background: linear-gradient(
+    135deg,
+    var(--eco-sand) 0%,
+    var(--eco-cream) 100%
+  );
+
+  box-shadow: var(--shadow-sm);
+  border: 1px solid rgba(var(--color-accent-rgb), 0.12);
+
+  transition: var(--transition-normal);
+}
+
+.favoriteThumb:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  border-color: rgba(var(--color-accent-rgb), 0.35);
+}
+
+.favoriteThumb:focus-visible {
+  outline: 3px solid var(--eco-accent);
+  outline-offset: 3px;
+}
+
+.favoriteThumbImg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+
+  transition: var(--transition-normal);
+}
+
+.favoriteThumb:hover .favoriteThumbImg {
+  transform: scale(1.05);
+}
+
+.favoriteThumbImg[src="/placeholder-product.png"],
+.favoriteThumbImg[src=""] {
+  filter: saturate(0) opacity(0.55);
+}
+
+/* Мета-блок */
+.favoriteMeta {
+  position: relative;
+  z-index: 1;
+
+  display: flex;
+  flex-direction: column;
+  gap: var(--fav-meta-gap);
+  flex: 1;
+  min-width: 0;
+}
+
+/* Название и цена */
+.favoriteTitleRow {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.3rem 0.5rem;
+
+  color: var(--color-text-primary);
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.favoritePrice {
+  color: var(--eco-primary);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+/* Ссылка */
+.inlineLink {
+  color: var(--eco-dark);
+  font-weight: 600;
+  text-decoration: none;
+
+  transition: var(--transition-normal);
+}
+
+.inlineLink:hover {
+  color: var(--eco-primary);
+  text-decoration: underline;
+  text-decoration-color: rgba(var(--color-primary-rgb), 0.35);
+  text-underline-offset: 3px;
+}
+
+.inlineLink:focus-visible {
+  outline: 3px solid var(--eco-accent);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+/* Чекбокс-лейблы */
+.checkLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  width: fit-content;
+
+  color: var(--color-text-secondary);
+  font-size: 0.82rem;
+  font-weight: 500;
+  line-height: 1.4;
+
+  cursor: pointer;
+  user-select: none;
+
+  transition: var(--transition-normal);
+}
+
+.checkLabel:hover {
+  color: var(--eco-primary);
+}
+
+.checkLabel input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+
+  position: relative;
+
+  width: var(--fav-check-size);
+  height: var(--fav-check-size);
+  min-width: var(--fav-check-size);
+
+  border: 1px solid var(--color-border);
+  border-radius: 5px;
+  background: var(--color-surface);
+
+  cursor: pointer;
+
+  transition: var(--transition-normal);
+}
+
+.checkLabel input[type="checkbox"]:hover {
+  border-color: rgba(var(--color-accent-rgb), 0.35);
+  background: rgba(var(--color-accent-rgb), 0.06);
+}
+
+.checkLabel input[type="checkbox"]:checked {
+  border-color: var(--eco-accent);
+  background: var(--gradient-primary);
+  box-shadow: 0 0 0 4px rgba(var(--color-accent-rgb), 0.14);
+}
+
+.checkLabel input[type="checkbox"]::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  margin: auto;
+
+  width: 8px;
+  height: 5px;
+
+  border-bottom: 2px solid var(--color-surface);
+  border-left: 2px solid var(--color-surface);
+  border-radius: 1px;
+
+  opacity: 0;
+  transform: rotate(-45deg) scale(0) translate(1px, -1px);
+
+  transition: var(--transition-normal);
+}
+
+.checkLabel input[type="checkbox"]:checked::after {
+  opacity: 1;
+  transform: rotate(-45deg) scale(1) translate(1px, -1px);
+}
+
+.checkLabel input[type="checkbox"]:active {
+  transform: scale(0.92);
+}
+
+.checkLabel input[type="checkbox"]:focus-visible {
+  outline: 3px solid var(--eco-accent);
+  outline-offset: 3px;
+}
+
+/* Кнопка удаления */
+.inlineActionBtn {
+  align-self: flex-start;
+  margin-top: var(--fav-inline-offset);
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0.45rem 0.85rem;
+
+  color: var(--color-danger, #b42318);
+  background: rgba(180, 35, 24, 0.08);
+
+  border: 1px solid rgba(180, 35, 24, 0.18);
+  border-radius: var(--radius-sm);
+
+  font-size: 0.78rem;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+
+  cursor: pointer;
+  transition: var(--transition-normal);
+}
+
+.inlineActionBtn:hover {
+  transform: translateY(-1px);
+  color: var(--color-surface);
+  background: var(--color-danger, #b42318);
+  border-color: var(--color-danger, #b42318);
+  box-shadow: var(--shadow-sm);
+}
+
+.inlineActionBtn:active {
+  transform: translateY(0);
+  box-shadow: none;
+}
+
+.inlineActionBtn:disabled {
+  opacity: 0.68;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.inlineActionBtn:focus-visible {
+  outline: 3px solid var(--color-danger, #b42318);
+  outline-offset: 3px;
+}
+
+/* Адаптивность */
+@media (max-width: 1024px) {
+  .favoriteThumb {
+    width: var(--fav-thumb-size-md);
+    height: var(--fav-thumb-size-md);
+  }
+}
+
+@media (max-width: 640px) {
+  .favoriteItem {
+    flex-direction: column;
+    gap: var(--fav-item-gap-sm);
+    padding: var(--fav-item-padding-sm);
+  }
+
+  .favoriteThumb {
+    width: 100%;
+    height: var(--fav-thumb-height-sm);
+  }
+
+  .favoriteThumb:hover {
+    transform: none;
+  }
+
+  .favoriteThumbImg {
+    object-position: center top;
+  }
+
+  .favoriteTitleRow {
+    font-size: 0.9rem;
+  }
+
+  .checkLabel {
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 380px) {
+  .favoriteMeta {
+    gap: 0.55rem;
+  }
+
+  .inlineActionBtn {
+    width: 100%;
+  }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .favoriteItem,
+  .favoriteItem::before,
+  .favoriteThumb,
+  .favoriteThumbImg,
+  .inlineLink,
+  .checkLabel,
+  .checkLabel input[type="checkbox"],
+  .checkLabel input[type="checkbox"]::after,
+  .inlineActionBtn {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .favoriteItem:hover,
+  .favoriteThumb:hover,
+  .favoriteThumb:hover .favoriteThumbImg,
+  .inlineActionBtn:hover {
+    transform: none !important;
+  }
+}
