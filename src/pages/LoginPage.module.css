@@ -1,0 +1,401 @@
+/* src/pages/LoginPage.module.css */
+
+/* --- Базовая структура страницы --- */
+.loginPage {
+  display: flex;
+  flex-direction: row; /* Явно указываем направление */
+  min-height: 100dvh; /* Используем динамическую высоту для мобильных */
+  font-family: 'Inter', sans-serif;
+  background: var(--gradient-hero);
+  color: var(--color-text-primary);
+  -webkit-tap-highlight-color: transparent;
+
+  /* FIX: Заставляем блок растягиваться (убираем белую полосу) */
+  flex-grow: 1;
+  padding-bottom: env(safe-area-inset-bottom); /* Отступ только для iOS safe area */
+  margin-bottom: 0;
+}
+
+/* Гарантируем, что последний элемент не создает лишних отступов */
+.loginPage > *:last-child {
+  margin-bottom: 0 !important;
+}
+
+/* --- Левая панель (с иллюстрацией) --- */
+.leftPanel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+  background: var(--gradient-primary);
+  color: #fff;
+  text-align: center;
+}
+
+.brandLogo {
+  font-size: 5rem;
+  margin-bottom: 1.5rem;
+  filter: drop-shadow(0 4px 15px rgba(0, 0, 0, 0.2));
+  animation: float 4s ease-in-out infinite;
+}
+
+.brandTitle {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+}
+
+.brandSlogan {
+  font-size: 1.1rem;
+  max-width: 400px;
+  opacity: 0.9;
+  line-height: 1.6;
+}
+
+/* --- Правая панель (с формой) --- */
+.formPanel {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 3rem 2rem;
+}
+
+/* ВАЖНО: убираем лишние margin-bottom внутри панели */
+.formPanel > *:last-child {
+  margin-bottom: 0 !important;
+}
+
+.formContainer {
+  width: 100%;
+  max-width: 420px;
+  background: #fff;
+  padding: 2.5rem;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  transition: var(--transition-normal);
+}
+
+.formTitle {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+/* --- Элементы формы --- */
+.inputGroup {
+  margin-bottom: 1.5rem;
+  position: relative;
+}
+
+.inputLabel {
+  display: block;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+  color: var(--color-text-secondary);
+}
+
+.input {
+  width: 100%;
+  height: 50px;
+  padding: 0 16px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  font-size: 1rem;
+  color: var(--color-text-primary);
+  background: #fff;
+  transition: var(--transition-normal);
+  -webkit-appearance: none;
+     -moz-appearance: none;
+          appearance: none;
+}
+
+.input::placeholder {
+  color: var(--color-text-muted);
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px var(--color-focus);
+}
+
+.fieldControl {
+  position: relative;
+}
+
+.inputWithToggle {
+  padding-right: 56px;
+}
+
+.passwordToggle {
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  transform: translateY(-50%);
+  cursor: pointer;
+  color: var(--color-text-secondary);
+  font-size: 1.1rem;
+  line-height: 1;
+  width: 44px;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background: transparent;
+  border: none;
+}
+
+.passwordToggle:hover {
+  background: rgba(47, 82, 51, 0.06);
+}
+
+.passwordToggle:active {
+  background: rgba(47, 82, 51, 0.1);
+}
+
+.passwordToggle:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--color-focus);
+}
+
+/* --- Кнопки и ссылки --- */
+.submitButton {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  background: var(--gradient-primary);
+  color: #fff;
+  padding: 14px;
+  border-radius: 12px;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 1.1rem;
+  transition: var(--transition-normal);
+  box-shadow: var(--shadow-md);
+  border: none;
+  cursor: pointer;
+}
+
+.submitButton:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.submitButton:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--color-focus), var(--shadow-lg);
+}
+
+.submitButton:disabled {
+  background: var(--color-border);
+  color: var(--color-text-secondary);
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.formLink {
+  color: var(--color-primary);
+  text-decoration: none;
+  font-weight: 500;
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  cursor: pointer;
+}
+
+.formLink:hover {
+  text-decoration: underline;
+}
+
+.formLink:focus-visible {
+  outline: none;
+  box-shadow: none;
+  text-decoration: underline;
+}
+
+.linkGroup {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 1rem;
+  font-size: 0.9rem;
+}
+
+.toggleForm {
+  text-align: center;
+  margin-top: 2rem;
+  font-size: 0.95rem;
+  color: var(--color-text-secondary);
+}
+
+/* --- Сообщения об ошибках --- */
+.errorText {
+  color: #d32f2f;
+  font-size: 0.85rem;
+  margin-top: 0.5rem;
+}
+
+.serverError {
+  color: #d32f2f;
+  background-color: rgba(211, 47, 47, 0.1);
+  padding: 1rem;
+  border-radius: 8px;
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.serverOk {
+  color: #1b5e20;
+  background-color: rgba(46, 125, 50, 0.12);
+  padding: 1rem;
+  border-radius: 8px;
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+/* --- Адаптивность --- */
+@media (max-width: 768px) {
+  .loginPage {
+    flex-direction: column;
+  }
+
+  .leftPanel {
+    display: none;
+  }
+
+  .formPanel {
+    padding: 2rem 1rem;
+  }
+
+  .formContainer {
+    padding: 1.5rem;
+    margin: 0 auto;
+  }
+
+  .linkGroup {
+    font-size: 0.95rem;
+  }
+}
+
+@media (max-width: 380px) {
+  .formContainer {
+    padding: 1.25rem;
+  }
+  .submitButton {
+    padding: 12px;
+    font-size: 1rem;
+  }
+}
+
+/* --- Анимации --- */
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-15px); }
+  100% { transform: translateY(0px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .brandLogo { animation: none; }
+  .submitButton, .input { transition: none; }
+}
+
+/* --- Социальный вход --- */
+.socialButtons {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+@media (min-width: 480px) {
+  .socialButtons {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.socialBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--color-border);
+  background: #fff;
+  color: var(--color-text-primary);
+  font-weight: 600;
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm, 0 1px 2px rgba(0,0,0,.06));
+  transition: var(--transition-normal);
+}
+
+.socialBtn svg {
+  font-size: 1.1rem;
+}
+
+.socialBtn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.socialBtn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.socialBtn:disabled {
+  opacity: .6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.socialBtn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--color-focus), var(--shadow-md);
+}
+
+.googleBtn {
+  background: #fff;
+  color: var(--color-text-primary);
+  border-color: var(--color-border);
+}
+
+.facebookBtn {
+  background: #fff;
+  color: #1877f2;
+  border-color: #1877f2;
+}
+
+.facebookBtn:hover:not(:disabled) {
+  background: rgba(24, 119, 242, 0.06);
+}
+
+.orDivider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--color-text-secondary);
+  opacity: .9;
+  font-size: 0.9rem;
+  margin: 6px 0 16px;
+}
+
+.orDivider::before,
+.orDivider::after {
+  content: "";
+  height: 1px;
+  background: var(--color-border);
+  flex: 1;
+}

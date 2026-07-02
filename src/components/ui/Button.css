@@ -1,0 +1,78 @@
+/* Базовые стили для всех кнопок */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 20px;
+  border-radius: var(--radius-md);
+  /* Наследуем Inter из глобального сброса (global.css: button { font: inherit }) */
+  font-weight: 600;
+  font-size: 16px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: background-color var(--transition-fast),
+    border-color var(--transition-fast), color var(--transition-fast),
+    opacity var(--transition-fast);
+  user-select: none; /* Запрещаем выделение текста на кнопке */
+  text-decoration: none; /* Убираем подчеркивание, если кнопка сделана из ссылки */
+  white-space: nowrap; /* Запрещаем перенос текста */
+}
+
+/* --- Варианты стилей (Variants) --- */
+
+/* Основная кнопка (Primary) - например, "В корзину" */
+.btn-primary {
+  background-color: var(--color-primary); /* Бренд-зелёный из дизайн-системы */
+  color: #ffffff;
+  border-color: var(--color-primary);
+}
+
+.btn-primary:hover {
+  background-color: var(--color-primary-light);
+  border-color: var(--color-primary-light);
+}
+
+.btn-primary:active {
+  background-color: var(--color-primary-dark);
+  border-color: var(--color-primary-dark);
+}
+
+/* Второстепенная кнопка (Secondary) - например, "Фильтры", "Назад" */
+.btn-secondary {
+  background-color: var(--color-background);
+  color: var(--color-text-primary);
+  border-color: var(--color-border);
+}
+
+.btn-secondary:hover {
+  background-color: var(--color-border-light);
+  border-color: var(--color-text-muted);
+}
+
+.btn-secondary:active {
+  background-color: var(--color-border);
+  border-color: var(--color-text-muted);
+}
+
+/* --- Состояние Disabled --- */
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  pointer-events: none; /* Отключаем все события мыши */
+}
+
+/* --- Размеры (Sizes) --- */
+.btn-sm {
+  padding: 8px 16px;
+  font-size: 14px;
+}
+
+.btn-md {
+  padding: 10px 20px;
+  font-size: 16px;
+}
+
+.btn-lg {
+  padding: 12px 24px;
+  font-size: 18px;
+}

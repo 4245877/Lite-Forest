@@ -1,0 +1,31 @@
+/* Root app settings */
+
+:root {
+  color-scheme: light;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  min-height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+#root {
+  max-width: 100vw;
+  /* clip (а не hidden): так же гасит горизонтальное переполнение,
+     но не создаёт scroll-контейнер и не ломает position: sticky. */
+  overflow-x: clip;
+}
+
+#root > .app-shell {
+  grid-column: 1 / -1;
+  width: 100%;
+  min-height: 100vh;
+}

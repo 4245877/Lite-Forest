@@ -1,0 +1,405 @@
+/* CustomPrint.module.css */
+
+.customPrintLead {
+  max-width: 70ch;
+  margin: 0 0 var(--spacing-xl);
+  color: var(--color-text-secondary);
+  font-size: 0.975rem;
+  line-height: 1.6;
+}
+
+.customPrintTopGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: stretch;
+  gap: var(--spacing-lg);
+  margin-bottom: var(--spacing-xl);
+}
+
+.customPrintMainGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.55fr) minmax(260px, 0.95fr);
+  align-items: start;
+  gap: var(--spacing-lg);
+  margin-bottom: var(--spacing-xl);
+}
+
+.customPrintTopGrid > *,
+.customPrintMainGrid > * {
+  min-width: 0;
+  margin-bottom: 0;
+}
+
+.customPrintTopGrid > * {
+  height: 100%;
+}
+
+.customPrintPreviewCard,
+.customPrintHistoryCard {
+  min-width: 0;
+}
+
+.customPrintPreviewCard {
+  display: flex;
+  flex-direction: column;
+}
+
+.customPrintPreviewMedia {
+  display: flex;
+  justify-content: center;
+  margin-bottom: var(--spacing-lg);
+}
+
+.customPrintHistoryCard {
+  align-self: start;
+}
+
+.customPrintDropzone {
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  min-height: 196px;
+  padding: var(--spacing-xl);
+  border: 1px dashed color-mix(in srgb, var(--color-primary) 18%, var(--color-border));
+  border-radius: var(--profile-radius-card, 16px);
+  background: linear-gradient(180deg, var(--color-surface) 0%, color-mix(in srgb, var(--color-accent) 5%, var(--color-surface)) 100%);
+  cursor: pointer;
+  text-align: center;
+  transition: border-color var(--transition-fast), background-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.customPrintDropzone:focus-visible {
+  outline: var(--profile-focus-outline-size, 2px) solid var(--color-accent);
+  outline-offset: 2px;
+  box-shadow: var(--profile-focus-ring-soft);
+}
+
+.customPrintDropzone[aria-disabled='true'] {
+  cursor: not-allowed;
+  background: var(--color-background);
+  opacity: 0.65;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .customPrintDropzone:not([aria-disabled='true']):hover {
+    border-color: color-mix(in srgb, var(--color-primary) 34%, var(--color-border));
+    background: color-mix(in srgb, var(--color-accent) 7%, var(--color-surface));
+    box-shadow: var(--shadow-sm);
+  }
+}
+
+.customPrintDropzoneActive {
+  border-color: var(--color-accent);
+  background: color-mix(in srgb, var(--color-accent) 8%, var(--color-surface));
+  box-shadow: var(--profile-focus-ring-soft);
+}
+
+.customPrintDropIcon {
+  display: inline-grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  margin-bottom: var(--spacing-md);
+  border: 1px solid color-mix(in srgb, var(--color-primary) 18%, var(--color-border));
+  border-radius: var(--profile-radius-control, 12px);
+  background: var(--color-surface);
+  color: var(--color-primary);
+  line-height: 1;
+}
+
+.customPrintDropIcon svg {
+  width: 28px;
+  height: 28px;
+}
+
+.customPrintDropTitle {
+  margin-bottom: var(--spacing-sm);
+  color: var(--color-text-primary);
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.customPrintDropMeta {
+  color: var(--color-text-secondary);
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.customPrintCurrentFile {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-lg);
+  padding: var(--spacing-md);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--profile-radius-control, 12px);
+  background: var(--color-background);
+  color: var(--color-text-primary);
+  font-size: 0.9375rem;
+}
+
+.customPrintFileIcon {
+  color: var(--color-primary);
+}
+
+.customPrintFileInfo {
+  min-width: 0;
+}
+
+.customPrintFileName {
+  color: var(--color-text-primary);
+  font-weight: 700;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.customPrintFileSize {
+  margin-top: 2px;
+  color: var(--color-text-secondary);
+  font-size: 0.8125rem;
+  line-height: 1.35;
+}
+
+.customPrintButtonIcon {
+  flex: 0 0 auto;
+  margin-right: var(--spacing-xs);
+}
+
+.customPrintMeta {
+  display: grid;
+  gap: var(--spacing-sm);
+  margin: var(--spacing-md) 0 0;
+}
+
+.customPrintMetaRow {
+  display: grid;
+  grid-template-columns: minmax(8.5rem, 0.8fr) minmax(0, 1.2fr);
+  align-items: start;
+  gap: var(--spacing-md);
+  padding-bottom: var(--spacing-sm);
+  border-bottom: 1px solid var(--color-border-light);
+}
+
+.customPrintMetaRow:last-child {
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.customPrintMetaKey {
+  min-width: 0;
+  color: var(--color-text-secondary);
+  font-size: 0.9375rem;
+  overflow-wrap: anywhere;
+}
+
+.customPrintMetaValue {
+  min-width: 0;
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: 0.9375rem;
+  font-weight: 800;
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+.customPrintCheckboxList {
+  display: grid;
+  gap: var(--spacing-sm);
+}
+
+.customPrintHiddenInput {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.customPrintTextarea {
+  min-height: 120px;
+}
+
+.customPrintCharCount {
+  margin-top: var(--spacing-xs);
+  color: var(--color-text-secondary);
+  font-size: 0.8125rem;
+  text-align: right;
+}
+
+.customPrintInlineActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--spacing-md);
+  margin-top: var(--spacing-lg);
+}
+
+.customPrintHistoryItem {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(108px, auto);
+  align-items: stretch;
+  gap: var(--spacing-md);
+}
+
+.customPrintHistoryMain {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-md);
+  width: 100%;
+  min-width: 0;
+  min-height: 96px;
+  padding: var(--spacing-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--profile-radius-control, 12px);
+  background: var(--color-surface);
+  cursor: pointer;
+  text-align: left;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast), background var(--transition-fast);
+}
+
+.customPrintHistoryBody {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .customPrintHistoryMain:hover {
+    border-color: color-mix(in srgb, var(--color-primary) 24%, var(--color-border));
+    box-shadow: var(--shadow-sm);
+  }
+}
+
+.customPrintHistoryMainActive {
+  border-color: color-mix(in srgb, var(--color-primary) 28%, var(--color-border));
+  background: color-mix(in srgb, var(--color-accent) 8%, var(--color-surface));
+  box-shadow: var(--profile-focus-ring-soft);
+}
+
+.customPrintHistoryMain:focus-visible {
+  outline: var(--profile-focus-outline-size, 2px) solid var(--color-accent);
+  outline-offset: 2px;
+  box-shadow: var(--profile-focus-ring-soft);
+}
+
+.customPrintQuoteSource {
+  margin-bottom: var(--spacing-md);
+}
+
+.customPrintHistoryHead {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: var(--spacing-sm) var(--spacing-md);
+  min-width: 0;
+  margin-bottom: var(--spacing-sm);
+}
+
+.customPrintHistoryTitle {
+  min-width: 0;
+  color: var(--color-text-primary);
+  font-size: 0.975rem;
+  font-weight: 700;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.customPrintHistoryMuted {
+  color: var(--color-text-secondary);
+  font-size: 0.875rem;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.customPrintHistoryStatus {
+  justify-self: end;
+  white-space: nowrap;
+}
+
+.customPrintDeleteBtn {
+  align-self: stretch;
+  min-width: 108px;
+  gap: 0;
+  border-color: rgba(var(--color-error-rgb), 0.28);
+  background: rgba(var(--color-error-rgb), 0.05);
+  color: var(--profile-error-fg);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .customPrintDeleteBtn:not(:disabled):hover {
+    border-color: var(--profile-error-fg);
+    background: var(--profile-error-fg);
+    color: var(--color-surface);
+  }
+}
+
+@media (max-width: 900px) {
+  .customPrintTopGrid,
+  .customPrintMainGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .customPrintHistoryItem {
+    grid-template-columns: 1fr;
+  }
+
+  .customPrintDeleteBtn {
+    width: 100%;
+  }
+
+  .customPrintInlineActions {
+    flex-direction: column;
+  }
+
+  .customPrintInlineActions > * {
+    width: 100%;
+    white-space: normal;
+  }
+}
+
+@media (max-width: 640px) {
+  .customPrintMetaRow {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-xs);
+  }
+
+  .customPrintMetaValue {
+    text-align: left;
+  }
+
+  .customPrintHistoryHead {
+    grid-template-columns: 1fr;
+  }
+
+  .customPrintHistoryStatus {
+    justify-self: start;
+    white-space: normal;
+  }
+}
+
+@media (max-width: 480px) {
+  .customPrintDropzone {
+    min-height: 172px;
+    padding: var(--spacing-lg) var(--spacing-md);
+  }
+
+  .customPrintCurrentFile {
+    align-items: start;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .customPrintDropzone,
+  .customPrintHistoryMain {
+    transition: none !important;
+  }
+}

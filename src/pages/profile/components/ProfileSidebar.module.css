@@ -1,0 +1,332 @@
+/* ProfileSidebar.module.css */
+
+.sidebar {
+  position: sticky;
+  /* Учитываем липкую шапку (--header-height: 70px на десктопе),
+     чтобы сайдбар не уезжал под неё при скролле. */
+  top: calc(var(--header-height, 70px) + var(--spacing-md));
+  height: fit-content;
+  max-height: calc(100dvh - var(--header-height, 70px) - var(--spacing-md) * 2);
+  overflow: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(var(--profile-shadow-rgb), 0.35) transparent;
+
+  padding: var(--spacing-lg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--profile-radius-card);
+  background: var(--color-surface);
+  box-shadow: var(--profile-shadow-card);
+  transition: box-shadow var(--transition-normal), border-color var(--transition-normal);
+}
+
+.sidebar::-webkit-scrollbar {
+  width: 8px;
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background: rgba(var(--profile-shadow-rgb), 0.32);
+  background-clip: padding-box;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .sidebar:hover {
+    border-color: color-mix(in srgb, var(--color-primary) 16%, var(--color-border));
+    box-shadow: var(--profile-shadow-card-hover);
+  }
+}
+
+/* ─── Карточка пользователя ──────────────────────────────────────────────── */
+.userCard {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-md);
+  margin-bottom: var(--spacing-lg);
+
+  border: 1px solid color-mix(in srgb, var(--color-primary) 10%, var(--color-border));
+  border-radius: var(--profile-radius-control);
+  background: var(--profile-grad-brand-soft);
+}
+
+.avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 52px;
+  width: 52px;
+  height: 52px;
+  border-radius: var(--radius-round);
+  background: var(--profile-grad-brand);
+  color: var(--color-surface);
+  font-size: 1.25rem;
+  font-weight: 800;
+  box-shadow: 0 0 0 3px var(--color-surface), var(--profile-shadow-pop);
+}
+
+.userInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.userName {
+  margin-bottom: 2px;
+  color: var(--color-primary-dark);
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.userEmail {
+  color: var(--color-text-secondary);
+  font-size: 0.875rem;
+  line-height: 1.35;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ─── Меню ───────────────────────────────────────────────────────────────── */
+.menu {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.menuItem,
+.menuItemLink {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  width: 100%;
+  min-height: 44px;
+  padding: 10px var(--spacing-md);
+  border: 1px solid transparent;
+  border-radius: var(--profile-radius-control);
+  background: transparent;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  font-size: 0.925rem;
+  font-weight: 600;
+  line-height: 1.25;
+  text-align: left;
+  text-decoration: none;
+  transition: background var(--transition-fast), color var(--transition-fast),
+    border-color var(--transition-fast), transform var(--transition-fast);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.menuIcon {
+  flex: 0 0 auto;
+  width: 18px;
+  height: 18px;
+  color: var(--color-text-muted);
+  transition: color var(--transition-fast), transform var(--transition-fast);
+}
+
+.menuLabel {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+/* Анимированная фирменная «рейка» активного пункта */
+.menuItem::before,
+.menuItemLink::before {
+  content: '';
+  position: absolute;
+  left: 4px;
+  top: 50%;
+  width: 3px;
+  height: 18px;
+  border-radius: 999px;
+  background: var(--color-accent);
+  opacity: 0;
+  transform: translateY(-50%) scaleY(0);
+  transition: transform var(--transition-normal), opacity var(--transition-fast);
+}
+
+.menuItem:focus-visible,
+.menuItemLink:focus-visible {
+  outline: var(--profile-focus-outline-size) solid var(--color-accent);
+  outline-offset: var(--profile-focus-outline-offset);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .menuItem:hover,
+  .menuItemLink:hover {
+    background: var(--color-background);
+    color: var(--color-primary-dark);
+    transform: translateX(2px);
+  }
+
+  .menuItem:hover .menuIcon,
+  .menuItemLink:hover .menuIcon {
+    color: var(--color-primary);
+  }
+}
+
+.active {
+  background: color-mix(in srgb, var(--color-primary) 10%, var(--color-surface));
+  color: var(--color-primary-dark);
+  font-weight: 700;
+}
+
+.active .menuIcon {
+  color: var(--color-primary);
+}
+
+.active::before {
+  opacity: 1;
+  transform: translateY(-50%) scaleY(1);
+}
+
+.menuItemLink {
+  margin-top: var(--spacing-sm);
+}
+
+.logout {
+  color: var(--color-error);
+}
+
+.logout .menuIcon {
+  color: currentColor;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .logout:hover {
+    border-color: rgba(var(--color-error-rgb), 0.22);
+    background: var(--profile-error-bg);
+    color: var(--profile-error-fg);
+  }
+}
+
+/* ─── Адаптив: планшет ───────────────────────────────────────────────────── */
+@media (max-width: 1024px) {
+  .sidebar {
+    padding: var(--spacing-md);
+  }
+}
+
+/* ─── Мобайл: липкая горизонтальная лента «таблеток» ─────────────────────── */
+@media (max-width: 768px) {
+  /* Контейнер сайдбара «растворяем», чтобы userCard и menu стали
+     прямыми элементами сетки — тогда sticky работает на всю высоту. */
+  .sidebar {
+    display: contents;
+  }
+
+  .userCard {
+    margin-bottom: var(--spacing-md);
+    padding: 10px 12px;
+  }
+
+  .avatar {
+    flex-basis: 44px;
+    width: 44px;
+    height: 44px;
+    font-size: 1.05rem;
+  }
+
+  .menu {
+    position: sticky;
+    top: var(--profile-sticky-top, 64px);
+    z-index: 30;
+
+    flex-direction: row;
+    flex-wrap: nowrap;
+    gap: var(--spacing-sm);
+
+    margin: 0 calc(-1 * var(--spacing-md)) var(--spacing-lg);
+    padding: 10px var(--spacing-md);
+
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x proximity;
+    -webkit-overflow-scrolling: touch;
+
+    background: color-mix(in srgb, var(--color-background) 94%, transparent);
+    backdrop-filter: blur(14px) saturate(1.3);
+    -webkit-backdrop-filter: blur(14px) saturate(1.3);
+    border-bottom: 1px solid var(--color-border);
+
+    /* Затухание у краёв — мягкая подсказка о горизонтальной прокрутке */
+    -webkit-mask: linear-gradient(90deg, transparent, #000 18px, #000 calc(100% - 18px), transparent);
+    mask: linear-gradient(90deg, transparent, #000 18px, #000 calc(100% - 18px), transparent);
+
+    scrollbar-width: none;
+  }
+
+  .menu::-webkit-scrollbar {
+    display: none;
+  }
+
+  .menuItem,
+  .menuItemLink {
+    flex: 0 0 auto;
+    width: auto;
+    min-height: 40px;
+    padding: 8px 14px;
+    gap: var(--spacing-sm);
+    border: 1px solid var(--color-border);
+    border-radius: var(--profile-radius-chip);
+    background: var(--color-surface);
+    white-space: nowrap;
+    scroll-snap-align: center;
+    transform: none;
+    transition: background var(--transition-fast), color var(--transition-fast),
+      border-color var(--transition-fast), box-shadow var(--transition-fast);
+  }
+
+  .menuItem::before,
+  .menuItemLink::before {
+    display: none;
+  }
+
+  .menuIcon {
+    width: 16px;
+    height: 16px;
+  }
+
+  .menuItemLink {
+    margin-top: 0;
+  }
+
+  .active {
+    border-color: transparent;
+    background: var(--profile-grad-brand);
+    color: var(--color-surface);
+    box-shadow: var(--profile-shadow-pop);
+  }
+
+  .active .menuIcon {
+    color: currentColor;
+  }
+
+  .logout {
+    margin-top: 0;
+    border-color: color-mix(in srgb, var(--color-error) 24%, var(--color-border));
+    color: var(--color-error);
+  }
+
+  .menuItem:hover,
+  .menuItemLink:hover {
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .menuItem,
+  .menuItemLink,
+  .menuIcon,
+  .menuItem::before,
+  .menuItemLink::before {
+    transition: none !important;
+  }
+}
