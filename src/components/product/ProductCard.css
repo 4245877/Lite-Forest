@@ -1,0 +1,369 @@
+/* src/components/product/ProductCard.css */
+.product-card {
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 4px 20px rgba(var(--color-primary-rgb), 0.08);
+  overflow: hidden;
+  transition: transform var(--transition-normal), box-shadow var(--transition-normal);
+  border: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.product-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(var(--color-primary-rgb), 0.15);
+}
+
+/* Контейнер изображения */
+.product-image-container {
+  position: relative;
+  width: 100%;
+  height: 240px;
+  overflow: hidden;
+  background: var(--color-sand);
+}
+
+/* Кнопка избранного — внизу справа, чтобы не пересекаться с бейджем скидки */
+.favorite-btn {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.96);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  font-size: 20px;
+  line-height: 1;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  transition: transform var(--transition-fast), color var(--transition-fast),
+    border-color var(--transition-fast), background var(--transition-fast);
+}
+
+.favorite-btn:hover {
+  transform: scale(1.08);
+  background: #fff;
+  color: #d33;
+}
+
+.favorite-btn:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+.favorite-btn.active {
+  color: #d33;
+  border-color: rgba(211, 51, 51, 0.35);
+}
+
+.favorite-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+/* Подложка-блюр той же картинки */
+.product-image-container::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: var(--image-url);
+  background-size: cover;
+  background-position: center;
+  filter: blur(24px) brightness(0.98);
+  transform: scale(1.1);
+  will-change: transform, filter;
+}
+
+/* Скелет-заглушка (только пока изображение не загрузилось) */
+.product-image-container.loading::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+  z-index: 1; /* ниже самой картинки, но выше блюра */
+}
+
+/* Само изображение */
+.product-image {
+  position: relative;
+  z-index: 2; /* поверх блюра и скелета */
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* по умолчанию как раньше */
+  transition: transform 0.3s ease;
+}
+
+/* Портретные кадры показываем целиком */
+.product-image.is-portrait {
+  object-fit: contain;
+  padding: 0 6px; /* лёгкий «воздух» по бокам */
+}
+
+/* Ховер-эффект */
+.product-card:hover .product-image {
+  transform: scale(1.05);
+}
+
+/* Для портретных не увеличиваем сильно, чтобы не «обрезать» */
+.product-image-container.portrait .product-image {
+  transition: transform 0.25s ease;
+}
+
+.product-card:hover .product-image-container.portrait .product-image {
+  transform: scale(1.015);
+}
+
+/* Эко-бейдж */
+.eco-badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  background: linear-gradient(135deg, #38a169, #48bb78);
+  color: white;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  box-shadow: 0 2px 8px rgba(56, 161, 105, 0.3);
+  z-index: 3;
+}
+
+.eco-icon {
+  font-size: 14px;
+}
+
+/* Бейдж скидки */
+.discount-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: linear-gradient(135deg, #e53e3e, #f56565);
+  color: white;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(229, 62, 62, 0.3);
+  z-index: 3;
+}
+
+/* Информация о товаре */
+.product-info {
+  padding: 20px;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Категория над названием */
+.product-category {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-muted);
+}
+
+.product-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin: 0;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-height: 44px;
+}
+
+/* Статус наличия */
+.product-availability-row {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  align-items: flex-start;
+}
+
+.product-availability {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  width: fit-content;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  background: var(--color-sand);
+  color: var(--color-text-secondary);
+}
+
+.product-availability-timing {
+  font-size: 11px;
+  line-height: 1.3;
+  color: var(--color-text-secondary);
+}
+
+.product-availability.in-stock {
+  background: rgba(82, 183, 136, 0.12);
+  color: #047857;
+}
+
+.product-availability.in-catalog {
+  background: rgba(56, 132, 195, 0.1);
+  color: #2563eb;
+}
+
+.product-availability.made-to-order {
+  background: rgba(251, 191, 36, 0.14);
+  color: #d97706;
+}
+
+.product-availability.out-of-stock {
+  background: rgba(239, 68, 68, 0.1);
+  color: #dc2626;
+}
+
+/* Доп. характеристики (материал, технология и т.д.) */
+.product-attributes {
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--color-text-secondary);
+}
+
+/* Ценообразование */
+.product-pricing {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.current-price {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--color-primary);
+}
+
+.old-price {
+  font-size: 14px;
+  color: var(--color-text-muted);
+  text-decoration: line-through;
+}
+
+.eco-discount-text {
+  font-size: 12px;
+  color: #38a169;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Действия с товаром */
+.product-actions {
+  padding: 0 20px 20px 20px;
+}
+
+.add-to-cart-btn {
+  width: 100%;
+  justify-content: center;
+  transition: transform var(--transition-fast);
+}
+
+.add-to-cart-btn:hover {
+  transform: translateY(-1px);
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+  .product-image-container {
+    height: 200px;
+  }
+
+  .product-info {
+    padding: 16px;
+  }
+
+  .product-actions {
+    padding: 0 16px 16px 16px;
+  }
+
+  .product-title {
+    font-size: 15px;
+    min-height: 40px;
+  }
+
+  .current-price {
+    font-size: 18px;
+  }
+}
+
+@media (max-width: 480px) {
+  .product-image-container {
+    height: 180px;
+  }
+
+  .product-info {
+    padding: 14px;
+    gap: 10px;
+  }
+
+  .product-actions {
+    padding: 0 14px 14px 14px;
+  }
+
+  .eco-badge,
+  .discount-badge {
+    padding: 4px 8px;
+    font-size: 11px;
+  }
+}
+
+/* Улучшения для доступности */
+@media (prefers-reduced-motion: reduce) {
+  .product-card,
+  .product-image,
+  .add-to-cart-btn {
+    transition: none;
+  }
+
+  .product-card:hover {
+    transform: none;
+  }
+
+  .product-card:hover .product-image {
+    transform: none;
+  }
+}
+
+/* Состояния фокуса для доступности */
+.product-card:focus-within {
+  outline: 2px solid var(--color-primary-light);
+  outline-offset: 2px;
+}
+
+/* Анимация скелета */
+@keyframes loading {
+  0% {
+    background-position: 200% 0;
+  }
+
+  100% {
+    background-position: -200% 0;
+  }
+}

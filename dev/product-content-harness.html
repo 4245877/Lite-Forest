@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="uk">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ProductContentRenderer — стенд для браузерной проверки</title>
+    <!--
+      Стенд НЕ входит в production-сборку: vite build собирает точки входа из
+      build.rollupOptions.input (по умолчанию — только index.html), а этот файл
+      там не перечислен. Проверить это можно тем же scripts/check-bundle.mjs:
+      маркера pc-harness в dist нет.
+
+      Зачем он нужен. Ловушки вёрстки расширенного контента (широкая таблица,
+      растягивающая колонку грида; прокрутка, которая не включается, потому что
+      обёртка не уже содержимого) НЕ ВОСПРОИЗВОДЯТСЯ в jsdom: он не считает
+      раскладку вовсе. Проверять их можно только в настоящем браузере, а гонять
+      ради этого весь магазин с backend'ом и базой — значит проверять раз в
+      квартал. Стенд поднимает один компонент с фикстурами и открывается
+      мгновенно.
+    -->
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="./product-content-harness.jsx"></script>
+  </body>
+</html>

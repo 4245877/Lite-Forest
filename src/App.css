@@ -1,0 +1,16 @@
+/* App layout */
+
+.App {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  width: 100%;
+}
+
+.app-container {
+  max-width: 1680px;
+  width: 100%;
+  margin: 0 auto;
+  padding: var(--container-padding);
+  box-sizing: border-box;
+}

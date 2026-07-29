@@ -1,0 +1,441 @@
+/* ProductContentRenderer — расширенный контент товара (schema_version = 1).
+ *
+ * Оформление держится на токенах из assets/styles/global.css (Tailwind в проекте
+ * НЕ установлен — утилитарные классы здесь были бы мёртвыми). Все правила
+ * ограничены классом .product-content, чтобы содержимое документа никогда не
+ * влияло на остальную страницу товара.
+ *
+ * Mobile-first: базовые правила — телефон, расширения — в min-width. */
+
+.product-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xl);
+  color: var(--color-text-primary);
+  /* Длинное слово (артикул, ссылка в тексте) не имеет права растянуть страницу. */
+  overflow-wrap: anywhere;
+}
+
+/* ── Раскрывающаяся обёртка ─────────────────────────────────────────────── */
+
+/* Сам <details> не имеет оформления, кроме отступа между кнопкой и телом:
+   рамка вокруг всего расширенного описания превращала бы его в карточку внутри
+   карточки — на странице товара таких уровней и так достаточно. */
+.product-content .pc-disclosure {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+  min-width: 0;
+}
+
+.product-content .pc-disclosure__summary {
+  /* min-height 44px — палец, а не курсор: на телефоне это основная цель нажатия. */
+  min-height: 44px;
+  padding: var(--spacing-md) var(--spacing-lg);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  cursor: pointer;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  /* list-style: none + ::-webkit-details-marker убирают штатный треугольник,
+     вместо него ниже рисуется свой — управляемый поворотом. */
+  list-style: none;
+}
+
+.product-content .pc-disclosure__summary::-webkit-details-marker {
+  display: none;
+}
+
+.product-content .pc-disclosure__summary::before {
+  content: '';
+  flex: none;
+  width: 0;
+  height: 0;
+  border-left: 6px solid var(--color-primary);
+  border-top: 5px solid transparent;
+  border-bottom: 5px solid transparent;
+  transition: transform var(--transition-fast);
+}
+
+.product-content .pc-disclosure[open] > .pc-disclosure__summary::before {
+  transform: rotate(90deg);
+}
+
+/* Фокус обязан быть виден: раскрытие — единственный способ добраться до
+   содержимого с клавиатуры. */
+.product-content .pc-disclosure__summary:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.product-content .pc-disclosure__title {
+  /* Размер как у h3 документа: подпись читается заголовком блока, но заголовком
+     разметки НЕ является — иначе она встала бы в один ряд с h2 самого документа
+     и сломала бы его порядок. */
+  font-size: 1.125rem;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--color-text-primary);
+}
+
+/* Тело — тот же вертикальный поток, что и у нераскрывающегося варианта. */
+.product-content .pc-disclosure__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xl);
+  min-width: 0;
+}
+
+/* min-width: 0 — не косметика, а условие работы горизонтальной прокрутки.
+ *
+ * У элемента flex-раскладки min-width по умолчанию auto, то есть он отказывается
+ * становиться уже своего содержимого. Широкая таблица из-за этого растягивала
+ * обёртку с overflow-x до своей ширины (на телефоне — 768px в окне 390px):
+ * прокрутка не появлялась, а страница просто обрезала дальние колонки, и
+ * добраться до них было нечем. С min-width: 0 обёртка сжимается до ширины
+ * колонки текста, и прокручивается уже она — как и задумано. */
+.product-content > *,
+.product-content .pc-disclosure__body > *,
+.product-content .pc-sections__body > *,
+.product-content .pc-steps__item {
+  min-width: 0;
+}
+
+/* ── Текст ──────────────────────────────────────────────────────────────── */
+
+.product-content .pc-paragraph {
+  margin: 0;
+  /* pre-line — вместо <br/> в разметке: перевод строки внутри абзаца это
+     оформление текста, а не элемент документа. */
+  white-space: pre-line;
+  font-size: 1rem;
+  line-height: 1.7;
+  color: var(--color-text-secondary);
+}
+
+.product-content .pc-heading {
+  margin: var(--spacing-md) 0 0;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--color-text-primary);
+}
+
+.product-content .pc-heading:first-child {
+  margin-top: 0;
+}
+
+.product-content .pc-heading--2 { font-size: 1.375rem; }
+.product-content .pc-heading--3 { font-size: 1.125rem; }
+.product-content .pc-heading--4 { font-size: 1rem; }
+
+/* ── Списки ─────────────────────────────────────────────────────────────── */
+
+.product-content .pc-list {
+  margin: 0;
+  padding-left: var(--spacing-2xl);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  color: var(--color-text-secondary);
+  line-height: 1.7;
+}
+
+.product-content .pc-list--bullet { list-style: disc; }
+.product-content .pc-list--ordered { list-style: decimal; }
+
+/* ── Инструкция ─────────────────────────────────────────────────────────── */
+
+.product-content .pc-steps {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: pc-step;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+}
+
+.product-content .pc-steps__item {
+  counter-increment: pc-step;
+  position: relative;
+  padding: var(--spacing-lg);
+  padding-left: calc(var(--spacing-4xl) + var(--spacing-xs));
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+/* Номер шага — оформление: сам порядок уже несёт <ol>, и скринридер зачитывает
+   его без нашей помощи. Отсюда aria-hidden у псевдоэлемента не нужен — псевдо-
+   элементы в дерево доступности и так попадают как декорация. */
+.product-content .pc-steps__item::before {
+  content: counter(pc-step);
+  position: absolute;
+  top: var(--spacing-lg);
+  left: var(--spacing-lg);
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-round);
+  background: var(--color-primary);
+  color: var(--color-light);
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+.product-content .pc-steps__title {
+  margin: 0 0 var(--spacing-xs);
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.product-content .pc-steps__text {
+  margin: 0;
+  white-space: pre-line;
+  line-height: 1.7;
+  color: var(--color-text-secondary);
+}
+
+.product-content .pc-steps__image {
+  margin-top: var(--spacing-md);
+}
+
+/* ── Картинки ───────────────────────────────────────────────────────────── */
+
+.product-content .pc-image__figure {
+  margin: 0;
+}
+
+/* width: auto (а не 100%) — чтобы фотографию не РАСТЯГИВАЛО сверх её настоящего
+   размера: снимок 800px, натянутый на колонку в 1238px, выглядит мылом. Картинка
+   рисуется в своём размере и ужимается, когда места меньше; потолок в 720px
+   держит крупные снимки в пределах читаемой колонки.
+   height: auto нужен, чтобы явные width/height в атрибутах (они стоят ради
+   резерва места и защиты от прыжков вёрстки) не мешали пропорциям. */
+.product-content .pc-image__img {
+  display: block;
+  width: auto;
+  max-width: min(100%, 720px);
+  height: auto;
+  border-radius: var(--radius-md);
+  background: var(--color-border-light);
+}
+
+.product-content .pc-image__caption {
+  margin-top: var(--spacing-sm);
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--color-text-muted);
+}
+
+/* ── Таблица ────────────────────────────────────────────────────────────── */
+
+.product-content .pc-table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+
+/* Область прокручиваемая, значит она в порядке табуляции (tabIndex={0}) — а
+   значит обязана показывать фокус. */
+.product-content .pc-table-wrap:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.product-content .pc-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9375rem;
+}
+
+.product-content .pc-table th,
+.product-content .pc-table td {
+  padding: var(--spacing-md) var(--spacing-lg);
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid var(--color-border-light);
+  /* Колонка не сжимается в столбик из букв; горизонтальная прокрутка для того и
+     сделана. */
+  white-space: normal;
+  min-width: 8rem;
+}
+
+.product-content .pc-table thead th {
+  background: var(--color-sand);
+  color: var(--color-text-primary);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.product-content .pc-table tbody tr:last-child th,
+.product-content .pc-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* ── Выноска ────────────────────────────────────────────────────────────── */
+
+.product-content .pc-callout {
+  padding: var(--spacing-lg);
+  border-radius: var(--radius-md);
+  /* Полоса слева, а не только цвет фона: признак остаётся видимым и в
+     высококонтрастных режимах. */
+  border-left: 4px solid var(--color-primary);
+  background: var(--color-border-light);
+}
+
+.product-content .pc-callout__title {
+  margin: 0 0 var(--spacing-xs);
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.product-content .pc-callout__text {
+  margin: 0;
+  white-space: pre-line;
+  line-height: 1.7;
+  color: var(--color-text-secondary);
+}
+
+.product-content .pc-callout--info {
+  border-left-color: var(--color-primary-light);
+  background: rgba(var(--color-accent-rgb), 0.08);
+}
+
+.product-content .pc-callout--warning {
+  border-left-color: var(--color-accent-alt);
+  background: rgba(var(--color-accent-alt-rgb), 0.16);
+}
+
+.product-content .pc-callout--warning .pc-callout__title {
+  color: var(--color-warning-text);
+}
+
+.product-content .pc-callout--danger {
+  border-left-color: var(--color-error);
+  background: rgba(var(--color-error-rgb), 0.08);
+}
+
+.product-content .pc-callout--danger .pc-callout__title {
+  color: var(--color-error);
+}
+
+.product-content .pc-callout--success {
+  border-left-color: var(--color-success);
+  background: rgba(var(--color-accent-rgb), 0.1);
+}
+
+.product-content .pc-callout--success .pc-callout__title {
+  color: var(--color-success);
+}
+
+/* ── Секции ─────────────────────────────────────────────────────────────── */
+
+.product-content .pc-sections {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.product-content .pc-sections__item {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  overflow: hidden;
+}
+
+.product-content .pc-sections__summary {
+  padding: var(--spacing-lg);
+  /* min-height 44px — палец, а не курсор: это основная цель нажатия на мобильном. */
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  list-style: none;
+}
+
+.product-content .pc-sections__summary::-webkit-details-marker {
+  display: none;
+}
+
+/* Собственный маркер: у ::-webkit-details-marker нет управления поворотом, а
+   треугольник должен показывать состояние. */
+.product-content .pc-sections__summary::before {
+  content: '';
+  flex: none;
+  width: 0;
+  height: 0;
+  border-left: 6px solid var(--color-primary);
+  border-top: 5px solid transparent;
+  border-bottom: 5px solid transparent;
+  transition: transform var(--transition-fast);
+}
+
+.product-content .pc-sections__item[open] > .pc-sections__summary::before {
+  transform: rotate(90deg);
+}
+
+.product-content .pc-sections__summary:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -2px;
+}
+
+.product-content .pc-sections__body {
+  padding: 0 var(--spacing-lg) var(--spacing-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .product-content .pc-disclosure__summary::before,
+  .product-content .pc-sections__summary::before {
+    transition: none;
+  }
+}
+
+/* ── Планшет и шире ─────────────────────────────────────────────────────── */
+
+@media (min-width: 640px) {
+  .product-content,
+  .product-content .pc-disclosure__body {
+    gap: var(--spacing-2xl);
+  }
+
+  .product-content .pc-heading--2 { font-size: 1.5rem; }
+  .product-content .pc-heading--3 { font-size: 1.25rem; }
+
+  .product-content .pc-steps__item {
+    padding: var(--spacing-xl);
+    padding-left: calc(var(--spacing-5xl) - var(--spacing-lg));
+  }
+
+  .product-content .pc-steps__item::before {
+    top: var(--spacing-xl);
+    left: var(--spacing-xl);
+  }
+
+  /* Иллюстрация шага на широком экране не должна занимать всю ширину карточки:
+     это фото детали, а не обложка товара. */
+  .product-content .pc-steps__image {
+    max-width: 420px;
+  }
+}
+
+@media (min-width: 1024px) {
+  /* Длина строки: читать абзац шириной в 1200px невозможно. */
+  .product-content .pc-paragraph,
+  .product-content .pc-list,
+  .product-content .pc-steps__text {
+    max-width: 72ch;
+  }
+}

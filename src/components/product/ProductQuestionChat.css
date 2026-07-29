@@ -1,0 +1,324 @@
+/* Мини-чат «Питання майстру». Десктоп — карточка справа снизу, мобайл —
+   нижняя панель. Использует дизайн-токены проекта (global.css). Панель и
+   оверлей рендерятся порталом в body, поэтому стили самодостаточны. */
+
+.pq-root {
+  display: inline-flex;
+}
+
+.pq-launcher {
+  /* Берёт вид .btn-primary из .product-detail; здесь только нюансы раскладки. */
+  cursor: pointer;
+}
+
+/* ─── Overlay (затемнение, активно только на мобайле) ─── */
+.pq-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(26, 71, 42, 0.45);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity var(--transition-normal), visibility var(--transition-normal);
+  z-index: 1000;
+}
+
+/* ─── Панель чата ─── */
+.pq-panel {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 1001;
+
+  display: flex;
+  flex-direction: column;
+  width: min(360px, calc(100vw - 32px));
+  max-height: min(70vh, 560px);
+
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(16px) scale(0.98);
+  transform-origin: bottom right;
+  transition:
+    opacity var(--transition-normal),
+    transform var(--transition-normal),
+    visibility var(--transition-normal);
+}
+
+.pq-panel.open {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateY(0) scale(1);
+}
+
+/* ─── Шапка ─── */
+.pq-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-md);
+  padding: var(--spacing-md) var(--spacing-lg);
+  background: var(--gradient-primary);
+  color: #fff;
+}
+
+.pq-head-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.25;
+  min-width: 0;
+}
+
+.pq-head-text strong {
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.pq-head-sub {
+  font-size: 0.8rem;
+  opacity: 0.9;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pq-close {
+  flex: 0 0 auto;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: var(--radius-round);
+  background: rgba(255, 255, 255, 0.18);
+  color: #fff;
+  font-size: 1.35rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.pq-close:hover {
+  background: rgba(255, 255, 255, 0.32);
+}
+
+/* ─── Тело / лента сообщений ─── */
+.pq-body {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: var(--spacing-lg);
+  background: var(--color-cream);
+}
+
+.pq-empty {
+  margin: var(--spacing-sm) 0;
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.pq-messages {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.pq-msg {
+  display: flex;
+  flex-direction: column;
+  max-width: 85%;
+}
+
+.pq-msg--customer {
+  align-self: flex-end;
+  align-items: flex-end;
+}
+
+.pq-msg--system {
+  align-self: flex-start;
+  align-items: flex-start;
+}
+
+/* Ответ оператора («майстра») — как входящее сообщение слева, с акцентной
+   рамкой, чтобы отличать реальный ответ от системного подтверждения. */
+.pq-msg--operator {
+  align-self: flex-start;
+  align-items: flex-start;
+}
+
+.pq-bubble {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--radius-md);
+  font-size: 0.9rem;
+  word-break: break-word;
+  white-space: pre-wrap;
+}
+
+.pq-msg--customer .pq-bubble {
+  background: var(--color-primary);
+  color: #fff;
+  border-bottom-right-radius: 4px;
+}
+
+.pq-msg--system .pq-bubble {
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border);
+  border-bottom-left-radius: 4px;
+}
+
+.pq-msg--operator .pq-bubble {
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border);
+  border-left: 3px solid var(--color-primary);
+  border-bottom-left-radius: 4px;
+}
+
+.pq-msg.is-failed .pq-bubble {
+  background: var(--color-error);
+}
+
+.pq-bubble-meta {
+  font-size: 0.7rem;
+  opacity: 0.75;
+  align-self: flex-end;
+}
+
+.pq-msg--system .pq-bubble-meta,
+.pq-msg--operator .pq-bubble-meta {
+  align-self: flex-start;
+}
+
+.pq-retry {
+  margin-top: 4px;
+  padding: 2px 6px;
+  border: none;
+  background: none;
+  color: var(--color-error);
+  font-size: 0.75rem;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.pq-retry:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ─── Ошибка ─── */
+.pq-error {
+  padding: var(--spacing-sm) var(--spacing-lg);
+  background: rgba(var(--color-error-rgb), 0.1);
+  color: var(--color-error);
+  font-size: 0.8rem;
+}
+
+/* ─── Форма ввода ─── */
+.pq-form {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md);
+  border-top: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+
+.pq-input {
+  flex: 1 1 auto;
+  resize: none;
+  max-height: 96px;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font: inherit;
+  font-size: 0.9rem;
+  color: var(--color-text-primary);
+  background: var(--color-background);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.pq-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-focus);
+}
+
+.pq-input:disabled {
+  opacity: 0.6;
+}
+
+.pq-send {
+  flex: 0 0 auto;
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: var(--radius-round);
+  background: var(--color-primary);
+  color: #fff;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background var(--transition-fast), transform var(--transition-fast);
+}
+
+.pq-send:hover:not(:disabled) {
+  background: var(--color-primary-dark);
+  transform: translateY(-1px);
+}
+
+.pq-send:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ─── Мобайл: нижняя панель + затемнение ─── */
+@media (max-width: 640px) {
+  .pq-root {
+    display: block;
+  }
+
+  .pq-launcher {
+    width: 100%;
+  }
+
+  .pq-overlay.open {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+  }
+
+  .pq-panel {
+    right: 0;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    max-height: 80vh;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    transform: translateY(100%);
+    transform-origin: bottom center;
+  }
+
+  .pq-panel.open {
+    transform: translateY(0);
+  }
+}
+
+/* Уважение к prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  .pq-overlay,
+  .pq-panel {
+    transition: opacity 0.01ms, visibility 0.01ms;
+  }
+}

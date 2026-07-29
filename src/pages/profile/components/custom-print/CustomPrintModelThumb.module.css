@@ -1,0 +1,56 @@
+.thumb {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 14%, var(--color-border));
+  border-radius: var(--profile-radius-control, 12px);
+  background:
+    color-mix(in srgb, var(--color-accent) 6%, var(--color-surface));
+}
+
+.thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56%;
+  height: 56%;
+  color: color-mix(in srgb, var(--color-primary) 45%, var(--color-text-secondary));
+}
+
+.placeholder svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* Розміри */
+.sm {
+  width: 56px;
+  height: 56px;
+  border-radius: 8px;
+}
+
+.md {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  max-width: 220px;
+}
+
+.lg {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+}
+
+.checkout {
+  width: 64px;
+  height: 64px;
+  border-radius: 8px;
+}

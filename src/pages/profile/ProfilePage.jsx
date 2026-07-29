@@ -1,0 +1,196 @@
+import React, { useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../auth';
+import styles from './ProfilePage.module.css';
+
+import { TABS, getInitialTab } from './profileTabs';
+import ProfileSidebar from './components/ProfileSidebar';
+import ProfileTabPanel from './components/ProfileTabPanel';
+
+import OverviewTab from './tabs/OverviewTab';
+import ProfileTab from './tabs/ProfileTab';
+import OrdersTab from './tabs/OrdersTab';
+import CustomPrintTab from './tabs/CustomPrintTab';
+import PaymentsTab from './tabs/PaymentsTab';
+import ShippingTab from './tabs/ShippingTab';
+import ReturnsTab from './tabs/ReturnsTab';
+import FavoritesTab from './tabs/FavoritesTab';
+import NotificationsTab from './tabs/NotificationsTab';
+import SupportTab from './tabs/SupportTab';
+import CouponsTab from './tabs/CouponsTab';
+import SecurityTab from './tabs/SecurityTab';
+
+const ProfilePage = () => {
+  const [tab, setTab] = useState(getInitialTab);
+  const { user, loading, signout } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const nextHash = `#${tab}`;
+
+    if (window.location.hash !== nextHash) {
+      window.history.replaceState(null, '', nextHash);
+    }
+  }, [tab]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const syncTabFromHash = () => {
+      const nextTab = getInitialTab();
+
+      if (nextTab !== tab) {
+        setTab(nextTab);
+      }
+    };
+
+    window.addEventListener('hashchange', syncTabFromHash);
+
+    return () => {
+      window.removeEventListener('hashchange', syncTabFromHash);
+    };
+  }, [tab]);
+
+  const handleLogout = async () => {
+    await signout();
+    navigate('/', { replace: true });
+  };
+
+  const onTabsKey = (e) => {
+    const idx = TABS.indexOf(tab);
+
+    if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
+      e.preventDefault();
+      setTab(TABS[(idx + 1) % TABS.length]);
+    }
+
+    if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+      e.preventDefault();
+      setTab(TABS[(idx - 1 + TABS.length) % TABS.length]);
+    }
+
+    if (e.key === 'Home') {
+      e.preventDefault();
+      setTab(TABS[0]);
+    }
+
+    if (e.key === 'End') {
+      e.preventDefault();
+      setTab(TABS[TABS.length - 1]);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className={styles.container}>
+        <div className={styles.headerRow}>
+          <h1 className={styles.title}>Особистий кабінет</h1>
+          <div className={styles.smallNote}>Завантаження…</div>
+        </div>
+
+        <div className={styles.skeletonGrid}>
+          <div className={styles.skeletonCard} />
+          <div className={styles.skeletonMain} />
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className={styles.container}>
+        <div className={styles.headerRow}>
+          <h1 className={styles.title}>Особистий кабінет</h1>
+        </div>
+
+        <section className={styles.authCard}>
+          <h2>Потрібен вхід</h2>
+          <p>Увійди, щоб переглядати особистий кабінет.</p>
+
+          <Link
+            className={styles.authButton}
+            to="/login"
+            state={{ from: { pathname: '/profile', hash: `#${tab}` } }}
+          >
+            Увійти
+          </Link>
+        </section>
+      </div>
+    );
+  }
+
+  return (
+    <div className={styles.container}>
+      <div className={styles.headerRow}>
+        <h1 className={styles.title}>Особистий кабінет</h1>
+        <div className={styles.smallNote}>
+          Ласкаво просимо, <strong>{(user?.name || 'Користувач').split(' ')[0]}</strong>
+        </div>
+      </div>
+
+      <div className={styles.grid}>
+        <ProfileSidebar
+          user={user}
+          tab={tab}
+          setTab={setTab}
+          onTabsKey={onTabsKey}
+          onLogout={handleLogout}
+        />
+
+        <div className={styles.main}>
+          <ProfileTabPanel tabKey="overview" activeTab={tab}>
+            <OverviewTab user={user} />
+          </ProfileTabPanel>
+
+          <ProfileTabPanel tabKey="profile" activeTab={tab}>
+            <ProfileTab user={user} />
+          </ProfileTabPanel>
+
+          <ProfileTabPanel tabKey="orders" activeTab={tab}>
+            <OrdersTab />
+          </ProfileTabPanel>
+
+          <ProfileTabPanel tabKey="custom-print" activeTab={tab}>
+            <CustomPrintTab />
+          </ProfileTabPanel>
+
+          <ProfileTabPanel tabKey="payments" activeTab={tab}>
+            <PaymentsTab />
+          </ProfileTabPanel>
+
+          <ProfileTabPanel tabKey="shipping" activeTab={tab}>
+            <ShippingTab />
+          </ProfileTabPanel>
+
+          <ProfileTabPanel tabKey="returns" activeTab={tab}>
+            <ReturnsTab />
+          </ProfileTabPanel>
+
+          <ProfileTabPanel tabKey="favorites" activeTab={tab}>
+            <FavoritesTab />
+          </ProfileTabPanel>
+
+          <ProfileTabPanel tabKey="notifications" activeTab={tab}>
+            <NotificationsTab />
+          </ProfileTabPanel>
+
+          <ProfileTabPanel tabKey="support" activeTab={tab}>
+            <SupportTab />
+          </ProfileTabPanel>
+
+          <ProfileTabPanel tabKey="coupons" activeTab={tab}>
+            <CouponsTab />
+          </ProfileTabPanel>
+
+          <ProfileTabPanel tabKey="security" activeTab={tab}>
+            <SecurityTab />
+          </ProfileTabPanel>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default ProfilePage;

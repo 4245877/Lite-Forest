@@ -1,0 +1,473 @@
+/* ProfilePage.module.css */
+
+/* ─── Токены страницы профиля ────────────────────────────────────────────── */
+/*
+  Общие значения берём из global.css:
+  цвета, отступы, радиусы, тени, переходы, focus-ring.
+
+  Здесь остаются только локальные токены профиля:
+  размеры элементов, профильные акценты, локальные анимации.
+*/
+
+.container {
+  /* Базовые токены страницы из global.css */
+  --profile-white: var(--color-surface);
+  --profile-thumb-bg: var(--color-border-light);
+  --profile-shadow-rgb: var(--color-primary-rgb);
+
+  --profile-text: var(--color-text-primary);
+  --profile-text-soft: var(--color-text-secondary);
+  --profile-text-muted: var(--color-text-muted);
+
+  --profile-title-color: var(--color-primary-dark);
+  --profile-accent: var(--color-accent);
+  --profile-accent-alt: var(--color-accent-alt);
+  --profile-forest: var(--color-primary);
+  --profile-forest-light: var(--color-secondary);
+
+  /* Тени */
+  --profile-hover-shadow: var(--shadow-lg);
+  --profile-avatar-shadow: var(--shadow-sm);
+  --profile-avatar-shadow-hover: var(--shadow-md);
+  --profile-btn-shadow: var(--shadow-sm);
+  --profile-btn-shadow-hover: var(--shadow-md);
+
+  /* Focus */
+  --profile-focus-ring: 0 0 0 3px var(--color-focus);
+  --profile-focus-ring-soft: 0 0 0 3px rgba(var(--color-primary-rgb), 0.16);
+  --profile-focus-outline-size: 2px;
+  --profile-focus-outline-offset: 3px;
+
+  /* Статусы */
+  --profile-error-bg: rgba(var(--color-error-rgb), 0.08);
+  --profile-error-fg: var(--color-error);
+
+  --profile-success-bg: rgba(var(--color-accent-rgb), 0.12);
+  --profile-success-fg: var(--color-success);
+  --profile-success-border: var(--color-accent);
+
+  --profile-warning-bg: #fbf3d4;
+  --profile-warning-bg: color-mix(in srgb, var(--color-accent-alt) 18%, var(--color-surface));
+
+  --profile-warning-fg: var(--color-warning-text);
+  --profile-warning-fg: color-mix(in srgb, var(--color-accent-alt) 45%, var(--color-primary-dark));
+
+  /* Размеры элементов */
+  --profile-thumb-size: 72px;
+  --profile-thumb-radius: var(--radius-md);
+  --profile-card-accent-size: 3px;
+  --profile-title-accent-height: 4px;
+  --profile-menu-gap: var(--spacing-xs);
+  --profile-radius-xs: var(--radius-sm);
+  --profile-radius-pill: 999px;
+  --profile-status-padding-y: var(--spacing-xs);
+  --profile-status-padding-x: var(--spacing-md);
+  --profile-code-padding-y: var(--spacing-xs);
+  --profile-code-padding-x: var(--spacing-sm);
+
+  /* Улюблені */
+  --profile-favorites-list-gap: 0.85rem;
+  --profile-favorites-item-gap: 1rem;
+  --profile-favorites-item-gap-sm: 0.75rem;
+  --profile-favorites-item-padding: 1rem;
+  --profile-favorites-item-padding-sm: 0.85rem;
+  --profile-favorites-meta-gap: 0.45rem;
+  --profile-favorites-thumb-size-lg: 80px;
+  --profile-favorites-thumb-size-md: 64px;
+  --profile-favorites-thumb-height-sm: 140px;
+  --profile-favorites-check-size: 15px;
+  --profile-favorites-inline-action-offset: 0.35rem;
+  --profile-favorites-title-gap: 0.5rem;
+  --profile-favorites-empty-icon-size: 3rem;
+  --profile-favorites-shimmer-duration: 1.8s;
+
+  /* Анимации */
+  --profile-skeleton-duration: 2s;
+
+  /* Локальная тема профиля */
+  --raph-gold: var(--color-accent-alt);
+  --raph-gold-light: color-mix(in srgb, var(--color-accent-alt) 72%, var(--color-surface));
+  --raph-gold-pale: color-mix(in srgb, var(--color-accent-alt) 28%, var(--color-surface));
+
+  --raph-forest: var(--color-primary);
+  --raph-forest-light: var(--color-secondary);
+  --raph-forest-pale: color-mix(in srgb, var(--color-accent) 24%, var(--color-surface));
+
+  --raph-cream: var(--color-cream);
+  --raph-caramel: color-mix(in srgb, var(--color-accent-alt) 55%, var(--color-primary-dark));
+  --raph-brown-pale: color-mix(in srgb, var(--raph-caramel) 16%, var(--color-surface));
+
+  --raph-text: var(--color-text-primary);
+  --raph-text-soft: var(--color-text-secondary);
+
+  /* Единая визуальная система кабинета */
+  --profile-radius-card: 18px;
+  --profile-radius-control: 12px;
+  --profile-radius-chip: 999px;
+
+  --profile-shadow-card:
+    0 1px 2px rgba(15, 23, 42, 0.04),
+    0 12px 28px -18px rgba(var(--color-primary-rgb), 0.30);
+  --profile-shadow-card-hover:
+    0 2px 6px rgba(15, 23, 42, 0.06),
+    0 24px 46px -22px rgba(var(--color-primary-rgb), 0.38);
+  --profile-shadow-pop:
+    0 6px 14px -8px rgba(var(--color-primary-rgb), 0.45);
+
+  --profile-grad-brand: linear-gradient(135deg, var(--color-primary) 0%, var(--color-accent) 100%);
+  --profile-grad-brand-soft: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--color-primary) 14%, var(--color-surface)) 0%,
+    color-mix(in srgb, var(--color-accent) 18%, var(--color-surface)) 100%
+  );
+
+  --profile-sticky-top: calc(var(--header-height, 70px) + 8px);
+
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding: 40px clamp(16px, 3vw, 32px) 48px;
+
+  color: var(--profile-text);
+  position: relative;
+  /* clip (а не hidden) — чтобы не ломать position: sticky у дочерних элементов */
+  overflow-x: clip;
+  isolation: isolate;
+
+  background: linear-gradient(180deg, var(--color-background) 0%, #f4f8f5 48%, var(--color-surface) 100%);
+}
+
+/* Мягкое фирменное свечение в шапке страницы */
+.container::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 460px;
+  background:
+    radial-gradient(58% 100% at 88% -10%, rgba(var(--color-accent-rgb), 0.16), transparent 68%),
+    radial-gradient(48% 100% at 6% -16%, rgba(var(--color-primary-rgb), 0.10), transparent 66%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Все прямые потомки — над текстурой */
+.container > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* ─── Шапка ──────────────────────────────────────────────────────────────── */
+.headerRow {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-lg);
+
+  max-width: 1200px;
+  margin: 0 auto var(--spacing-2xl);
+  padding: 0;
+
+  animation: raphEntrance 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.headerRow::before {
+  display: none;
+}
+
+.headerRow > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Анимация входа */
+@keyframes raphEntrance {
+  0% {
+    opacity: 0;
+    transform: translateY(-12px);
+    filter: blur(3px);
+  }
+
+  60% {
+    filter: blur(0);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
+.title {
+  position: relative;
+  display: inline-block;
+
+  margin: 0;
+
+  color: var(--color-primary-dark);
+  font-size: clamp(1.7rem, 1.2rem + 1.8vw, 2.25rem);
+  font-weight: 800;
+  line-height: 1.12;
+  letter-spacing: -0.01em;
+}
+
+/* Короткий фирменный акцент под заголовком */
+.title::after {
+  content: '';
+  display: block;
+  width: 60px;
+  height: 4px;
+  margin-top: 14px;
+  border-radius: 999px;
+  background: var(--profile-grad-brand);
+  transform-origin: left center;
+  animation: titleAccent 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.25s both;
+}
+
+@keyframes titleAccent {
+  0% {
+    transform: scaleX(0);
+    opacity: 0;
+  }
+  100% {
+    transform: scaleX(1);
+    opacity: 1;
+  }
+}
+
+.smallNote {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+
+  max-width: min(100%, 420px);
+  padding: 8px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--profile-radius-pill);
+  background: var(--color-surface);
+
+  color: var(--profile-text-soft);
+  font-size: 0.9rem;
+  font-weight: 500;
+  text-align: right;
+
+  animation: raphEntrance 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both;
+}
+
+.smallNote strong {
+  color: var(--color-primary-dark);
+  font-weight: 700;
+}
+
+/* ─── Основная сетка ─────────────────────────────────────────────────────── */
+.grid {
+  display: grid;
+  grid-template-columns: minmax(248px, 280px) minmax(0, 1fr);
+  align-items: start;
+  gap: var(--spacing-2xl);
+
+  max-width: 1200px;
+  margin: 0 auto;
+
+  animation: gridReveal 0.75s cubic-bezier(0.16, 1, 0.3, 1) 0.18s both;
+}
+
+.main {
+  min-width: 0;
+}
+
+@keyframes gridReveal {
+  0% {
+    opacity: 0;
+    transform: translateY(14px);
+    filter: blur(2px);
+  }
+
+  55% {
+    filter: blur(0);
+  }
+
+  100% {
+    opacity: 1;
+    transform: none;
+    filter: blur(0);
+  }
+}
+
+.skeletonGrid {
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr);
+  gap: var(--spacing-3xl);
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.skeletonCard,
+.skeletonMain {
+  border-radius: var(--radius-lg);
+  background: linear-gradient(
+    90deg,
+    rgba(var(--color-primary-rgb), 0.06),
+    rgba(var(--color-accent-rgb), 0.12),
+    rgba(var(--color-primary-rgb), 0.06)
+  );
+  background-size: 220% 100%;
+  animation: profileSkeleton var(--profile-skeleton-duration) ease-in-out infinite;
+}
+
+.skeletonCard {
+  min-height: 420px;
+}
+
+.skeletonMain {
+  min-height: 520px;
+}
+
+@keyframes profileSkeleton {
+  from {
+    background-position: 180% center;
+  }
+
+  to {
+    background-position: -180% center;
+  }
+}
+
+/* ─── Адаптивность ───────────────────────────────────────────────────────── */
+@media (max-width: 1024px) {
+  .grid {
+    grid-template-columns: 240px minmax(0, 1fr);
+    gap: var(--spacing-xl);
+  }
+}
+
+@media (max-width: 1024px) {
+  .skeletonGrid {
+    grid-template-columns: 240px minmax(0, 1fr);
+    gap: var(--spacing-2xl);
+  }
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: var(--spacing-2xl) var(--spacing-md);
+  }
+
+  .headerRow {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-xl);
+  }
+
+  .smallNote {
+    justify-content: flex-start;
+    text-align: left;
+  }
+
+  .title {
+    font-size: 1.875rem;
+  }
+
+  /* Обычный блочный поток — чтобы position: sticky у ленты вкладок
+     работал на всю высоту контента (а не в пределах ячейки грида). */
+  .grid {
+    display: block;
+  }
+
+  .skeletonGrid {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-xl);
+  }
+
+  .skeletonCard {
+    min-height: 180px;
+  }
+
+  .skeletonMain {
+    min-height: 360px;
+  }
+}
+
+@media (max-width: 480px) {
+  .title {
+    font-size: 1.625rem;
+  }
+
+  .smallNote {
+    width: 100%;
+  }
+}
+
+.authCard {
+  max-width: 520px;
+  margin: 0 auto;
+  padding: clamp(24px, 4vw, 36px);
+
+  border: 1px solid var(--color-border);
+  border-radius: var(--profile-radius-card);
+  background: var(--color-surface);
+  box-shadow: var(--profile-shadow-card);
+  text-align: center;
+
+  animation: raphEntrance 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.authCard h2 {
+  margin: 0 0 var(--spacing-sm);
+  color: var(--profile-title-color);
+  font-size: 1.5rem;
+  line-height: 1.2;
+}
+
+.authCard p {
+  margin: 0 0 var(--spacing-xl);
+  color: var(--profile-text-soft);
+}
+
+.authButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-height: 48px;
+  padding: 0 28px;
+
+  border: 1px solid transparent;
+  border-radius: var(--profile-radius-control);
+  background: var(--profile-grad-brand);
+  color: var(--color-surface);
+  font-weight: 700;
+  box-shadow: var(--profile-shadow-pop);
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast), filter var(--transition-fast);
+}
+
+.authButton:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--profile-shadow-card-hover);
+  filter: brightness(1.04);
+}
+
+.authButton:active {
+  transform: translateY(0);
+}
+
+.authButton:focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 3px;
+}
+
+/* ─── Доступность: уменьшенный motion ────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .container,
+  .container *,
+  .container *::before,
+  .container *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

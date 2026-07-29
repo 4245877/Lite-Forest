@@ -1,0 +1,280 @@
+.pfm-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(2px);
+}
+
+.pfm-dialog {
+  width: 100%;
+  max-width: 520px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.25);
+  overflow: hidden;
+}
+
+.pfm-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 18px 20px 10px;
+}
+
+.pfm-title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.pfm-close {
+  border: none;
+  background: transparent;
+  font-size: 1.6rem;
+  line-height: 1;
+  cursor: pointer;
+  color: #64748b;
+  padding: 0 4px;
+}
+
+.pfm-close:hover {
+  color: #0f172a;
+}
+
+.pfm-subtitle {
+  margin: 0;
+  padding: 0 20px 8px;
+  color: #64748b;
+  font-size: 0.92rem;
+}
+
+.pfm-bulk {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 4px 20px 8px;
+}
+
+.pfm-bulk-info {
+  font-size: 0.88rem;
+  color: #64748b;
+}
+
+.pfm-bulk-actions {
+  display: flex;
+  gap: 14px;
+}
+
+.pfm-bulk-btn {
+  border: none;
+  background: transparent;
+  padding: 0;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #2563eb;
+  cursor: pointer;
+}
+
+.pfm-bulk-btn:hover:not(:disabled) {
+  text-decoration: underline;
+}
+
+.pfm-bulk-btn:disabled {
+  color: #cbd5e1;
+  cursor: default;
+}
+
+.pfm-list {
+  list-style: none;
+  margin: 0;
+  padding: 4px 12px;
+  overflow-y: auto;
+  flex: 1 1 auto;
+}
+
+.pfm-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px;
+  border-radius: 12px;
+}
+
+.pfm-item:hover {
+  background: #f8fafc;
+}
+
+.pfm-check {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.pfm-check input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.pfm-checkbox {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  border: 2px solid #cbd5e1;
+  background: #fff;
+  transition: border-color 0.15s ease, background 0.15s ease;
+  position: relative;
+}
+
+.pfm-check input:checked + .pfm-checkbox {
+  border-color: #2563eb;
+  background: #2563eb;
+}
+
+.pfm-check input:checked + .pfm-checkbox::after {
+  content: '';
+  position: absolute;
+  left: 6px;
+  top: 2px;
+  width: 5px;
+  height: 10px;
+  border: solid #fff;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.pfm-check input:focus-visible + .pfm-checkbox {
+  outline: 2px solid #93c5fd;
+  outline-offset: 2px;
+}
+
+.pfm-check input:disabled + .pfm-checkbox {
+  border-color: #e2e8f0;
+  background: #f1f5f9;
+  opacity: 0.7;
+}
+
+.pfm-price {
+  flex: 0 0 auto;
+  font-weight: 600;
+  color: #0f172a;
+  white-space: nowrap;
+}
+
+.pfm-thumb {
+  flex: 0 0 auto;
+  width: 56px;
+  height: 56px;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+}
+
+.pfm-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.pfm-info {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.pfm-name {
+  font-weight: 600;
+  font-size: 0.95rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pfm-type {
+  align-self: flex-start;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: #475569;
+  background: #e2e8f0;
+  border-radius: 6px;
+  padding: 1px 6px;
+}
+
+.pfm-qty {
+  flex: 0 0 auto;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.pfm-empty {
+  margin: 0;
+  padding: 16px 20px;
+  color: #64748b;
+}
+
+.pfm-footer {
+  border-top: 1px solid #e2e8f0;
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.pfm-total {
+  font-size: 0.98rem;
+  color: #334155;
+}
+
+.pfm-total strong {
+  font-size: 1.1rem;
+  color: #0f172a;
+}
+
+.pfm-hint {
+  color: #b91c1c;
+  font-weight: 600;
+  font-size: 0.92rem;
+}
+
+.pfm-approx {
+  color: #94a3b8;
+  font-size: 0.82rem;
+  font-weight: 400;
+}
+
+.pfm-actions {
+  display: flex;
+  gap: 8px;
+}
+
+@media (max-width: 480px) {
+  .pfm-footer {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .pfm-actions {
+    justify-content: flex-end;
+  }
+}

@@ -1,0 +1,635 @@
+/* ============================================================= */
+/* === 📄 Юридична сторінка — чистий, «живий» редизайн ========== */
+/* ============================================================= */
+
+.legal {
+  --legal-offset: 96px;        /* відступ якоря під шапкою */
+  /* + місце під липку стрічку-навігацію; завʼязано на реальну висоту шапки,
+     щоб на планшетах (70px-шапка) заголовок секції не ховався під пілюлями */
+  --legal-mobile-offset: calc(var(--header-height, 70px) + 76px);
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: clamp(1.25rem, 4vw, 3rem) var(--spacing-xl) var(--spacing-5xl);
+  padding-left: calc(var(--spacing-xl) + env(safe-area-inset-left));
+  padding-right: calc(var(--spacing-xl) + env(safe-area-inset-right));
+  color: var(--color-text-primary);
+  font-feature-settings: "kern" 1, "liga" 1;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ===== Hero ===== */
+.legal__hero {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  text-align: center;
+  padding: clamp(2.5rem, 5vw, 4.5rem) clamp(1.25rem, 4vw, 3rem);
+  margin-bottom: clamp(1.75rem, 4vw, 3rem);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  background:
+    radial-gradient(1000px 480px at 50% -25%, rgba(var(--color-accent-rgb), 0.18), transparent 70%),
+    var(--gradient-hero);
+  box-shadow: var(--shadow-sm);
+  animation: legalRise 0.6s ease both;
+}
+
+.legal__hero::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: radial-gradient(620px 320px at 85% 8%, rgba(var(--color-accent-alt-rgb), 0.16), transparent 70%);
+}
+
+.legal__hero-inner {
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+.legal__eyebrow {
+  display: inline-block;
+  margin-bottom: var(--spacing-lg);
+  padding: 0.35rem 0.85rem;
+  border-radius: 999px;
+  background: rgba(var(--color-accent-rgb), 0.14);
+  color: var(--color-accent-text);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.legal__title {
+  margin: 0 0 var(--spacing-md);
+  font-size: clamp(1.9rem, 1.4rem + 2.4vw, 3rem);
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: var(--color-primary-dark);
+  text-wrap: balance;
+}
+
+.legal__subtitle {
+  max-width: 48ch;
+  margin: 0 auto var(--spacing-lg);
+  color: var(--color-text-secondary);
+  font-size: clamp(1rem, 0.96rem + 0.3vw, 1.15rem);
+  line-height: 1.6;
+}
+
+.legal__updated {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--color-text-secondary);
+}
+
+.legal__updated-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-accent);
+  box-shadow: 0 0 0 4px rgba(var(--color-accent-rgb), 0.18);
+}
+
+/* ===== Сітка: сайдбар + контент ===== */
+.legal__layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: clamp(1.5rem, 3vw, 2.5rem);
+}
+
+@media (min-width: 960px) {
+  .legal__layout {
+    grid-template-columns: 262px minmax(0, 1fr);
+    align-items: start;
+  }
+}
+
+/* ===== Навігація ===== */
+.legal__aside {
+  min-width: 0;
+}
+
+@media (min-width: 960px) {
+  .legal__aside {
+    position: sticky;
+    top: var(--legal-offset);
+  }
+}
+
+.legal__nav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: var(--spacing-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.legal__nav-title {
+  margin: 0;
+  padding: var(--spacing-sm) var(--spacing-md) var(--spacing-xs);
+  color: var(--color-text-muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.legal__nav-link {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.65rem 0.8rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  color: var(--color-text-secondary);
+  font-size: 0.925rem;
+  font-weight: 500;
+  text-decoration: none;
+  transition: background var(--transition-fast), color var(--transition-fast),
+    border-color var(--transition-fast);
+}
+
+.legal__nav-link::before {
+  content: "";
+  position: absolute;
+  left: -1px;
+  top: 50%;
+  width: 3px;
+  height: 58%;
+  border-radius: 3px;
+  background: var(--gradient-primary);
+  transform: translateY(-50%) scaleY(0);
+  transform-origin: center;
+  transition: transform 0.25s ease;
+}
+
+.legal__nav-icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 32px;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  background: var(--color-sand);
+  font-size: 1rem;
+  transition: transform var(--transition-fast), background var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+.legal__nav-label {
+  min-width: 0;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .legal__nav-link:hover {
+    background: var(--color-sand);
+    color: var(--color-primary-dark);
+  }
+  .legal__nav-link:hover .legal__nav-icon {
+    transform: scale(1.08);
+  }
+}
+
+.legal__nav-link[data-active="true"] {
+  background: linear-gradient(135deg, rgba(var(--color-accent-rgb), 0.16), rgba(var(--color-accent-alt-rgb), 0.14));
+  border-color: rgba(var(--color-accent-rgb), 0.35);
+  color: var(--color-primary-dark);
+  font-weight: 700;
+}
+
+.legal__nav-link[data-active="true"]::before {
+  transform: translateY(-50%) scaleY(1);
+}
+
+.legal__nav-link[data-active="true"] .legal__nav-icon {
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.legal__nav-link:focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+/* Мобільна навігація: липка стрічка пігулок під шапкою */
+@media (max-width: 959px) {
+  .legal__aside {
+    position: sticky;
+    top: var(--header-height, 56px);
+    z-index: 20;
+    margin: 0 calc(-1 * var(--spacing-xl));
+    border-bottom: 1px solid var(--color-border-light);
+    background: rgba(255, 255, 255, 0.9);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+  }
+  .legal__nav {
+    flex-direction: row;
+    gap: 0.5rem;
+    padding: var(--spacing-md) var(--spacing-xl);
+    overflow-x: auto;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    scrollbar-width: none;
+    scroll-snap-type: x proximity;
+    /* натяк, що стрічку можна гортати вбік (скролбар прихований) */
+    -webkit-mask-image: linear-gradient(to right, transparent, #000 18px, #000 calc(100% - 18px), transparent);
+    mask-image: linear-gradient(to right, transparent, #000 18px, #000 calc(100% - 18px), transparent);
+  }
+  .legal__nav::-webkit-scrollbar {
+    display: none;
+  }
+  .legal__nav-title {
+    display: none;
+  }
+  .legal__nav-link {
+    flex: 0 0 auto;
+    padding: 0.5rem 0.9rem;
+    border: 1.5px solid var(--color-border);
+    border-radius: 999px;
+    background: var(--color-surface);
+    font-size: 0.85rem;
+    white-space: nowrap;
+    scroll-snap-align: start;
+  }
+  .legal__nav-link::before {
+    display: none;
+  }
+  .legal__nav-icon {
+    display: none;
+  }
+  .legal__nav-link[data-active="true"] {
+    border-color: rgba(var(--color-accent-rgb), 0.5);
+  }
+}
+
+/* ===== Контент: картки-секції ===== */
+.legal__content {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(1.25rem, 2.5vw, 2rem);
+  min-width: 0;
+}
+
+.legal-card {
+  scroll-margin-top: var(--legal-offset);
+  padding: clamp(1.5rem, 3vw, 2.75rem);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+  animation: legalRise 0.55s ease both;
+}
+
+.legal-card:nth-child(1) { animation-delay: 0.04s; }
+.legal-card:nth-child(2) { animation-delay: 0.08s; }
+.legal-card:nth-child(3) { animation-delay: 0.12s; }
+.legal-card:nth-child(4) { animation-delay: 0.16s; }
+.legal-card:nth-child(5) { animation-delay: 0.2s; }
+
+.legal-card:target {
+  animation: legalTargetRing 1.3s ease;
+}
+
+/* ===== Типографіка контенту ===== */
+.legal-card h2 {
+  position: relative;
+  margin: 0 0 var(--spacing-xl);
+  padding-bottom: var(--spacing-md);
+  border-bottom: 2px solid var(--color-border-light);
+  color: var(--color-primary-dark);
+  font-size: clamp(1.5rem, 1.2rem + 1vw, 2rem);
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+  text-wrap: balance;
+}
+
+.legal-card h2::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -2px;
+  width: 56px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--gradient-primary);
+}
+
+.legal-card h3 {
+  position: relative;
+  margin: var(--spacing-3xl) 0 var(--spacing-md);
+  padding-left: 0.9rem;
+  color: var(--color-secondary);
+  font-size: clamp(1.05rem, 1rem + 0.3vw, 1.2rem);
+  font-weight: 700;
+  line-height: 1.4;
+  text-wrap: balance;
+}
+
+.legal-card h3::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.18em;
+  bottom: 0.18em;
+  width: 4px;
+  border-radius: 3px;
+  background: var(--gradient-primary);
+}
+
+.legal-card p {
+  max-width: 68ch; /* комфортна довжина рядка для читання суцільного тексту */
+  margin: 0 0 var(--spacing-lg);
+  color: var(--color-text-primary);
+  font-size: 1rem;
+  line-height: 1.75;
+}
+
+.legal-card > p:last-child {
+  margin-bottom: 0;
+}
+
+/* Списки */
+.legal-card ul {
+  margin: 0 0 var(--spacing-lg);
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.legal-card ul li {
+  position: relative;
+  max-width: 68ch;
+  padding-left: 1.6rem;
+  line-height: 1.7;
+  color: var(--color-text-primary);
+}
+
+.legal-card ul li::before {
+  content: "";
+  position: absolute;
+  left: 0.15rem;
+  top: 0.62em;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--color-accent);
+  box-shadow: 0 0 0 3px rgba(var(--color-accent-rgb), 0.14);
+}
+
+.legal-card ol {
+  margin: 0 0 var(--spacing-lg);
+  padding-left: 1.35rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.legal-card ol li {
+  max-width: 68ch;
+  padding-left: 0.35rem;
+  line-height: 1.7;
+  color: var(--color-text-primary);
+}
+
+.legal-card ol li::marker {
+  color: var(--color-primary);
+  font-weight: 700;
+}
+
+.legal-card li strong {
+  color: var(--color-primary-dark);
+  font-weight: 700;
+}
+
+/* Посилання */
+.legal-card a {
+  color: var(--color-primary);
+  font-weight: 600;
+  text-decoration: none;
+  box-shadow: inset 0 -1px 0 rgba(var(--color-primary-rgb), 0.28);
+  transition: color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.legal-card a:hover {
+  color: var(--color-accent-text);
+  box-shadow: inset 0 -2px 0 var(--color-accent);
+}
+
+.legal-card a:focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+/* Примітка-каллаут */
+.legal-note {
+  margin: var(--spacing-lg) 0 0 !important;
+  padding: 0.8rem 1rem;
+  border-left: 3px solid var(--color-accent);
+  border-radius: var(--radius-sm);
+  background: var(--color-sand);
+  color: var(--color-text-secondary);
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+
+/* ===== Таблиця cookie ===== */
+.legal-table-wrap {
+  margin: var(--spacing-lg) 0;
+  overflow-x: auto;
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-md);
+  -webkit-overflow-scrolling: touch;
+}
+
+.legal-table {
+  width: 100%;
+  min-width: 560px;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.legal-table thead th {
+  padding: 0.8rem 0.9rem;
+  background: var(--gradient-primary);
+  color: #fff;
+  text-align: left;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.legal-table td {
+  padding: 0.8rem 0.9rem;
+  border-top: 1px solid var(--color-border-light);
+  color: var(--color-text-primary);
+  vertical-align: top;
+}
+
+.legal-table tbody tr:nth-child(even) {
+  background: var(--color-sand);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .legal-table tbody tr {
+    transition: background var(--transition-fast);
+  }
+  .legal-table tbody tr:hover {
+    background: rgba(var(--color-accent-rgb), 0.08);
+  }
+}
+
+/* ===== Кнопка «догори» ===== */
+.legal__top {
+  position: fixed;
+  right: clamp(1rem, 3vw, 2rem);
+  bottom: clamp(1rem, 3vw, 2rem);
+  bottom: calc(clamp(1rem, 3vw, 2rem) + env(safe-area-inset-bottom));
+  z-index: 40;
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--gradient-primary);
+  color: #fff;
+  font-size: 1.2rem;
+  cursor: pointer;
+  box-shadow: var(--shadow-md);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(12px) scale(0.9);
+  transition: opacity 0.3s ease, transform 0.3s ease, visibility 0.3s, box-shadow var(--transition-fast);
+}
+
+.legal__top[data-show="true"] {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .legal__top:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+  }
+}
+
+.legal__top:focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 3px;
+}
+
+/* ===== Адаптивність контенту ===== */
+@media (max-width: 959px) {
+  .legal-card {
+    scroll-margin-top: var(--legal-mobile-offset);
+  }
+}
+
+@media (max-width: 480px) {
+  .legal-card p {
+    text-align: left;
+  }
+  .legal-table-wrap {
+    margin-left: calc(-1 * var(--spacing-lg));
+    margin-right: calc(-1 * var(--spacing-lg));
+    border-radius: 0;
+    border-left: 0;
+    border-right: 0;
+  }
+}
+
+/* ===== Анімації ===== */
+@keyframes legalRise {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes legalTargetRing {
+  0% {
+    box-shadow: 0 0 0 3px rgba(var(--color-accent-rgb), 0.5), var(--shadow-sm);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(var(--color-accent-rgb), 0), var(--shadow-sm);
+  }
+}
+
+/* Доступність: без блимання й без «зникання» контенту */
+@media (prefers-reduced-motion: reduce) {
+  .legal *,
+  .legal *::before,
+  .legal *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+  .legal__hero,
+  .legal-card {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
+/* ===== Друк ===== */
+@media print {
+  .legal {
+    max-width: none;
+    padding: 0;
+  }
+  .legal__hero {
+    background: none;
+    box-shadow: none;
+    border: 0;
+    border-bottom: 2px solid #000;
+    border-radius: 0;
+    text-align: left;
+    padding: 0 0 var(--spacing-lg);
+  }
+  .legal__layout {
+    display: block;
+  }
+  .legal__aside,
+  .legal__top {
+    display: none;
+  }
+  .legal-card {
+    box-shadow: none;
+    border: 0;
+    border-bottom: 1px solid #ccc;
+    border-radius: 0;
+    padding: var(--spacing-lg) 0;
+    page-break-inside: avoid;
+  }
+  .legal-card a {
+    color: #000;
+    box-shadow: none;
+    text-decoration: underline;
+  }
+}
